@@ -1,2 +1,2 @@
 # Dependability-for-Harris-SIFT
-DCA research project
+DCA research project (academic document)
