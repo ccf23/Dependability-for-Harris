@@ -3,25 +3,43 @@
  */
 
 #include "../include/harris.h"
+#include <chrono>
 
 Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
-    // (1) Convert to greyscalescale image
+
+    // (1) Convert to greyscale image
+    auto t_start = std::chrono::high_resolution_clock::now();
     Mat greyscaleImg = convertRgbToGrayscale(img);
+    auto t_stop = std::chrono::high_resolution_clock::now();
+    auto duration = duration_cast<std::chrono::microseconds>(t_stop - t_start);
+    cout << "Time to convert to greyscale image: " << duration.count() << " us" << endl;
 
     // (2) Compute Derivatives
+    t_start = std::chrono::high_resolution_clock::now();
     Derivatives derivatives = computeDerivatives(greyscaleImg);
+    t_stop = std::chrono::high_resolution_clock::now();
+    duration = duration_cast<std::chrono::microseconds>(t_stop - t_start);
+    cout << "Time to compute derivatives: " << duration.count() << " us" << endl;
 
     // (3) Median Filtering
+    t_start = std::chrono::high_resolution_clock::now();
     Derivatives mDerivatives;
     if(gauss) {
         mDerivatives = applyGaussToDerivatives(derivatives, filterRange);
     } else {
         mDerivatives = applyMeanToDerivatives(derivatives, filterRange);
     }
+    t_stop = std::chrono::high_resolution_clock::now();
+    duration = duration_cast<std::chrono::microseconds>(t_stop - t_start);
+    cout << "Time to perform median filtering: " << duration.count() << " us" << endl;
 
     // (4) Compute Harris Responses
+    t_start = std::chrono::high_resolution_clock::now();
     Mat harrisResponses = computeHarrisResponses(k, mDerivatives);
     m_harrisResponses = harrisResponses;
+    t_stop = std::chrono::high_resolution_clock::now();
+    duration = duration_cast<std::chrono::microseconds>(t_stop - t_start);
+    cout << "Time to compute Harris responses: " << duration.count() << " us" << endl;
 }
 
 //-----------------------------------------------------------------------------------------------

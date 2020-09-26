@@ -34,14 +34,27 @@ Mat m_img;
 string filename;
 
 void doHarris() {
+    
     // compute harris
+    auto t_before = std::chrono::high_resolution_clock::now();
     Harris harris(m_img, k, boxFilterSize, gauss);
+    auto t_after = std::chrono::high_resolution_clock::now();
+    auto duration = duration_cast<std::chrono::microseconds>(t_after - t_before);
+    cout << "Total time to compute Harris: " << duration.count() << " us" << endl;
 
     // get vector of points wanted
+    t_before = std::chrono::high_resolution_clock::now();
     vector<pointData> resPts = harris.getMaximaPoints(percentage, boxFilterSize, maximaSuppressionDimension);
+    t_after = std::chrono::high_resolution_clock::now();
+    duration = duration_cast<std::chrono::microseconds>(t_after - t_before);
+    cout << "Total time to get vector of points: " << duration.count() << " us" << endl;
     // cout << resPts.size() << " Points" << endl;
 
+    t_before = std::chrono::high_resolution_clock::now();
     Mat _img = Util::MarkInImage(m_img, resPts, markDimension);
+    t_after = std::chrono::high_resolution_clock::now();
+    duration = duration_cast<std::chrono::microseconds>(t_after - t_before);
+    cout << "Time to mark image: " << duration.count() << " us" << endl;
 
     imshow("HarrisCornerDetector", _img);
 }
@@ -62,8 +75,11 @@ int main(int argc, char** argv) {
 
     img.copyTo(m_img);
 
+    auto t_before = std::chrono::high_resolution_clock::now();
     doHarris();
-
+    auto t_after = std::chrono::high_resolution_clock::now();
+    auto duration = duration_cast<std::chrono::microseconds>(t_after - t_before);
+    cout << "Total execution time: " << duration.count() << " us" << endl;
     
     waitKey(0);
 
