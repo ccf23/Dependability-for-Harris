@@ -68,7 +68,7 @@ int main(int argc, char** argv) {
     doHarris();
     auto t_after = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(t_after - t_before);
-    cout << "Total execution time: " << duration.count() << " us" << endl;
+    cout << "Total execution time: " << duration.count()/1000 << " ms" << endl;
     
     //waitKey(0);
 
