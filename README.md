@@ -14,7 +14,7 @@ make
 The cmake file is configured for local or arm compiling. The default will compile for the local machine's architecture. Follow the instructions in the quick start section to compile for the local machine. 
 
 ## Compile for ARM
-To successfuly compile for arm you need to have arm-linux-gnueabihf-g++ installed and have *staticly* compiled openCV for arm, otherwise it will not build and run successfuly.
+To successfuly compile for arm you need to have `arm-linux-gnueabihf-g++` installed and have ***staticly*** compiled openCV for arm, otherwise it will not build and run successfuly.
 
 For deployent to an arm based device run the following commands from the `build` directory:
 
