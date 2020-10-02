@@ -6,6 +6,19 @@ DCA research project (academic document)
 mkdir build
 cd ./build
 cmake ..
-make 
-./Harris ../images/house.jpg
+make
+./Harris ../images/landslides_in_cerbers_fossae.jpeg
 ```
+
+## Compile For Local
+The cmake file is configured for local or arm compiling. The default will compile for the local machine's architecture. Follow the instructions in the quick start section to compile for the local machine. 
+
+## Compile for ARM
+For deployent to an arm based device run the following commands from the `build` directory:
+
+```
+rm -r *
+cmake -D arm=true ..
+make
+```
+The executable won't run on your machine, you will need to scp it to the arm platform and run it there. 
