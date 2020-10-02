@@ -45,7 +45,7 @@ void doHarris() {
     duration = duration_cast<microseconds>(t_after - t_before);
     cout << "Time to mark image: " << duration.count() << " us" << endl;
 
-    imshow("HarrisCornerDetector", _img);
+    //imshow("HarrisCornerDetector", _img);
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -70,7 +70,7 @@ int main(int argc, char** argv) {
     auto duration = duration_cast<microseconds>(t_after - t_before);
     cout << "Total execution time: " << duration.count() << " us" << endl;
     
-    waitKey(0);
+    //waitKey(0);
 
     return 0;
 

@@ -23,9 +23,9 @@ MESSAGE( STATUS "------------------" ${OpenCV_INCLUDE_DIRS} )
 #
 
 # TODO: get this to staticly compile
-#SET(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
-#SET(BUILD_SHARED_LIBS OFF)
-#SET(CMAKE_EXE_LINKER_FLAGS "-static")
+SET(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
+SET(BUILD_SHARED_LIBS OFF)
+SET(CMAKE_EXE_LINKER_FLAGS "-static")
 
 add_executable( Harris 
 	./src/util.cpp
