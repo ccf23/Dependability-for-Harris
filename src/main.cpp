@@ -12,6 +12,9 @@ using namespace std::chrono;
 using namespace cv;
 using namespace std;
 
+// uncomment to allow for visual test on local machine
+//#define LOCAL
+
 Mat m_img;
 string filename;
 
@@ -37,15 +40,17 @@ void doHarris() {
     t_after = high_resolution_clock::now();
     duration = duration_cast<microseconds>(t_after - t_before);
     cout << "Total time to get vector of points: " << duration.count() << " us" << endl;
-    // cout << resPts.size() << " Points" << endl;
+    cout << "Features Detected: "<<resPts.size()<<endl;
 
+    #ifdef LOCAL
     t_before = high_resolution_clock::now();
     Mat _img = Util::MarkInImage(m_img, resPts, markDimension);
     t_after = high_resolution_clock::now();
     duration = duration_cast<microseconds>(t_after - t_before);
     cout << "Time to mark image: " << duration.count() << " us" << endl;
-
-    //imshow("HarrisCornerDetector", _img);
+    
+    imshow("HarrisCornerDetector", _img);
+    #endif
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -70,7 +75,9 @@ int main(int argc, char** argv) {
     auto duration = duration_cast<microseconds>(t_after - t_before);
     cout << "Total execution time: " << duration.count()/1000 << " ms" << endl;
     
-    //waitKey(0);
+    #ifdef LOCAL
+        waitKey(0);
+    #endif
 
     return 0;
 

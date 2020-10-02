@@ -76,9 +76,10 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
 
         int supRows = maximaSuppressionMat.rows;
         int supCols = maximaSuppressionMat.cols;
-
+    
         // Check if point marked in maximaSuppression matrix
         if(maximaSuppressionMat.at<int>(points[i].point.x,points[i].point.y) == 0) {
+            
             for (int r = -suppressionRadius; r <= suppressionRadius; r++) {
                 for (int c = -suppressionRadius; c <= suppressionRadius; c++) {
                     int sx = points[i].point.x+c;
@@ -94,10 +95,11 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
                     if(sy < 0)
                         sy = 0;
 
-                    maximaSuppressionMat.at<int>(points[i].point.x+c, points[i].point.y+r) = 1;
+                    //cout <<maximaSuppressionMat.size()<< points[i].point.x + c<<"\t"<<points[i].point.y+r<<endl;
+                    maximaSuppressionMat.at<int>(sx, sy) = 1;
                 }
             }
-
+            
             // Convert back to original image coordinate system 
             points[i].point.x += 1 + filterRange;
             points[i].point.y += 1 + filterRange;
