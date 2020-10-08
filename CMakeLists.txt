@@ -13,7 +13,7 @@ if(arm)
 	set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 	set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
 
-	find_package( OpenCV 4.5.0 )
+	find_package( OpenCV 4.5.0 REQUIRED PATHS /usr/lib/lib/cmake/opencv4 NO_DEFAULT_PATH)
 
 	set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
 	set(BUILD_SHARED_LIBS OFF)
@@ -23,6 +23,7 @@ else()
 	message("---- Compiling for local ----")
 
 	find_package(OpenCV REQUIRED)
+
 endif()
 
 message( STATUS "------------------" ${OpenCV_INCLUDE_DIRS} )
