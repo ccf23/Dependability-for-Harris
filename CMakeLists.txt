@@ -13,7 +13,13 @@ if(arm)
 	set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 	set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
 
-	find_package( OpenCV 4.5.0 REQUIRED PATHS /usr/lib/lib/cmake/opencv4 NO_DEFAULT_PATH)
+	# This is so I won't have to recompile openCV, it won't affect normal functionality
+	if(daniel)
+		find_package( OpenCV 4.5.0 REQUIRED)
+	else()
+		find_package( OpenCV 4.5.0 REQUIRED PATHS /usr/lib/lib/cmake/opencv4 NO_DEFAULT_PATH)
+	endif()
+	
 
 	set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
 	set(BUILD_SHARED_LIBS OFF)
