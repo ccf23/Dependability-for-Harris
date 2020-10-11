@@ -25,6 +25,13 @@ void doHarris() {
     float percentage = 50e-5;
     int markDimension = 5;
     float k = 0.25;
+
+    // Temporary: Pattern to follow for enabling/disabling FT:
+    #if ASSERTIONS_ON
+        // Do assertions code here
+
+    #endif 
+    
     
     // compute harris
     auto t_before = high_resolution_clock::now();

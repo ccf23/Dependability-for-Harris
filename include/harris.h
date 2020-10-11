@@ -9,6 +9,11 @@
 using namespace std;
 using namespace cv;
 
+#define ASSERTIONS_ON FALSE
+#define LDPC_ON FALSE
+#define CHECKPOINTING_ON FALSE
+#define ABFT_ON FALSE
+
 class Harris {
 public:
     Harris(Mat img, float k, int filterRange, bool gauss);
