@@ -9,15 +9,17 @@
 using namespace std;
 using namespace cv;
 
-#define ASSERTIONS_ON FALSE
-#define LDPC_ON FALSE
-#define CHECKPOINTING_ON FALSE
-#define ABFT_ON FALSE
+#define ASSERTIONS_ON false
+#define LDPC_ON true
+#define CHECKPOINTING_ON false
+#define ABFT_ON false
 
 class Harris {
 public:
     Harris(Mat img, float k, int filterRange, bool gauss);
 	vector<pointData> getMaximaPoints(float percentage, int filterRange, int suppressionRadius);
+	void encodeLDPC(Mat img);
+	void decodeLDPC(Mat img);
 
 private:
 	Mat convertRgbToGrayscale(Mat& img);

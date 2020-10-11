@@ -8,6 +8,10 @@ using namespace std::chrono;
 
 Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
 
+    #if LDPC_ON
+        encodeLDPC(img);
+    #endif
+
     // (1) Convert to greyscale image
     auto t_start = high_resolution_clock::now();
     Mat greyscaleImg = convertRgbToGrayscale(img);
@@ -110,6 +114,20 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
     }
 
     return topPoints;
+}
+
+//-----------------------------------------------------------------------------------------------
+void Harris::encodeLDPC(Mat img)
+{
+    printf("Rows in matrix: %d, columns in matrix: %d\n", img.rows, img.cols);
+    printf("element at (0,0): %f\n", img.at<float>(0,0));
+
+}
+
+//-----------------------------------------------------------------------------------------------
+void Harris::decodeLDPC(Mat img)
+{
+
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -314,3 +332,4 @@ Mat Harris::gaussFilter(Mat& img, int range) {
 
     return gauss;
 }
+

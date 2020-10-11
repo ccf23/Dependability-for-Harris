@@ -26,13 +26,6 @@ void doHarris() {
     int markDimension = 5;
     float k = 0.25;
 
-    // Temporary: Pattern to follow for enabling/disabling FT:
-    #if ASSERTIONS_ON
-        // Do assertions code here
-
-    #endif 
-    
-    
     // compute harris
     auto t_before = high_resolution_clock::now();
     Harris harris(m_img, k, boxFilterSize, gauss);
@@ -62,6 +55,13 @@ void doHarris() {
 
 //-----------------------------------------------------------------------------------------------
 int main(int argc, char** argv) {
+
+    printf("Fault tolerance techniques enabled:\n");
+    printf("LDPC_ON:\t\t%d\n", (LDPC_ON == true));
+    printf("ASSERTIONS_ON:\t\t%d\n", (ASSERTIONS_ON == true));
+    printf("ABFT_ON:\t\t%d\n", (ABFT_ON == true));
+    printf("CHECKPOINTING_ON:\t%d\n\n", (CHECKPOINTING_ON == true));
+
     // read image from file + error handling
     Mat img;
 
