@@ -9,10 +9,12 @@
 using namespace std;
 using namespace cv;
 
-#define ASSERTIONS_ON FALSE
-#define LDPC_ON FALSE
-#define CHECKPOINTING_ON FALSE
-#define ABFT_ON FALSE
+#define ASSERTIONS_ON false
+#define LDPC_ON false
+#define CHECKPOINTING_ON false
+#define ABFT_ON false
+
+#define DATA_COLLECTION_MODE false
 
 class Harris {
 public:
