@@ -19,6 +19,7 @@ To successfully compile for arm you need to have `arm-linux-gnueabihf-g++` insta
 For deployent to an arm based device run the following commands from the `build` directory:
 
 ```
+cd build
 rm -r *
 cmake -D arm=true ..
 make
