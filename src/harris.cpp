@@ -6,25 +6,33 @@
 #include <chrono>
 using namespace std::chrono;
 
-Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
+Harris::Harris(Mat img, float k, int filterRange, bool gauss) :
 
     #if LDPC_ON
-        encodeLDPC(img);
+       ldpc()
     #endif
-
+{
     // (1) Convert to greyscale image
     auto t_start = high_resolution_clock::now();
     Mat greyscaleImg = convertRgbToGrayscale(img);
     auto t_stop = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(t_stop - t_start);
-    cout << "Time to convert to greyscale image: " << duration.count() << " us" << endl;
+    #if DATA_COLLECTION_MODE
+        cout << duration.count()/1000 << ",";
+    #else
+        cout << "Time to convert to greyscale image: " << duration.count()/1000 << " ms" << endl;
+    #endif
 
     // (2) Compute Derivatives
     t_start = high_resolution_clock::now();
     Derivatives derivatives = computeDerivatives(greyscaleImg);
     t_stop = high_resolution_clock::now();
     duration = duration_cast<microseconds>(t_stop - t_start);
-    cout << "Time to compute derivatives: " << duration.count() << " us" << endl;
+    #if DATA_COLLECTION_MODE
+        cout << duration.count()/1000 << ",";
+    #else
+        cout << "Time to compute derivatives: " << duration.count()/1000 << " ms" << endl;
+    #endif
 
     // (3) Median Filtering
     t_start = high_resolution_clock::now();
@@ -36,7 +44,15 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
     }
     t_stop = high_resolution_clock::now();
     duration = duration_cast<microseconds>(t_stop - t_start);
-    cout << "Time to perform median filtering: " << duration.count() << " us" << endl;
+    #if DATA_COLLECTION_MODE
+        cout << duration.count()/1000  << ",";
+    #else
+        cout << "Time to perform median filtering: " << duration.count()/1000 << " ms" << endl;
+    #endif 
+
+    #if LDPC_ON
+        
+    #endif
 
     // (4) Compute Harris Responses
     t_start = high_resolution_clock::now();
@@ -44,7 +60,12 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
     m_harrisResponses = harrisResponses;
     t_stop = high_resolution_clock::now();
     duration = duration_cast<microseconds>(t_stop - t_start);
-    cout << "Time to compute Harris responses: " << duration.count() << " us" << endl;
+
+    #if DATA_COLLECTION_MODE
+        cout << duration.count()/1000  << ",";
+    #else
+        cout << "Time to compute Harris responses: " << duration.count()/1000 << " ms" << endl;
+    #endif
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -114,20 +135,6 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
     }
 
     return topPoints;
-}
-
-//-----------------------------------------------------------------------------------------------
-void Harris::encodeLDPC(Mat img)
-{
-    printf("Rows in matrix: %d, columns in matrix: %d\n", img.rows, img.cols);
-    printf("element at (0,0): %f\n", img.at<float>(0,0));
-
-}
-
-//-----------------------------------------------------------------------------------------------
-void Harris::decodeLDPC(Mat img)
-{
-
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -332,4 +339,3 @@ Mat Harris::gaussFilter(Mat& img, int range) {
 
     return gauss;
 }
-

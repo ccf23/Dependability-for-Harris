@@ -1,3 +1,6 @@
+#ifndef _HARRIS_H_
+#define _HARRIS_H_
+
 /*
  *      Author: alexanderb
  */
@@ -5,6 +8,7 @@
 #include <opencv2/opencv.hpp>
 
 #include "util.h"
+#include "../include/ldpc.h"
 
 using namespace std;
 using namespace cv;
@@ -18,8 +22,6 @@ class Harris {
 public:
     Harris(Mat img, float k, int filterRange, bool gauss);
 	vector<pointData> getMaximaPoints(float percentage, int filterRange, int suppressionRadius);
-	void encodeLDPC(Mat img);
-	void decodeLDPC(Mat img);
 
 private:
 	Mat convertRgbToGrayscale(Mat& img);
@@ -34,4 +36,7 @@ private:
 
 private:
 	Mat m_harrisResponses;
+	LDPC ldpc;
 };
+
+#endif // _HARRIS_H_

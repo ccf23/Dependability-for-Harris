@@ -1,3 +1,6 @@
+#ifndef _UTIL_H_
+#define _UTIL_H_
+
 /*
  *      Author: alexanderb
  */
@@ -33,3 +36,5 @@ public:
 
 	static Mat MarkInImage(Mat& img, vector<pointData> points, int radius);
 };
+
+#endif // _UTIL_H_
