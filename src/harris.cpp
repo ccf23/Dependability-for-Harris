@@ -49,10 +49,13 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) :
     #else
         cout << "Time to perform median filtering: " << duration.count()/1000 << " ms" << endl;
     #endif 
+<<<<<<< HEAD
 
     #if LDPC_ON
         
     #endif
+=======
+>>>>>>> master
 
     // (4) Compute Harris Responses
     t_start = high_resolution_clock::now();

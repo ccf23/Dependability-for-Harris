@@ -31,7 +31,11 @@ void doHarris() {
     Harris harris(m_img, k, boxFilterSize, gauss);
     auto t_after = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(t_after - t_before);
-    cout << "Total time to compute Harris: " << duration.count() << " us" << endl;
+    #if DATA_COLLECTION_MODE
+        cout << duration.count()/1000  << ",";
+    #else
+        cout << "Total time to compute Harris: " << duration.count()/1000 << " ms" << endl;
+    #endif
 
     // get vector of points wanted
     t_before = high_resolution_clock::now();
@@ -39,16 +43,24 @@ void doHarris() {
     vector<pointData> resPts = harris.getMaximaPoints(percentage, boxFilterSize, maximaSuppressionDimension);
     t_after = high_resolution_clock::now();
     duration = duration_cast<microseconds>(t_after - t_before);
-    cout << "Total time to get vector of points: " << duration.count() << " us" << endl;
-    cout << "Features Detected: "<<resPts.size()<<endl;
+    #if DATA_COLLECTION_MODE
+        cout << duration.count()/1000 << ",";
+        cout << resPts.size() << ",";
+    #else
+        cout << "Total time to get vector of points: " << duration.count()/1000 << " ms" << endl;
+        cout << "Features Detected: "<<resPts.size()<<endl;
+    #endif
 
     #ifdef LOCAL
     t_before = high_resolution_clock::now();
     Mat _img = Util::MarkInImage(m_img, resPts, markDimension);
     t_after = high_resolution_clock::now();
     duration = duration_cast<microseconds>(t_after - t_before);
-    cout << "Time to mark image: " << duration.count() << " us" << endl;
-    
+    #if DATA_COLLECTION_MODE
+        cout << duration.count()/1000  << ",";
+    #else
+        cout << "Time to mark image: " << duration.count()/1000 << " ms" << endl;
+    #endif
     imshow("HarrisCornerDetector", _img);
     #endif
 }
@@ -80,7 +92,12 @@ int main(int argc, char** argv) {
     doHarris();
     auto t_after = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(t_after - t_before);
-    cout << "Total execution time: " << duration.count()/1000 << " ms" << endl;
+
+    #if DATA_COLLECTION_MODE
+        cout << duration.count()/1000  << "\n" << endl;
+    #else
+        cout << "Total execution time: " << duration.count()/1000 << " ms" << endl;
+    #endif
     
     #ifdef LOCAL
         waitKey(0);
