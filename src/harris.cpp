@@ -3,12 +3,17 @@
  */
 
 #include "../include/harris.h"
+#include "../include/abft.h"
 #include <chrono>
 using namespace std::chrono;
 
 Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
 
     // (1) Convert to greyscale image
+    #if ABFT_ON
+        img = doGrayscaleABFT(img);
+    #endif
+
     auto t_start = high_resolution_clock::now();
     Mat greyscaleImg = convertRgbToGrayscale(img);
     auto t_stop = high_resolution_clock::now();
