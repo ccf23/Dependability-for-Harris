@@ -25,6 +25,6 @@ struct abftMat
 
 Mat doGrayscaleABFT(Mat);
 
-bool grayscaleABFTCheck(Mat);
+bool grayscaleABFTCheck(Mat&);
 
 #endif
