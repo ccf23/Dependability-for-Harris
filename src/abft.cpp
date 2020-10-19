@@ -84,3 +84,37 @@ Mat doGrayscaleABFT(Mat im)
     vconcat(im, cSum.t(), im);
     return im;
 }
+
+bool grayscaleABFTCheck(Mat img)
+{
+    int rows = img.rows - 1;
+    int cols = img.cols - 1;
+    float sum;
+    for (int r = 0; r < rows; ++r)
+    {
+        sum = 0;
+        for (int i = 0; i < cols; ++i)
+        {
+            sum += img.at<float>(r,i);
+        }
+        if (sum != img.at<float>(r,cols + 1))
+        {
+            cout<<sum<<"\t"<<img.at<float>(r,cols + 1)<<"\t"<<r<<endl;
+            return false;
+        }
+    }
+
+    for (int c = 0; c < cols; ++c)
+    {
+        sum = 0;
+        for (int i = 0; i < cols; ++i)
+        {
+            sum += img.at<float>(i,c);
+        }
+        if (sum != img.at<float>(rows + 1,c))
+        {
+            return false;
+        }
+    }
+    return true;
+}
