@@ -32,6 +32,8 @@ else()
 
 endif()
 
+find_package(OpenMP REQUIRED)
+
 message( STATUS "------------------" ${OpenCV_INCLUDE_DIRS} )
 
 add_executable( Harris 
@@ -47,4 +49,5 @@ target_include_directories( Harris
 
 target_link_libraries( Harris 
 	${OpenCV_LIBS} 
+	${OpenMP_CXX_FLAGS}
 )

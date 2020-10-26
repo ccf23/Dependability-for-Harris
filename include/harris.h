@@ -13,6 +13,7 @@ using namespace cv;
 #define LDPC_ON false
 #define CHECKPOINTING_ON false
 #define ABFT_ON false
+#define THREADS_ON true
 
 #define DATA_COLLECTION_MODE false
 
