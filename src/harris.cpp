@@ -147,15 +147,9 @@ Mat Harris::convertRgbToGrayscale(Mat& img) {
             	0.2126 * img.at<cv::Vec3f>(r,c)[0] +
             	0.7152 * img.at<cv::Vec3f>(r,c)[1] +
             	0.0722 * img.at<cv::Vec3f>(r,c)[2];
-            if (r == img.rows - 1)
-            {
-                //cout<<greyscaleImg.at<float>(r,c)<<endl;
-                //cout<<endl;
-            }
         }
 
     }
-    cout<<greyscaleImg.at<float>(1,greyscaleImg.cols - 1)<<endl;
     return greyscaleImg;
 }
 

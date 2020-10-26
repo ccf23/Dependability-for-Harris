@@ -1,46 +1,5 @@
 
 #include "../include/abft.h"
-/*
-abftMat::abftMat(Mat m, abftMode mode)
-{
-    /*
-    switch (mode)
-    {
-    case NONE:
-        img = m;
-        hasRowSum = false;
-        hasColSum = false;
-        break;
-    case GRAYSCALE:
-        Mat im = m;
-        img = doGrayscaleABFT(im);
-        break;
-    default:
-
-        break;
-    }*/
-    
-//}//*/
-/*
-Mat abftMat::encode(Mat m, abftMode mode)
-{
-    switch (mode)
-    {
-    case NONE:
-        img = m;
-        hasRowSum = false;
-        hasColSum = false;
-        break;
-    case GRAYSCALE:
-        img = doGrayscaleABFT(m);
-        break;
-    default:
-
-        break;
-    }
-    return img;
-}
-*/
 
 Mat doGrayscaleABFT(Mat im)
 {
@@ -68,7 +27,7 @@ Mat doGrayscaleABFT(Mat im)
         rSum.at<Vec3f>(r,0)[2] = cs2;
     }
     
-    for (int c = 1; c <= cols; ++c)
+    for (int c = 0; c <= cols; ++c)
     {
         cs0 = cs1 = cs2 = 0;
         for (int i = 0; i < rows; ++i)
@@ -81,16 +40,9 @@ Mat doGrayscaleABFT(Mat im)
         cSum.at<Vec3f>(c,0)[1] = cs1;
         cSum.at<Vec3f>(c,0)[2] = cs2;
     } 
-    /*
-    for (int i = 0; i < cSum.cols; ++i)
-    {
-        cout<<cSum.at<Vec3f>(i,0)
-    }
-    */
+
     hconcat(im, rSum, im);
     vconcat(im, cSum.t(), im);
-    imwrite("./im.jpg",im);
-    //cout<<"p0: "<<(float)im.at<Vec3f>(2, cols)[0]<<endl;
     return im;
 }
 
@@ -109,11 +61,12 @@ bool grayscaleABFTCheck(Mat& img)
         }
         if (abs(sum - img.at<float>(r,cols - 1))> 1)
         {
-            cout<<setprecision(10)<<sum<<"\t"<<img.at<float>(r,cols - 1)<<"\t"<<r<<endl;
-            //return false;
+            //cout<<setprecision(10)<<sum<<"\t"<<img.at<float>(r,cols - 1)<<"\t"<<r<<endl;
+            return false;
         }
     }
 
+    
     for (int c = 0; c < cols - 1; ++c)
     {
         sum = 0;
@@ -121,8 +74,9 @@ bool grayscaleABFTCheck(Mat& img)
         {
             sum += img.at<float>(i,c);
         }
-        if (sum != img.at<float>(rows - 1,c))
+        if (abs(sum - img.at<float>(rows - 1,c)) > 1)
         {
+            //cout<<setprecision(10)<<sum<<"\t"<<img.at<float>(rows - 1,c)<<"\t"<<c<<endl;
             return false;
         }
     }
