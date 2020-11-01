@@ -38,6 +38,11 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
         cout << "Time to compute derivatives: " << duration.count()/1000 << " ms" << endl;
     #endif
 
+    #if ABFT_ON
+        abft_addChecksums(greyscaleImg);
+    #endif
+
+
     // (3) Median Filtering
     t_start = high_resolution_clock::now();
     Derivatives mDerivatives;

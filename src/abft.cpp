@@ -82,3 +82,22 @@ bool grayscaleABFTCheck(Mat& img)
     }
     return true;
 }
+
+Mat abft_addChecksums(Mat img)
+{
+    Mat rowSum, cSum;
+    Mat colSum = Mat::zeros(1, img.cols + 1, img.type());
+    reduce(img, cSum, 0, REDUCE_SUM);
+    reduce(img, rowSum, 1, REDUCE_SUM);
+
+    for (int i = 0; i < cSum.cols; ++i)
+    {
+        colSum.at<float>(0,i) = cSum.at<float>(0,i);
+    }
+
+
+    hconcat(img, rowSum, img);
+    vconcat(img, colSum, img);
+
+    return img;
+}
