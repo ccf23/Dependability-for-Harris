@@ -16,8 +16,8 @@ Mat doGrayscaleABFT(Mat);
 
 bool grayscaleABFTCheck(Mat&);
 
-Mat abft_addChecksums(Mat);
+bool abft_addChecksums(Mat, Mat&, Mat&);
 
-bool abft_check(Mat &);
+bool abft_check(Mat &, Mat&, Mat&);
 
 #endif

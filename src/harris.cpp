@@ -12,12 +12,12 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
     // (1) Convert to greyscale image
     auto t_start = high_resolution_clock::now();
     #if ABFT_ON
-        img = doGrayscaleABFT(img);
+        //img = doGrayscaleABFT(img);
     #endif
     Mat greyscaleImg = convertRgbToGrayscale(img);
     #if ABFT_ON
-        bool correct = grayscaleABFTCheck(greyscaleImg);
-        cout<<correct<<endl;
+        //bool correct = grayscaleABFTCheck(greyscaleImg);
+        //cout<<correct<<endl;
     #endif
     auto t_stop = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(t_stop - t_start);
@@ -39,7 +39,10 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
     #endif
 
     #if ABFT_ON
-        abft_addChecksums(greyscaleImg);
+        Mat a, b;
+        abft_addChecksums(greyscaleImg,a,b);
+        bool val = abft_check(greyscaleImg,a,b);
+        cout<<"ABFT Check: "<<boolalpha<<val<<endl;
     #endif
 
 

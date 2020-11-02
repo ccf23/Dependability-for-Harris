@@ -83,21 +83,27 @@ bool grayscaleABFTCheck(Mat& img)
     return true;
 }
 
-Mat abft_addChecksums(Mat img)
+bool abft_addChecksums(Mat img, Mat &rCheck, Mat &cCheck)
 {
-    Mat rowSum, cSum;
-    Mat colSum = Mat::zeros(1, img.cols + 1, img.type());
-    reduce(img, cSum, 0, REDUCE_SUM);
-    reduce(img, rowSum, 1, REDUCE_SUM);
+    reduce(img, cCheck, 0, REDUCE_SUM);
+    reduce(img, rCheck, 1, REDUCE_SUM);
+}
 
-    for (int i = 0; i < cSum.cols; ++i)
-    {
-        colSum.at<float>(0,i) = cSum.at<float>(0,i);
-    }
+bool abft_check(Mat &img, Mat &rCheck, Mat &cCheck)
+{
+    Mat newCcheck, newRcheck, cDiff, rDiff;
+    reduce(img, newCcheck, 0, REDUCE_SUM);
+    reduce(img, newRcheck, 1, REDUCE_SUM);
+
+    cDiff = abs(newCcheck - cCheck);
+    rDiff = abs(newRcheck - rCheck);
+
+    Mat zeroCheckC = Mat::ones(cDiff.rows, cDiff.cols, cDiff.type());
+    Mat zeroCheckR = Mat::ones(rDiff.rows, rDiff.cols, rDiff.type());
 
 
-    hconcat(img, rowSum, img);
-    vconcat(img, colSum, img);
+    compare(cDiff, zeroCheckC, cDiff, CMP_GE);
+    compare(rDiff, zeroCheckR, rDiff, CMP_GE);
 
-    return img;
+    cout<<rDiff<<endl;
 }
