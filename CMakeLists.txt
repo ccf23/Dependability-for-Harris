@@ -12,6 +12,8 @@ if(arm)
 	set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 	set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 	set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
+	
+	set(CMAKE_REQUIRED_LIBRARIES "ITPP")
 
 	# This is so I won't have to recompile openCV, it won't affect normal functionality
 	if(daniel)
@@ -20,6 +22,8 @@ if(arm)
 		find_package( OpenCV 4.5.0 REQUIRED PATHS /usr/lib/lib/cmake/opencv4 NO_DEFAULT_PATH)
 	endif()
 	
+
+
 
 	set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
 	set(BUILD_SHARED_LIBS OFF)
@@ -46,6 +50,15 @@ target_include_directories( Harris
 			${OpenCV_INCLUDE_DIRS}
 )
 
+target_include_directories( Harris
+	PRIVATE		.
+			/usr/local/itpp-arm/include
+)
+
 target_link_libraries( Harris 
 	${OpenCV_LIBS} 
+)
+
+target_link_libraries( Harris
+	/usr/local/itpp-arm/lib/libitpp_static.a
 )
