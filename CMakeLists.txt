@@ -36,6 +36,8 @@ else()
 
 endif()
 
+find_package(OpenMP REQUIRED)
+
 message( STATUS "------------------" ${OpenCV_INCLUDE_DIRS} )
 
 add_executable( Harris 
@@ -56,9 +58,11 @@ target_include_directories( Harris
 )
 
 target_link_libraries( Harris 
-	${OpenCV_LIBS} 
+	${OpenCV_LIBS}
+	${OpenMP_CXX_FLAGS}	
+	/usr/local/itpp-arm/lib/libitpp_static.a
 )
 
 target_link_libraries( Harris
-	/usr/local/itpp-arm/lib/libitpp_static.a
+
 )
