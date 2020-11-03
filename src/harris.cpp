@@ -41,6 +41,34 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
     // (2) Compute Derivatives
     t_start = high_resolution_clock::now();
     Derivatives derivatives = computeDerivatives(greyscaleImg);
+
+    #if ABFT_ON
+        //generate checksums for Derivatives
+        Mat IxC, IxR, IyC, IyR, IxyC, IxyR;
+        abft_addChecksums(derivatives.Ix, IxR, IxC);
+        abft_addChecksums(derivatives.Iy, IyR, IyC);
+        abft_addChecksums(derivatives.Ixy, IxyR, IxyC);
+
+        // error injection
+        bool matchX, matchY, matchXY;
+        matchX = matchY = matchXY = 0; 
+        
+        while (!matchX)
+        {
+            //inject errors at probabilistic rate
+            matchX = abft_check(derivatives.Ix, IxR, IxC);
+        }
+        while (!matchY)
+        {
+            //inject errors at probabilistic rate
+            matchY = abft_check(derivatives.Iy, IyR, IyC);
+        }
+        while (!matchXY)
+        {
+            //inject errors at probabilistic rate
+            matchXY = abft_check(derivatives.Ixy, IxyR, IxyC);
+        }
+    #endif
     t_stop = high_resolution_clock::now();
     duration = duration_cast<microseconds>(t_stop - t_start);
     #if DATA_COLLECTION_MODE
