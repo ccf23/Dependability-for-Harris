@@ -27,6 +27,13 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
         cout << "Time to convert to greyscale image: " << duration.count()/1000 << " ms" << endl;
     #endif
 
+    #if ABFT_ON
+        Mat a, b;
+        abft_addChecksums(greyscaleImg,a,b);
+        bool val = abft_check(greyscaleImg,a,b);
+        cout<<"ABFT Check: "<<boolalpha<<val<<endl;
+    #endif
+
     // (2) Compute Derivatives
     t_start = high_resolution_clock::now();
     Derivatives derivatives = computeDerivatives(greyscaleImg);
@@ -38,12 +45,7 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
         cout << "Time to compute derivatives: " << duration.count()/1000 << " ms" << endl;
     #endif
 
-    #if ABFT_ON
-        Mat a, b;
-        abft_addChecksums(greyscaleImg,a,b);
-        bool val = abft_check(greyscaleImg,a,b);
-        cout<<"ABFT Check: "<<boolalpha<<val<<endl;
-    #endif
+    
 
 
     // (3) Median Filtering

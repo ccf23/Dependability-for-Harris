@@ -89,21 +89,33 @@ bool abft_addChecksums(Mat img, Mat &rCheck, Mat &cCheck)
     reduce(img, rCheck, 1, REDUCE_SUM);
 }
 
-bool abft_check(Mat &img, Mat &rCheck, Mat &cCheck)
+bool abft_check(Mat img, Mat &rCheck, Mat &cCheck)
 {
-    Mat newCcheck, newRcheck, cDiff, rDiff;
+    Mat newCcheck, newRcheck, cDiff, rDiff, cErr, rErr;
+
+    //cout<<img<<endl;
+
     reduce(img, newCcheck, 0, REDUCE_SUM);
     reduce(img, newRcheck, 1, REDUCE_SUM);
 
-    cDiff = abs(newCcheck - cCheck);
-    rDiff = abs(newRcheck - rCheck);
+    absdiff(newCcheck, cCheck, cDiff);
+    absdiff(newRcheck, rCheck, rDiff);
 
     Mat zeroCheckC = Mat::ones(cDiff.rows, cDiff.cols, cDiff.type());
     Mat zeroCheckR = Mat::ones(rDiff.rows, rDiff.cols, rDiff.type());
 
 
-    compare(cDiff, zeroCheckC, cDiff, CMP_GE);
-    compare(rDiff, zeroCheckR, rDiff, CMP_GE);
+    compare(cDiff, zeroCheckC, cErr, CMP_GE);
+    compare(rDiff, zeroCheckR, rErr, CMP_GE);
 
-    cout<<rDiff<<endl;
+    vector<Point> cErrPts, rErrPts;
+
+    findNonZero(cErr, cErrPts);
+    findNonZero(rErr, rErrPts);
+
+    cout<<" ----------- rErrPts -------------"<<endl;
+    cout<<rErrPts<<endl;
+
+    cout<<" ----------- cErrPts -------------"<<endl;
+    cout<<cErrPts<<endl;
 }
