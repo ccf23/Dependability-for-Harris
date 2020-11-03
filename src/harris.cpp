@@ -13,11 +13,14 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
     auto t_start = high_resolution_clock::now();
     #if ABFT_ON
         //img = doGrayscaleABFT(img);
+    #else
+        img.convertTo(img, CV_32F);    
     #endif
     Mat greyscaleImg = convertRgbToGrayscale(img);
     #if ABFT_ON
         //bool correct = grayscaleABFTCheck(greyscaleImg);
         //cout<<correct<<endl;
+
     #endif
     auto t_stop = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(t_stop - t_start);
