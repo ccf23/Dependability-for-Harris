@@ -93,9 +93,6 @@ bool abft_check(Mat img, Mat &rCheck, Mat &cCheck)
 {
     Mat newCcheck, newRcheck, cDiff, rDiff, cErr, rErr;
 
-    //cout<<img<<endl;
-    img.at<float>(345,23) = 4;
-
     reduce(img, newCcheck, 0, REDUCE_SUM);
     reduce(img, newRcheck, 1, REDUCE_SUM);
 
@@ -114,9 +111,28 @@ bool abft_check(Mat img, Mat &rCheck, Mat &cCheck)
     findNonZero(cErr, cErrPts);
     findNonZero(rErr, rErrPts);
 
-    cout<<" ----------- rErrPts -------------"<<endl;
-    cout<<rErrPts<<endl;
+    if (rErrPts.size() == 0 && cErrPts.size() == 0)
+    {
+        cout<<"ABFT: NO ERRORS DETECTED"<<endl;
+        return true;
+    }
+    else if (rErrPts.size() == 1 && cErrPts.size() == 1)
+    {
+        cout<<"ABFT: CORRECTABLE ERROR DETECTED"<<endl;
 
-    cout<<" ----------- cErrPts -------------"<<endl;
-    cout<<cErrPts<<endl;
+        // correct value
+        int v = cErrPts[0].x;
+        int u = rErrPts[0].y;
+
+        float diff = newCcheck.at<float>(0,v) - img.at<float>(u,v);
+        img.at<float>(u,v) = cCheck.at<float>(0,v) - diff;
+        cout<<img.at<float>(44,99)<<endl;
+        return true;
+    }
+    else
+    {
+        cout<<"ABFT: UN-CORRECTABLE ERRORS DETECTED"<<endl;
+        return false;
+    }
+
 }
