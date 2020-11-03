@@ -94,6 +94,7 @@ bool abft_check(Mat img, Mat &rCheck, Mat &cCheck)
     Mat newCcheck, newRcheck, cDiff, rDiff, cErr, rErr;
 
     //cout<<img<<endl;
+    img.at<float>(345,23) = 4;
 
     reduce(img, newCcheck, 0, REDUCE_SUM);
     reduce(img, newRcheck, 1, REDUCE_SUM);

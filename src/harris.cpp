@@ -11,6 +11,7 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
 
     // (1) Convert to greyscale image
     auto t_start = high_resolution_clock::now();
+    img.convertTo(img, CV_32F); 
     #if ABFT_ON
         //img = doGrayscaleABFT(img);
     #else
