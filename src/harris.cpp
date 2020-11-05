@@ -147,6 +147,7 @@ Mat Harris::convertRgbToGrayscale(Mat& img) {
       state ck_B;
       // save original again? risk of losing? need for checkpoint B?
       ck_B.grey = greyscaleImg; //saving greyscale checkpoint
+      
     #endif
     return greyscaleImg;
 }
