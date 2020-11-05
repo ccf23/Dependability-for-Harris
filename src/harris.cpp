@@ -22,6 +22,12 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
     // (2) Compute Derivatives
     t_start = high_resolution_clock::now();
     Derivatives derivatives = computeDerivatives(greyscaleImg);
+    #if CHECKPOINTING_ON
+      state C_ck;
+      C_ck.derivx = derivatives.Ix.clone();
+      C_ck.derivy = derivatives.Iy.clone();
+      C_ck.derivxy = derivatives.Ixy.clone();
+    #endif
     t_stop = high_resolution_clock::now();
     duration = duration_cast<microseconds>(t_stop - t_start);
     #if DATA_COLLECTION_MODE
@@ -147,7 +153,7 @@ Mat Harris::convertRgbToGrayscale(Mat& img) {
       state ck_B;
       // save original again? risk of losing? need for checkpoint B?
       ck_B.grey = greyscaleImg; //saving greyscale checkpoint
-      
+
     #endif
     return greyscaleImg;
 }

@@ -19,10 +19,13 @@ using namespace cv;
 #if CHECKPOINTING_ON
 
   struct state { // Each var saved is a checkpoint
-    Mat original; // may seem like do not need to save original image because it does not change, but saving it prevents imread
-    Mat grey;
-  };
+    Mat original;// Amay seem like do not need to save original image because it does not change, but saving it prevents imread
+    Mat grey; // B
+    Mat derivx;// C
+    Mat derivy;  //C
+    Mat derivxy; //C
 
+  };
 
 #endif
 

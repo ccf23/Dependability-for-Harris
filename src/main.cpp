@@ -98,7 +98,7 @@ int main(int argc, char** argv) {
     //   FILE* f = fopen("checkpoints","wb+");
     //   fwrite(&checkpoints, sizeof(struct state), 1, f);// makes one binary per var using sizeof() // doesnt imread come from memory?
       state ck_A;
-      ck_A.original = img;
+      ck_A.original = img.clone();
 
       //if error, go to
 
