@@ -28,11 +28,11 @@ void doHarris() {
 
     // Temporary: Pattern to follow for enabling/disabling FT:
     #if ASSERTIONS_ON
-        // Do assertions code here
+        cout <<\t<<"Hello world";
 
-    #endif 
-    
-    
+    #endif
+
+
     // compute harris
     auto t_before = high_resolution_clock::now();
     Harris harris(m_img, k, boxFilterSize, gauss);
@@ -75,6 +75,9 @@ void doHarris() {
 //-----------------------------------------------------------------------------------------------
 int main(int argc, char** argv) {
     // read image from file + error handling
+
+
+
     Mat img;
 
     if (argc == 1) {
@@ -85,6 +88,21 @@ int main(int argc, char** argv) {
         filename = argv[1];
         img = imread(argv[1]);
     }
+
+
+    //first Checkpoint
+    #if CHECKPOINTING_ON
+    // call struct to see if it is working
+
+    //   struct state checkpoints = {img};
+    //   FILE* f = fopen("checkpoints","wb+");
+    //   fwrite(&checkpoints, sizeof(struct state), 1, f);// makes one binary per var using sizeof() // doesnt imread come from memory?
+      state ck_A;
+      ck_A.original = img;
+
+      //if error, go to
+
+    #endif
 
     img.copyTo(m_img);
 
@@ -98,12 +116,13 @@ int main(int argc, char** argv) {
     #else
         cout << "Total execution time: " << duration.count()/1000 << " ms" << endl;
     #endif
-    
+
     #ifdef LOCAL
         waitKey(0);
     #endif
 
     return 0;
 
-}
+    //maybe clear all vars in state struct to have a clean slate for next image?
 
+}

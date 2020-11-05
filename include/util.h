@@ -7,14 +7,16 @@
 using namespace std;
 using namespace cv;
 
-struct pointData { 
+
+
+struct pointData {
     float cornerResponse;
 
     Point point;
 };
 
-struct by_cornerResponse { 
-    bool operator()(pointData const &left, pointData const &right) { 
+struct by_cornerResponse {
+    bool operator()(pointData const &left, pointData const &right) {
         return left.cornerResponse > right.cornerResponse;
     }
 };

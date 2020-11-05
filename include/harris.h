@@ -11,10 +11,20 @@ using namespace cv;
 
 #define ASSERTIONS_ON false
 #define LDPC_ON false
-#define CHECKPOINTING_ON false
+#define CHECKPOINTING_ON true
 #define ABFT_ON false
 
 #define DATA_COLLECTION_MODE false
+
+#if CHECKPOINTING_ON
+
+  struct state { // Each var saved is a checkpoint
+    Mat original; // may seem like do not need to save original image because it does not change, but saving it prevents imread
+    Mat grey;
+  };
+
+
+#endif
 
 class Harris {
 public:
@@ -23,7 +33,7 @@ public:
 
 private:
 	Mat convertRgbToGrayscale(Mat& img);
-	Derivatives computeDerivatives(Mat& greyscaleImg);	
+	Derivatives computeDerivatives(Mat& greyscaleImg);
 	Derivatives applyMeanToDerivatives(Derivatives& dMats, int filterRange);
 	Derivatives applyGaussToDerivatives(Derivatives& dMats, int filterRange);
 	Mat computeHarrisResponses(float k, Derivatives& intMats);

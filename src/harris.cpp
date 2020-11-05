@@ -44,7 +44,7 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
         cout << duration.count()/1000  << ",";
     #else
         cout << "Time to perform median filtering: " << duration.count()/1000 << " ms" << endl;
-    #endif 
+    #endif
 
     // (4) Compute Harris Responses
     t_start = high_resolution_clock::now();
@@ -69,7 +69,7 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
     std::vector<pointData> points;
     for (int r = 0; r < m_harrisResponses.rows; r++) {
         for (int c = 0; c < m_harrisResponses.cols; c++) {
-            Point p(r,c); 
+            Point p(r,c);
 
             pointData d;
             d.cornerResponse = m_harrisResponses.at<float>(r,c);
@@ -93,10 +93,10 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
 
         int supRows = maximaSuppressionMat.rows;
         int supCols = maximaSuppressionMat.cols;
-    
+
         // Check if point marked in maximaSuppression matrix
         if(maximaSuppressionMat.at<int>(points[i].point.x,points[i].point.y) == 0) {
-            
+
             for (int r = -suppressionRadius; r <= suppressionRadius; r++) {
                 for (int c = -suppressionRadius; c <= suppressionRadius; c++) {
                     int sx = points[i].point.x+c;
@@ -116,8 +116,8 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
                     maximaSuppressionMat.at<int>(sx, sy) = 1;
                 }
             }
-            
-            // Convert back to original image coordinate system 
+
+            // Convert back to original image coordinate system
             points[i].point.x += 1 + filterRange;
             points[i].point.y += 1 + filterRange;
             topPoints.push_back(points[i]);
@@ -135,13 +135,19 @@ Mat Harris::convertRgbToGrayscale(Mat& img) {
 
     for (int c = 0; c < img.cols; c++) {
         for (int r = 0; r < img.rows; r++) {
-            greyscaleImg.at<float>(r,c) = 
+            greyscaleImg.at<float>(r,c) =
             	0.2126 * img.at<cv::Vec3b>(r,c)[0] +
             	0.7152 * img.at<cv::Vec3b>(r,c)[1] +
             	0.0722 * img.at<cv::Vec3b>(r,c)[2];
         }
     }
 
+    #if CHECKPOINTING_ON
+      //to check control flow, can do a check on whether original has the right data, it's empty or
+      state ck_B;
+      // save original again? risk of losing? need for checkpoint B?
+      ck_B.grey = greyscaleImg; //saving greyscale checkpoint
+    #endif
     return greyscaleImg;
 }
 
@@ -229,7 +235,7 @@ Derivatives Harris::computeDerivatives(Mat& greyscaleImg) {
 Mat Harris::computeHarrisResponses(float k, Derivatives& d) {
     Mat M(d.Iy.rows, d.Ix.cols, CV_32F);
 
-    for(int r=0; r<d.Iy.rows; r++) {  
+    for(int r=0; r<d.Iy.rows; r++) {
         for(int c=0; c<d.Iy.cols; c++) {
             float   a11, a12,
                     a21, a22;
@@ -256,20 +262,20 @@ Mat Harris::computeIntegralImg(Mat& img) {
     integralMat.at<float>(0,0) = img.at<float>(0,0);
 
     for (int i = 1; i < img.cols; i++) {
-        integralMat.at<float>(0,i) = 
-            integralMat.at<float>(0,i-1) 
+        integralMat.at<float>(0,i) =
+            integralMat.at<float>(0,i-1)
             + img.at<float>(0,i);
     }
 
     for (int j = 1; j < img.rows; j++) {
-        integralMat.at<float>(j,0) = 
-            integralMat.at<float>(j-1,0) 
+        integralMat.at<float>(j,0) =
+            integralMat.at<float>(j-1,0)
             + img.at<float>(j,0);
-    }    
+    }
 
     for (int i = 1; i < img.cols; i++) {
         for (int j = 1; j < img.rows; j++) {
-            integralMat.at<float>(j,i) = 
+            integralMat.at<float>(j,i) =
                 img.at<float>(j,i)
                 + integralMat.at<float>(j-1,i)
                 + integralMat.at<float>(j,i-1)
@@ -286,7 +292,7 @@ Mat Harris::meanFilter(Mat& intImg, int range) {
 
     for (int r = range; r < intImg.rows-range; r++) {
         for (int c = range; c < intImg.cols-range; c++) {
-            medianFilteredMat.at<float>(r-range, c-range) = 
+            medianFilteredMat.at<float>(r-range, c-range) =
                 intImg.at<float>(r+range, c+range)
                 + intImg.at<float>(r-range, c-range)
                 - intImg.at<float>(r+range, c-range)
