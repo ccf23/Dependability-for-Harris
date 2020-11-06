@@ -9,22 +9,44 @@ using namespace std::chrono;
 Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
     #if CHECKPOINTING_ON
       // assumes starts with an error and no fix
+      int errorA = 1;
+      int fixA = 0; //change in the loop if a fix comes up
+
+      int errorB = 1;
+      int fixB = 0; //change in the loop if a fix comes up
+
       int errorC = 1;
       int fixC = 0; //change in the loop if a fix comes up
 
       int errorD = 1;
       int fixD = 0;//change in the loop if a fix comes up
+
+      int errorE = 1;
+      int fixE = 0;//change in the loop if a fix comes up
     #endif
 
-    // (1) Convert to greyscale image
-    auto t_start = high_resolution_clock::now();
-    Mat greyscaleImg = convertRgbToGrayscale(img);
-    auto t_stop = high_resolution_clock::now();
-    auto duration = duration_cast<microseconds>(t_stop - t_start);
-    #if DATA_COLLECTION_MODE
-        cout << duration.count()/1000 << ",";
+    #if CHECKPOINTING_ON
+      Mat greyscaleImg;
+      while ( (errorB == 1) && (fixB == 0) ) {
+        greyscaleImg = convertRgbToGrayscale(img);
+        //to check control flow, can do a check on whether original has the right data, it's empty or
+        state ck_B;
+        // save original again? risk of losing? need for checkpoint B?
+        ck_B.grey = greyscaleImg; //saving greyscale checkpoint
+        fixB = 1;
+      }
+
     #else
-        cout << "Time to convert to greyscale image: " << duration.count()/1000 << " ms" << endl;
+      // (1) Convert to greyscale image
+      auto t_start = high_resolution_clock::now();
+      Mat greyscaleImg = convertRgbToGrayscale(img);
+      auto t_stop = high_resolution_clock::now();
+      auto duration = duration_cast<microseconds>(t_stop - t_start);
+      #if DATA_COLLECTION_MODE
+          cout << duration.count()/1000 << ",";
+      #else
+          cout << "Time to convert to greyscale image: " << duration.count()/1000 << " ms" << endl;
+      #endif
     #endif
 
     #if CHECKPOINTING_ON
@@ -55,15 +77,7 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
       #endif
 
     #endif
-    t_stop = high_resolution_clock::now();
-    duration = duration_cast<microseconds>(t_stop - t_start);
-    #if DATA_COLLECTION_MODE
-        cout << duration.count()/1000 << ",";
-    #else
-        cout << "Time to compute derivatives: " << duration.count()/1000 << " ms" << endl;
-    #endif
 
-    // (3) Median Filtering
     #if CHECKPOINTING_ON
       Derivatives mDerivatives; // could clean the code a bit more since the guass filter will always be applied
       while ( (errorD == 1) && (fixD == 0) ) {
@@ -81,6 +95,8 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
 
 
     #else
+
+      // (3) Median Filtering
       t_start = high_resolution_clock::now();
       Derivatives mDerivatives;
       if(gauss) {
@@ -98,17 +114,30 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
 
     #endif
 
-    // (4) Compute Harris Responses
-    t_start = high_resolution_clock::now();
-    Mat harrisResponses = computeHarrisResponses(k, mDerivatives);
-    m_harrisResponses = harrisResponses;
-    t_stop = high_resolution_clock::now();
-    duration = duration_cast<microseconds>(t_stop - t_start);
+    #if CHECKPOINTING_ON
+      Mat harrisResponses;
+      while ( (errorE == 1) && (fixE == 0) ) {
+        harrisResponses = computeHarrisResponses(k, mDerivatives);
+        m_harrisResponses = harrisResponses;
+        fixE = 1;
+      }
+      state ck_E;
+      ck_E.corners = harrisResponses.clone();
 
-    #if DATA_COLLECTION_MODE
-        cout << duration.count()/1000  << ",";
     #else
-        cout << "Time to compute Harris responses: " << duration.count()/1000 << " ms" << endl;
+      // (4) Compute Harris Response
+      t_start = high_resolution_clock::now();
+      Mat harrisResponses = computeHarrisResponses(k, mDerivatives);
+      m_harrisResponses = harrisResponses;
+      t_stop = high_resolution_clock::now();
+      duration = duration_cast<microseconds>(t_stop - t_start);
+
+      #if DATA_COLLECTION_MODE
+          cout << duration.count()/1000  << ",";
+      #else
+          cout << "Time to compute Harris responses: " << duration.count()/1000 << " ms" << endl;
+      #endif
+
     #endif
 }
 
@@ -193,14 +222,6 @@ Mat Harris::convertRgbToGrayscale(Mat& img) {
             	0.0722 * img.at<cv::Vec3b>(r,c)[2];
         }
     }
-
-    #if CHECKPOINTING_ON
-      //to check control flow, can do a check on whether original has the right data, it's empty or
-      state ck_B;
-      // save original again? risk of losing? need for checkpoint B?
-      ck_B.grey = greyscaleImg; //saving greyscale checkpoint
-
-    #endif
     return greyscaleImg;
 }
 
