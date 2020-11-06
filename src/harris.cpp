@@ -7,6 +7,14 @@
 using namespace std::chrono;
 
 Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
+    #if CHECKPOINTING_ON
+      // assumes starts with an error and no fix
+      int errorC = 1;
+      int fixC = 0; //change in the loop if a fix comes up
+
+      int errorD = 1;
+      int fixD = 0;//change in the loop if a fix comes up
+    #endif
 
     // (1) Convert to greyscale image
     auto t_start = high_resolution_clock::now();
@@ -19,14 +27,33 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
         cout << "Time to convert to greyscale image: " << duration.count()/1000 << " ms" << endl;
     #endif
 
-    // (2) Compute Derivatives
-    t_start = high_resolution_clock::now();
-    Derivatives derivatives = computeDerivatives(greyscaleImg);
     #if CHECKPOINTING_ON
-      state C_ck;
-      C_ck.derivx = derivatives.Ix.clone();
-      C_ck.derivy = derivatives.Iy.clone();
-      C_ck.derivxy = derivatives.Ixy.clone();
+
+    // (2) Compute Derivatives
+      //Derivatives derivatives = computeDerivatives(greyscaleImg);
+      Derivatives derivatives;
+      while ( (errorC == 1) && (fixC == 0) ) {
+        derivatives = computeDerivatives(greyscaleImg);
+        state ck_C;
+        ck_C.derivx = derivatives.Ix.clone();
+        ck_C.derivy = derivatives.Iy.clone();
+        ck_C.derivxy = derivatives.Ixy.clone();
+        fixC = 1;/// why does fixC become 20 on tge second loop?
+      }
+
+    #else
+
+      // (2) Compute Derivatives
+      t_start = high_resolution_clock::now();
+      Derivatives derivatives = computeDerivatives(greyscaleImg);
+      t_stop = high_resolution_clock::now();
+      duration = duration_cast<microseconds>(t_stop - t_start);
+      #if DATA_COLLECTION_MODE
+          cout << duration.count()/1000 << ",";
+      #else
+          cout << "Time to compute derivatives: " << duration.count()/1000 << " ms" << endl;
+      #endif
+
     #endif
     t_stop = high_resolution_clock::now();
     duration = duration_cast<microseconds>(t_stop - t_start);
@@ -37,19 +64,38 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
     #endif
 
     // (3) Median Filtering
-    t_start = high_resolution_clock::now();
-    Derivatives mDerivatives;
-    if(gauss) {
-        mDerivatives = applyGaussToDerivatives(derivatives, filterRange);
-    } else {
-        mDerivatives = applyMeanToDerivatives(derivatives, filterRange);
-    }
-    t_stop = high_resolution_clock::now();
-    duration = duration_cast<microseconds>(t_stop - t_start);
-    #if DATA_COLLECTION_MODE
-        cout << duration.count()/1000  << ",";
+    #if CHECKPOINTING_ON
+      Derivatives mDerivatives; // could clean the code a bit more since the guass filter will always be applied
+      while ( (errorD == 1) && (fixD == 0) ) {
+        if(gauss) {
+            mDerivatives = applyGaussToDerivatives(derivatives, filterRange);
+        } else {
+            mDerivatives = applyMeanToDerivatives(derivatives, filterRange);
+        }
+        state ck_D;
+        ck_D.mderivx = mDerivatives.Ix.clone();
+        ck_D.mderivy = mDerivatives.Iy.clone();
+        ck_D.mderivxy = mDerivatives.Ixy.clone();
+        fixD = 1;
+      }
+
+
     #else
-        cout << "Time to perform median filtering: " << duration.count()/1000 << " ms" << endl;
+      t_start = high_resolution_clock::now();
+      Derivatives mDerivatives;
+      if(gauss) {
+          mDerivatives = applyGaussToDerivatives(derivatives, filterRange);
+      } else {
+          mDerivatives = applyMeanToDerivatives(derivatives, filterRange);
+      }
+      t_stop = high_resolution_clock::now();
+      duration = duration_cast<microseconds>(t_stop - t_start);
+      #if DATA_COLLECTION_MODE
+          cout << duration.count()/1000  << ",";
+      #else
+          cout << "Time to perform median filtering: " << duration.count()/1000 << " ms" << endl;
+      #endif
+
     #endif
 
     // (4) Compute Harris Responses

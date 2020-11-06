@@ -24,6 +24,9 @@ using namespace cv;
     Mat derivx;// C
     Mat derivy;  //C
     Mat derivxy; //C
+    Mat mderivx;// D
+    Mat mderivy;  //D
+    Mat mderivxy; //D
 
   };
 

@@ -93,7 +93,6 @@ int main(int argc, char** argv) {
     //first Checkpoint
     #if CHECKPOINTING_ON
     // call struct to see if it is working
-
     //   struct state checkpoints = {img};
     //   FILE* f = fopen("checkpoints","wb+");
     //   fwrite(&checkpoints, sizeof(struct state), 1, f);// makes one binary per var using sizeof() // doesnt imread come from memory?
