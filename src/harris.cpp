@@ -6,12 +6,15 @@
 #include <chrono>
 using namespace std::chrono;
 
-Harris::Harris(Mat img, float k, int filterRange, bool gauss) //:
+Harris::Harris(Mat img, float k, int filterRange, bool gauss) :
 
-    // #if LDPC_ON
-    //    ldpc()
-    // #endif
+    #if LDPC_ON
+       ldpc()
+    #endif
 {
+    #if LDPC_ON
+        ldpc.encode(img);
+    #endif
     // (1) Convert to greyscale image
     auto t_start = high_resolution_clock::now();
     Mat greyscaleImg = convertRgbToGrayscale(img);
@@ -51,7 +54,7 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) //:
     #endif 
 
     #if LDPC_ON
-        
+        ldpc.decode(img);
     #endif
 
     // (4) Compute Harris Responses

@@ -2,6 +2,7 @@
 #define _LDPC_H_
 
 #include <opencv2/opencv.hpp>
+#include <itpp/comm/ldpc.h>
 
 using namespace std;
 
@@ -18,9 +19,9 @@ class LDPC
 
     private:
 
+        itpp::LDPC_Code _ldpc_code;
 
-
-
+        itpp::bvec mat2bvec(cv::Mat img);
 };
 
 #endif // _LDPC_H_
