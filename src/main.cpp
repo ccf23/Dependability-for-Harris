@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <opencv2/opencv.hpp>
 #include <chrono>
+
 using namespace std::chrono;
 
 #include "../include/harris.h"
@@ -32,10 +33,25 @@ void doHarris() {
 
     #endif
 
-
     // compute harris
     auto t_before = high_resolution_clock::now();
     Harris harris(m_img, k, boxFilterSize, gauss);
+    //first Checkpoint
+    #if CHECKPOINTING_ON
+    // call struct to see if it is working
+    //   struct state checkpoints = {img};
+    //   FILE* f = fopen("checkpoints","wb+");
+    //   fwrite(&checkpoints, sizeof(struct state), 1, f);// makes one binary per var using sizeof() // doesnt imread come from memory?
+
+      m_img.copyTo(harris.ck_A.original);
+
+      printf("heeeeeeeeerrrrrrrrrrre: %ld", harris.ck_A.original.size());
+
+      //imshow(cK_A.original);
+
+      //if error, go to
+
+    #endif
     auto t_after = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(t_after - t_before);
     #if DATA_COLLECTION_MODE
@@ -76,8 +92,6 @@ void doHarris() {
 int main(int argc, char** argv) {
     // read image from file + error handling
 
-
-
     Mat img;
 
     if (argc == 1) {
@@ -88,20 +102,6 @@ int main(int argc, char** argv) {
         filename = argv[1];
         img = imread(argv[1]);
     }
-
-
-    //first Checkpoint
-    #if CHECKPOINTING_ON
-    // call struct to see if it is working
-    //   struct state checkpoints = {img};
-    //   FILE* f = fopen("checkpoints","wb+");
-    //   fwrite(&checkpoints, sizeof(struct state), 1, f);// makes one binary per var using sizeof() // doesnt imread come from memory?
-      state ck_A;
-      ck_A.original = img.clone();
-
-      //if error, go to
-
-    #endif
 
     img.copyTo(m_img);
 

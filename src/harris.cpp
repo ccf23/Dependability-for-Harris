@@ -6,11 +6,32 @@
 #include <chrono>
 using namespace std::chrono;
 
+// int printmat(Mat mat)
+// {
+//     int m = 2
+//     int n = 3; //
+//     int mat[][3] = { {1, 2, 3},
+//                     {4, 5, 6},
+//                   };
+//     for (int i = 0; i < m; i++)
+//     {
+//        for (int j = 0; j < n; j++)
+//        {
+//
+//           // Prints ' ' if j != n-1 else prints '\n'
+//           cout << mat[i][j] << " \n"[j == n-1];
+//         }
+//     }
+//     return 0;
+// }
+
 Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
     #if CHECKPOINTING_ON
       // assumes starts with an error and no fix
-      int errorA = 1;
-      int fixA = 0; //change in the loop if a fix comes up
+
+      ////dont make vars to redo original image because
+      // int errorA = 1;
+      // int fixA = 0; //change in the loop if a fix comes up
 
       int errorB = 1;
       int fixB = 0; //change in the loop if a fix comes up
@@ -26,13 +47,18 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
     #endif
 
     #if CHECKPOINTING_ON
+
+
+
       Mat greyscaleImg;
-      while ( (errorB == 1) && (fixB == 0) ) {
-        greyscaleImg = convertRgbToGrayscale(img);
+      while ( (errorB == 1) && (fixB == 0) ) { //ck_A.original
+        printf("hellow");
+        printf("heeeeeeeeerrrrrrrrrrre: %ld", ck_A.original.size());
+        greyscaleImg = convertRgbToGrayscale(ck_A.original);// ck_a not only makes sure the prev checkpoint is used, but also makes sure the most updated data is used
         //to check control flow, can do a check on whether original has the right data, it's empty or
         state ck_B;
         // save original again? risk of losing? need for checkpoint B?
-        ck_B.grey = greyscaleImg; //saving greyscale checkpoint
+        ck_B.grey = greyscaleImg.clone(); //saving greyscale checkpoint no matter how many times it is rerun
         fixB = 1;
       }
 
@@ -54,13 +80,15 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
     // (2) Compute Derivatives
       //Derivatives derivatives = computeDerivatives(greyscaleImg);
       Derivatives derivatives;
-      while ( (errorC == 1) && (fixC == 0) ) {
-        derivatives = computeDerivatives(greyscaleImg);
+      state ck_B;
+
+      while ( (errorC == 1) && (fixC == 0) ) { //ck_B.grey
+        derivatives = computeDerivatives(greyscaleImg); //reyscaleImg
         state ck_C;
         ck_C.derivx = derivatives.Ix.clone();
         ck_C.derivy = derivatives.Iy.clone();
         ck_C.derivxy = derivatives.Ixy.clone();
-        fixC = 1;/// why does fixC become 20 on tge second loop?
+        fixC = 1; // why does fixC become 20 on tge second loop?
       }
 
     #else
