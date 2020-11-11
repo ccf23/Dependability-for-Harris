@@ -16,10 +16,10 @@ using namespace std;
 // uncomment to allow for visual test on local machine
 //#define LOCAL
 
-Mat m_img;
+//Mat m_img;-- var needs to be local
 string filename;
 
-void doHarris() {
+void doHarris(Mat m_img) {
     int boxFilterSize = 3;
     int maximaSuppressionDimension = 10;
     bool gauss = true;
@@ -43,14 +43,9 @@ void doHarris() {
     //   FILE* f = fopen("checkpoints","wb+");
     //   fwrite(&checkpoints, sizeof(struct state), 1, f);// makes one binary per var using sizeof() // doesnt imread come from memory?
 
-      m_img.copyTo(harris.ck_A.original);
-
-      printf("heeeeeeeeerrrrrrrrrrre: %ld", harris.ck_A.original.size());
-
-      //imshow(cK_A.original);
-
-      //if error, go to
-
+      m_img.copyTo(harris.ck.original);
+    //harris.ck.original = m_img.clone();
+    //printf("heeeeeeeeerrrrrrrrrrre: %ld", harris.ck_A.original.size());
     #endif
     auto t_after = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(t_after - t_before);
@@ -93,11 +88,18 @@ int main(int argc, char** argv) {
     // read image from file + error handling
 
     Mat img;
+    Mat m_img;
+    string filename;
 
     if (argc == 1) {
-        cout << "No image provided! Usage: ./Ex1 [path to image]" << endl << "Using default image: haus.jpg" << endl;
+        cout << "No image provided! Usage: ./Ex1 [path to image]" << endl << "Using default image: gullies_on_mars.jpg" << endl;
 
-        img = imread("haus.jpg");
+        img = imread("../images/gullies_on_mars.jpg");
+
+        if (!img.data){
+          //fprintf(stderr, "%s %d \n", __FILE__, __LINE__);
+          exit(1);
+        }
     } else {
         filename = argv[1];
         img = imread(argv[1]);
@@ -106,7 +108,7 @@ int main(int argc, char** argv) {
     img.copyTo(m_img);
 
     auto t_before = high_resolution_clock::now();
-    doHarris();
+    doHarris(m_img);
     auto t_after = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(t_after - t_before);
 
