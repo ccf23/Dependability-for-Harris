@@ -6,6 +6,17 @@
 #include <chrono>
 using namespace std::chrono;
 
+void validate_state(state_t& state) {
+  state.grey_actual = validate_tmr(state.greyA, state.greyB, state.greyC);
+  state.derivx_actual = validate_tmr(state.derivxA, state.derivxB, state.derivxC);
+  state.derivy_actual = validate_tmr(state.derivyA, state.derivyB, state.derivyC);
+  state.derivxy_actual = validate_tmr(state.derivxyA, state.derivxyB, state.derivxyC);
+  state.mderivx_actual = validate_tmr(state.mderivxA, state.mderivxB, state.mderivxC);
+  state.mderivy_actual = validate_tmr(state.mderivyA, state.mderivyB, state.mderivyC);
+  state.mderivxy_actual = validate_tmr(state.mderivxyA, state.mderivxyB, state.mderivxyC);
+  state.corners_actual = validate_tmr(state.cornersA, state.cornersB, state.cornersC);
+}
+
 Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
 
     #if TMR_ON
@@ -40,15 +51,17 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
       ck.derivxA = derivatives.Ix.clone();
       ck.derivyA = derivatives.Iy.clone();
       ck.derivxyA = derivatives.Ixy.clone();
+      validate_state(ck);
       derivatives = computeDerivatives(greyscaleImg); //reyscaleImg
       ck.derivxB = derivatives.Ix.clone();
       ck.derivyB = derivatives.Iy.clone();
       ck.derivxyB = derivatives.Ixy.clone();
+      validate_state(ck);
       derivatives = computeDerivatives(greyscaleImg); //reyscaleImg
       ck.derivxC = derivatives.Ix.clone();
       ck.derivyC = derivatives.Iy.clone();
       ck.derivxyC = derivatives.Ixy.clone();
-
+      validate_state(ck);
     #else
 
       // (2) Compute Derivatives
@@ -73,10 +86,32 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
           mDerivatives = applyMeanToDerivatives(derivatives, filterRange);
       }
 
-      ck.mderivx = mDerivatives.Ix.clone();
-      ck.mderivy = mDerivatives.Iy.clone();
-      ck.mderivxy = mDerivatives.Ixy.clone();
+      ck.mderivxA = mDerivatives.Ix.clone();
+      ck.mderivyA = mDerivatives.Iy.clone();
+      ck.mderivxyA = mDerivatives.Ixy.clone();
+      validate_state(ck);
 
+      if(gauss) {
+          mDerivatives = applyGaussToDerivatives(derivatives, filterRange);
+      } else {
+          mDerivatives = applyMeanToDerivatives(derivatives, filterRange);
+      }
+
+      ck.mderivxB = mDerivatives.Ix.clone();
+      ck.mderivyB = mDerivatives.Iy.clone();
+      ck.mderivxyC = mDerivatives.Ixy.clone();
+      validate_state(ck);
+
+      if(gauss) {
+          mDerivatives = applyGaussToDerivatives(derivatives, filterRange);
+      } else {
+          mDerivatives = applyMeanToDerivatives(derivatives, filterRange);
+      }
+
+      ck.mderivxC = mDerivatives.Ix.clone();
+      ck.mderivyC = mDerivatives.Iy.clone();
+      ck.mderivxyC = mDerivatives.Ixy.clone();
+      validate_state(ck);
 
     #else
 
@@ -102,11 +137,14 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
       Mat harrisResponses;
 
       harrisResponses = computeHarrisResponses(k, mDerivatives);
+      ck.cornersA = harrisResponses.clone();
+      harrisResponses = computeHarrisResponses(k, mDerivatives);
+      ck.cornersB = harrisResponses.clone();
+      harrisResponses = computeHarrisResponses(k, mDerivatives);
+      ck.cornersC = harrisResponses.clone();
+      validate_state(ck);
+
       m_harrisResponses = harrisResponses;
-
-
-      ck.corners = harrisResponses.clone();
-
     #else
       // (4) Compute Harris Response
       t_start = high_resolution_clock::now();

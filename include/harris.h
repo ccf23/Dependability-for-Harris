@@ -2,6 +2,10 @@
  *      Author: alexanderb
  */
 
+// Include Guard
+#ifndef HARRIS_H
+#define HARRIS_H
+
 #include <opencv2/opencv.hpp>
 
 #include "util.h"
@@ -52,9 +56,9 @@ using namespace cv;
     Mat cornersA; //E
     Mat cornersB; //E
     Mat cornersC; //E
-  } state;
+  } state_t;
 
-  Mat validate_tmr(Mat a, Mat b, Mat c) { //TMR program
+  Mat validate_tmr(Mat a, Mat b, Mat c) { //TMR logic
   if (!a.empty() && !b.empty() && !c.empty()) {
     // compare each with some kind of operator
     double voteA = cv::sum(a)[0];
@@ -73,20 +77,13 @@ using namespace cv;
 
     return c; // c is potentially broken because none of them are equal
     //
-} else {
-  return a;
+  } else {
+    return a;
+  }
 }
-}
-void validate_state(state& state) {
-  state.grey_actual = validate_tmr(state.greyA, state.greyB, state.greyC);
-  state.derivx_actual = validate_tmr(state.derivxA, state.derivxB, state.derivxC);
-  state.derivy_actual = validate_tmr(state.derivyA, state.derivyB, state.derivyC);
-  state.derivxy_actual = validate_tmr(state.derivxyA, state.derivxyB, state.derivxyC);
-  state.mderivx_actual = validate_tmr(state.mderivxA, state.mderivxB, state.mderivxC);
-  state.mderivy_actual = validate_tmr(state.mderivyA, state.mderivyB, state.mderivyC);
-  state.mderivxy_actual = validate_tmr(state.mderivxyA, state.mderivxyB, state.mderivxyC);
-  state.corners_actual = validate_tmr(state.cornersA, state.cornersB, state.cornersC);
-}
+
+// validate_state - ...
+void validate_state(state_t& state);
 
 #endif
 
@@ -111,3 +108,6 @@ private:
 private:
 	Mat m_harrisResponses;
 };
+
+
+#endif
