@@ -11,24 +11,82 @@ using namespace cv;
 
 #define ASSERTIONS_ON false
 #define LDPC_ON false
-#define CHECKPOINTING_ON true
+#define TMR_ON true
 #define ABFT_ON false
 
 #define DATA_COLLECTION_MODE false
 
-#if CHECKPOINTING_ON
+#if TMR_ON
 
   typedef struct state { // Each var saved is a checkpoint
     Mat original;// A may seem like do not need to save original image because it does not change, but saving it prevents imread
-    Mat grey; // B
-    Mat derivx;// C
-    Mat derivy;  //C
-    Mat derivxy; //C
-    Mat mderivx;// D
-    Mat mderivy;  //D
-    Mat mderivxy; //D
-    Mat corners; //E
+    Mat grey_actual;
+    Mat greyA; // B
+    Mat greyB; // B
+    Mat greyC; // B
+    Mat derivx_actual;
+    Mat derivxA;// C
+    Mat derivxB;// C
+    Mat derivxC;// C
+    Mat derivy_actual;
+    Mat derivyA;  //C
+    Mat derivyB;  //C
+    Mat derivyC;  //C
+    Mat derivxy_actual;
+    Mat derivxyA; //C
+    Mat derivxyB; //C
+    Mat derivxyC; //C
+    Mat mderivx_actual;
+    Mat mderivxA;// D
+    Mat mderivxB;// D
+    Mat mderivxC;// D
+    Mat mderivy_actual;
+    Mat mderivyA;  //D
+    Mat mderivyB;  //D
+    Mat mderivyC;  //D
+    Mat mderivxy_actual;
+    Mat mderivxyA; //D
+    Mat mderivxyB; //D
+    Mat mderivxyC; //D
+    Mat corners_actual;
+    Mat cornersA; //E
+    Mat cornersB; //E
+    Mat cornersC; //E
   } state;
+
+  Mat validate_tmr(Mat a, Mat b, Mat c) { //TMR program
+  if (!a.empty() && !b.empty() && !c.empty()) {
+    // compare each with some kind of operator
+    double voteA = cv::sum(a)[0];
+    double voteB = cv::sum(b)[0];
+    double voteC = cv::sum(c)[0];
+    if (voteA == voteB == voteC)  { // all matrices are equal, no data errors
+      return c;
+    } else if (voteA == voteB)  { // two of them are equal, likely error in C
+      return b;
+    } else if (voteB == voteC)  { // two of them are equal, likely error in A
+      return c;
+    } else if (voteA == voteC)  { // two of them are equal, likely error in B
+      return c;
+    }
+    // A != B != C
+
+    return c; // c is potentially broken because none of them are equal
+    //
+} else {
+  return a;
+}
+}
+void validate_state(state& state) {
+  state.grey_actual = validate_tmr(state.greyA, state.greyB, state.greyC);
+  state.derivx_actual = validate_tmr(state.derivxA, state.derivxB, state.derivxC);
+  state.derivy_actual = validate_tmr(state.derivyA, state.derivyB, state.derivyC);
+  state.derivxy_actual = validate_tmr(state.derivxyA, state.derivxyB, state.derivxyC);
+  state.mderivx_actual = validate_tmr(state.mderivxA, state.mderivxB, state.mderivxC);
+  state.mderivy_actual = validate_tmr(state.mderivyA, state.mderivyB, state.mderivyC);
+  state.mderivxy_actual = validate_tmr(state.mderivxyA, state.mderivxyB, state.mderivxyC);
+  state.corners_actual = validate_tmr(state.cornersA, state.cornersB, state.cornersC);
+}
 
 #endif
 
@@ -36,7 +94,7 @@ class Harris {
 public:
   Harris(Mat img, float k, int filterRange, bool gauss);
 	vector<pointData> getMaximaPoints(float percentage, int filterRange, int suppressionRadius);
-  #if CHECKPOINTING_ON
+  #if TMR_ON
     state ck;
   #endif
 private:

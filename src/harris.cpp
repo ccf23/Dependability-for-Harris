@@ -8,12 +8,15 @@ using namespace std::chrono;
 
 Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
 
-    #if CHECKPOINTING_ON
+    #if TMR_ON
       Mat greyscaleImg;
       greyscaleImg = convertRgbToGrayscale(img);// ck_a not only makes sure the prev checkpoint is used, but also makes sure the most updated data is used
-      //to check control flow, can do a check on whether original has the right data, it's empty or
-      // save original again? risk of losing? need for checkpoint B?
-      ck.grey = greyscaleImg.clone(); //saving greyscale checkpoint no matter how many times it is rerun
+      ck.greyA = greyscaleImg.clone();
+      greyscaleImg = convertRgbToGrayscale(img);
+      ck.greyB = greyscaleImg.clone();
+      greyscaleImg = convertRgbToGrayscale(img);
+      ck.greyC = greyscaleImg.clone();
+      validate_state(ck);
 
     #else
       // (1) Convert to greyscale image
@@ -28,17 +31,23 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
       #endif
     #endif
 
-    #if CHECKPOINTING_ON
+    #if TMR_ON
 
     // (2) Compute Derivatives
       //Derivatives derivatives = computeDerivatives(greyscaleImg);
       Derivatives derivatives;
-
       derivatives = computeDerivatives(greyscaleImg); //reyscaleImg
-      state ck_C;
-      ck.derivx = derivatives.Ix.clone();
-      ck.derivy = derivatives.Iy.clone();
-      ck.derivxy = derivatives.Ixy.clone();
+      ck.derivxA = derivatives.Ix.clone();
+      ck.derivyA = derivatives.Iy.clone();
+      ck.derivxyA = derivatives.Ixy.clone();
+      derivatives = computeDerivatives(greyscaleImg); //reyscaleImg
+      ck.derivxB = derivatives.Ix.clone();
+      ck.derivyB = derivatives.Iy.clone();
+      ck.derivxyB = derivatives.Ixy.clone();
+      derivatives = computeDerivatives(greyscaleImg); //reyscaleImg
+      ck.derivxC = derivatives.Ix.clone();
+      ck.derivyC = derivatives.Iy.clone();
+      ck.derivxyC = derivatives.Ixy.clone();
 
     #else
 
@@ -55,7 +64,7 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
 
     #endif
 
-    #if CHECKPOINTING_ON
+    #if TMR_ON
       Derivatives mDerivatives; // could clean the code a bit more since the guass filter will always be applied
 
       if(gauss) {
@@ -89,7 +98,7 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
 
     #endif
 
-    #if CHECKPOINTING_ON
+    #if TMR_ON
       Mat harrisResponses;
 
       harrisResponses = computeHarrisResponses(k, mDerivatives);

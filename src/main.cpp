@@ -30,14 +30,13 @@ void doHarris(Mat m_img) {
     // Temporary: Pattern to follow for enabling/disabling FT:
     #if ASSERTIONS_ON
         cout <<\t<<"Hello world";
-
     #endif
 
     // compute harris
     auto t_before = high_resolution_clock::now();
     Harris harris(m_img, k, boxFilterSize, gauss);
     //first Checkpoint
-    #if CHECKPOINTING_ON
+    #if TMR_ON
     // call struct to see if it is working
     //   struct state checkpoints = {img};
     //   FILE* f = fopen("checkpoints","wb+");
@@ -92,9 +91,9 @@ int main(int argc, char** argv) {
     string filename;
 
     if (argc == 1) {
-        cout << "No image provided! Usage: ./Ex1 [path to image]" << endl << "Using default image: gullies_on_mars.jpg" << endl;
+        cout << "No image provided! Usage: ./Ex1 [path to image]" << endl << "Using default image: gullies_on_mars.jpeg" << endl;
 
-        img = imread("../images/gullies_on_mars.jpg");
+        img = imread("../images/gullies_on_mars.jpeg");
 
         if (!img.data){
           //fprintf(stderr, "%s %d \n", __FILE__, __LINE__);
