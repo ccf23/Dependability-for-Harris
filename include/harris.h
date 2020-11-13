@@ -15,7 +15,7 @@ using namespace cv;
 
 #define ASSERTIONS_ON false
 #define LDPC_ON false
-#define TMR_ON true
+#define TMR_ON false
 #define ABFT_ON false
 
 #define DATA_COLLECTION_MODE false
@@ -58,29 +58,7 @@ using namespace cv;
     Mat cornersC; //E
   } state_t;
 
-  Mat validate_tmr(Mat a, Mat b, Mat c) { //TMR logic
-  if (!a.empty() && !b.empty() && !c.empty()) {
-    // compare each with some kind of operator
-    double voteA = cv::sum(a)[0];
-    double voteB = cv::sum(b)[0];
-    double voteC = cv::sum(c)[0];
-    if (voteA == voteB == voteC)  { // all matrices are equal, no data errors
-      return c;
-    } else if (voteA == voteB)  { // two of them are equal, likely error in C
-      return b;
-    } else if (voteB == voteC)  { // two of them are equal, likely error in A
-      return c;
-    } else if (voteA == voteC)  { // two of them are equal, likely error in B
-      return c;
-    }
-    // A != B != C
-
-    return c; // c is potentially broken because none of them are equal
-    //
-  } else {
-    return a;
-  }
-}
+  Mat validate_tmr(Mat a, Mat b, Mat c);
 
 // validate_state - ...
 void validate_state(state_t& state);
