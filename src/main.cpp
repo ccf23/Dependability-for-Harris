@@ -27,25 +27,16 @@ void doHarris(Mat m_img) {
     int markDimension = 5;
     float k = 0.25;
 
-    // Temporary: Pattern to follow for enabling/disabling FT:
-    #if ASSERTIONS_ON
-        cout <<\t<<"Hello world";
-    #endif
-
     // compute harris
     auto t_before = high_resolution_clock::now();
     Harris harris(m_img, k, boxFilterSize, gauss);
-    //first Checkpoint
-    #if TMR_ON
-    // call struct to see if it is working
-    //   struct state checkpoints = {img};
-    //   FILE* f = fopen("checkpoints","wb+");
-    //   fwrite(&checkpoints, sizeof(struct state), 1, f);// makes one binary per var using sizeof() // doesnt imread come from memory?
+    //first stopping point
+    //#if TMR_ON
 
-      m_img.copyTo(harris.ck.original);
+      //m_img.copyTo(harris.ck.original);
     //harris.ck.original = m_img.clone();
     //printf("heeeeeeeeerrrrrrrrrrre: %ld", harris.ck_A.original.size());
-    #endif
+    //#endif
     auto t_after = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(t_after - t_before);
     #if DATA_COLLECTION_MODE
@@ -73,11 +64,11 @@ void doHarris(Mat m_img) {
     Mat _img = Util::MarkInImage(m_img, resPts, markDimension);
     t_after = high_resolution_clock::now();
     duration = duration_cast<microseconds>(t_after - t_before);
-    #if DATA_COLLECTION_MODE
-        cout << duration.count()/1000  << ",";
-    #else
-        cout << "Time to mark image: " << duration.count()/1000 << " ms" << endl;
-    #endif
+      #if DATA_COLLECTION_MODE
+          cout << duration.count()/1000  << ",";
+      #else
+          cout << "Time to mark image: " << duration.count()/1000 << " ms" << endl;
+      #endif
     imshow("HarrisCornerDetector", _img);
     #endif
 }
@@ -90,19 +81,41 @@ int main(int argc, char** argv) {
     Mat m_img;
     string filename;
 
-    if (argc == 1) {
-        cout << "No image provided! Usage: ./Ex1 [path to image]" << endl << "Using default image: gullies_on_mars.jpeg" << endl;
+    # if TMR_ON
+      if (argc == 1) {
+          cout << "No image provided! Usage: ./Ex1 [path to image]" << endl << "Using default image: gullies_on_mars.jpeg" << endl;
 
-        img = imread("../images/gullies_on_mars.jpeg");
+          img = imread("../images/gullies_on_mars.jpeg");
+          Harris::harris.ck.originalA = img.clone();
+          img = imread("../images/gullies_on_mars.jpeg");
+          Harris::harris.ck.originalB = img.clone();
+          img = imread("../images/gullies_on_mars.jpeg");
+          Harris::harris.ck.originalC = img.clone();
+          //validate_state(harris.ck);
 
-        if (!img.data){
-          //fprintf(stderr, "%s %d \n", __FILE__, __LINE__);
-          exit(1);
-        }
-    } else {
-        filename = argv[1];
-        img = imread(argv[1]);
-    }
+          if (!img.data){
+            exit(1);
+          }
+      } else {
+          filename = argv[1];
+          img = imread(argv[1]);
+      }
+
+    #else
+      if (argc == 1) {
+          cout << "No image provided! Usage: ./Ex1 [path to image]" << endl << "Using default image: gullies_on_mars.jpeg" << endl;
+
+          img = imread("../images/gullies_on_mars.jpeg");
+
+          if (!img.data){
+            //fprintf(stderr, "%s %d \n", __FILE__, __LINE__);
+            exit(1);
+          }
+      } else {
+          filename = argv[1];
+          img = imread(argv[1]);
+      }
+    #endif
 
     img.copyTo(m_img);
 

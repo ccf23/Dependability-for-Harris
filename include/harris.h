@@ -13,9 +13,8 @@
 using namespace std;
 using namespace cv;
 
-#define ASSERTIONS_ON false
 #define LDPC_ON false
-#define TMR_ON false
+#define TMR_ON true
 #define ABFT_ON false
 
 #define DATA_COLLECTION_MODE false
