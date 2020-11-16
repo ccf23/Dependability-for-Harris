@@ -1,8 +1,17 @@
+/**
+ * @file injector.cpp
+ * @author Daniel Stumpp
+ * @brief fault injector implementation
+ * @version 0.1
+ * @date 2020-11-16
+ * 
+ * @copyright Copyright (c) 2020
+ * 
+ */
 
 #include "../include/injector.h"
 #include <inttypes.h>
 #include <time.h>
-#include <opencv2/opencv.hpp>
 
 injector::injector(INJECTOR_MODE_TYPE mode = NONE, double mhp = 0, double rhp = 0)
 {
@@ -61,7 +70,7 @@ template <typename T> void injector::inject(T &data, INJECTOR_MODE_TYPE mode)
     }
     else if (mode == PROB_DATA)
     {
-        unsigned long int oneOutOf = static_cast<unsigned long int>(1.0/reg_bit_hit_prob);
+        unsigned long int oneOutOf = static_cast<unsigned long int>(1.0/bit_hit_prob);
         
         // determine if each bit get's hit based on prob
         for (int by = 0; by < size; ++by)
@@ -162,9 +171,7 @@ std::string injector::stats(void)
     }
     
     return ("Default Mode: " + mode_str + "\nTotal Injections: " + \
-             std::to_string(injections) + "\nTotal Injections: "  + \
-             std::to_string(mem_injections) + "\nReg Injections: " + \
-             std::to_string(reg_injections) + "\n");
+             std::to_string(injections) + "\n");
 }
 
 // explicitly defines valid template types

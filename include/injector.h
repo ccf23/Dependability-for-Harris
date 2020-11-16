@@ -1,3 +1,14 @@
+/**
+ * @file injector.h
+ * @author Daniel Stumpp
+ * @brief fault injector for arbitary c++ types and openCV Mat types
+ * @version 0.1
+ * @date 2020-11-16
+ * 
+ * @copyright Copyright (c) 2020
+ * 
+ */
+
 #ifndef INJECTOR_H
 #define INJECTOR_H
 
@@ -15,12 +26,9 @@ class injector
 {
 private:
     INJECTOR_MODE_TYPE default_mode; // default mode for injections
-    double mem_bit_hit_prob; // probability of a single memory bit being hit
-    double reg_bit_hit_prob; // probability of a single register bit being hit
+    double bit_hit_prob; // probability of a single memory bit being hit
     bool enabled; // true when fault injection is enabled
-    unsigned int injections;
-    unsigned int mem_injections;
-    unsigned int reg_injections;
+    unsigned int injections; // total number of injections performed
 
 public:
     // create an injector initialized with the specific default mode
@@ -48,7 +56,5 @@ public:
     std::string stats(void);
 
 };
-
-//#include "../src/injector.cpp"
 
 #endif
