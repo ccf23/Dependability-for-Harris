@@ -11,10 +11,10 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
 
     //test injector init
     injector fi(NONE, 1e-6, 1e-6);
-    int test = 255;
-    cout<<test<<endl;
-    fi.inject(test,SINGLE_DATA);
-    cout<<test<<endl;
+    int8_t test = 0;
+    cout<<(int)test<<endl;
+    fi.inject(test,DOUBLE_DATA);
+    cout<<(int)test<<endl;
 
     std::cout<<fi.stats();
 

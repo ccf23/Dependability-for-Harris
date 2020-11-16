@@ -39,6 +39,24 @@ template <typename T> void injector::inject(T &data, INJECTOR_MODE_TYPE mode)
 
         bytes[bytePos] ^= mask; // flip bit in vale
     }
+    else if (mode == DOUBLE_DATA)
+    {
+        int bytePos1 = std::rand() % size; // randomly generate byte pos
+        int bitPos1 = std::rand() % 8;     // randomly generate bit pos
+        int bytePos2, bitPos2;
+        do 
+        {
+            bytePos2 = std::rand() % size;
+            bitPos2 = std::rand() % 8;
+        } while (bitPos1 == bitPos2 && bytePos1 == bytePos2);
+
+        uint8_t mask1 = std::pow(2,bitPos1); // generate bit mask
+        uint8_t mask2 = std::pow(2,bitPos2);
+
+        bytes[bytePos1] ^= mask1;
+        bytes[bytePos2] ^= mask2;        
+    }
+
     injections++;
     return;
 }
