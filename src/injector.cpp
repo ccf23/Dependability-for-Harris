@@ -100,20 +100,35 @@ void injector::inject(cv::Mat &data, INJECTOR_MODE_TYPE mode)
         {
             int rowPos = std::rand() % rows;
             int colPos = std::rand() % cols;
-            int bytePos = std::rand() % sizeof(float);
-            int bitPos = std::rand() % 8;
 
-            float val = data.at<float>(rowPos, colPos);
-            uint8_t *bytes = reinterpret_cast<uint8_t*>(&val);
-            bytes[bytePos] ^= static_cast<uint8_t>(std::pow(2,bitPos));
-            data.at<float>(rowPos, colPos) = val;
+            inject(data.at<float>(rowPos, colPos), SINGLE_DATA);
+        }
+        else if (mode == DOUBLE_DATA)
+        {
+            int rowPos1 = std::rand() % rows;
+            int colPos1 = std::rand() % cols;
+            int rowPos2, colPos2;
+            do
+            {
+                rowPos2 = std::rand() % rows;
+                colPos2 = std::rand() % cols;
+            } while (colPos1 == colPos2 && rowPos1 == rowPos2);
+
+            inject(data.at<float>(rowPos1, colPos1), SINGLE_DATA);
+            inject(data.at<float>(rowPos2, colPos2), SINGLE_DATA);
+        }
+        else if (mode == PROB_DATA)
+        {
+            for (int r = 0; r < rows; ++r)
+            {
+                for (int c = 0; c < cols; ++c)
+                {
+                    inject(data.at<float>(r,c), PROB_DATA);
+                }
+            }
         }
     }
     
-    
-    
-    injections++;
-    return;
 }
 
 void injector::inject(cv::Mat &data)
