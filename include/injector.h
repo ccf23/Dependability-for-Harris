@@ -33,10 +33,10 @@ public:
     void disable(void);
 
     // injects faults into arbitrary c++ data type with mode specified
-    template <class T> void inject(T &data, INJECTOR_MODE_TYPE mode);
+    template <typename T> void inject(T &data, INJECTOR_MODE_TYPE mode);
 
     // injects faults into arbitrary c++ data type with default mode
-    template <class T> void inject(T &data);
+    template <typename T> void inject(T &data);
 
     // injects faults into openCV Mat
     void inject(cv::Mat &data, INJECTOR_MODE_TYPE mode);

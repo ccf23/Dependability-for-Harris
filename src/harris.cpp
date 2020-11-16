@@ -9,6 +9,15 @@ using namespace std::chrono;
 
 Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
 
+    //test injector init
+    injector fi(NONE, 1e-6, 1e-6);
+    int test = 255;
+    cout<<test<<endl;
+    fi.inject(test,SINGLE_DATA);
+    cout<<test<<endl;
+
+    std::cout<<fi.stats();
+
     // (1) Convert to greyscale image
     auto t_start = high_resolution_clock::now();
     Mat greyscaleImg = convertRgbToGrayscale(img);
