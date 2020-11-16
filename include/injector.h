@@ -17,7 +17,6 @@
 typedef enum{
     SINGLE_DATA, // single bit error injected for each inject call
     DOUBLE_DATA, // double bit error injected for each inject call
-    MIXED_DATA,  // random mix of single and double bit errors
     PROB_DATA,   // injections made based on probability model
     NONE         // injections not performed
 } INJECTOR_MODE_TYPE;
@@ -32,13 +31,16 @@ private:
 
 public:
     // create an injector initialized with the specific default mode
-    injector(INJECTOR_MODE_TYPE mode, double mhp, double rhp);
+    injector(INJECTOR_MODE_TYPE mode, double bhp);
 
     // enable fault injection
     void enable(void);
 
     // disable fault injection
     void disable(void);
+
+    // change bit hit probability
+    void setBHP(double bhp);
 
     // injects faults into arbitrary c++ data type with mode specified
     template <typename T> void inject(T &data, INJECTOR_MODE_TYPE mode);
@@ -54,6 +56,8 @@ public:
 
     // returns injection statistics as a string
     std::string stats(void);
+
+    
 
 };
 

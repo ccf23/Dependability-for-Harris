@@ -13,14 +13,11 @@
 #include <inttypes.h>
 #include <time.h>
 
-injector::injector(INJECTOR_MODE_TYPE mode = NONE, double mhp = 0, double rhp = 0)
+injector::injector(INJECTOR_MODE_TYPE mode = NONE, double bhp = 0)
 {
-    mem_bit_hit_prob = mhp;
-    reg_bit_hit_prob = rhp;
+    bit_hit_prob = bhp;
     default_mode = mode;
     injections = 0;
-    mem_injections = 0;
-    reg_injections = 0;
 
     std::srand(time(NULL)); // seed rng
 }
@@ -33,6 +30,11 @@ void injector::enable(void)
 void injector::disable(void)
 {
     enabled = false;
+}
+
+void injetor::setBHP(double bhp)
+{
+    bit_hit_prob = bhp;
 }
 
 template <typename T> void injector::inject(T &data, INJECTOR_MODE_TYPE mode)
@@ -156,9 +158,6 @@ std::string injector::stats(void)
         break;
     case DOUBLE_DATA:
         mode_str = "DOUBLE_DATA";
-        break;
-    case MIXED_DATA:
-        mode_str = "MIXED_DATA";
         break;
     case PROB_DATA:
         mode_str = "PROB_DATA";
