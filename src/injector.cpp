@@ -2,6 +2,7 @@
 #include "../include/injector.h"
 #include <inttypes.h>
 #include <time.h>
+#include <opencv2/opencv.hpp>
 
 injector::injector(INJECTOR_MODE_TYPE mode = NONE, double mhp = 0, double rhp = 0)
 {
@@ -77,9 +78,6 @@ template <typename T> void injector::inject(T &data, INJECTOR_MODE_TYPE mode)
         }
 
     }
-
-    
-    return;
 }
 
 template <typename T> void injector::inject(T &data)
@@ -90,6 +88,30 @@ template <typename T> void injector::inject(T &data)
 
 void injector::inject(cv::Mat &data, INJECTOR_MODE_TYPE mode)
 {
+    int rows = data.rows;
+    int cols = data.cols;
+    int type = data.type();
+
+    // injection strategy is different for different types
+    if (type == CV_32F)
+    {
+        // select injection type
+        if (mode == SINGLE_DATA)
+        {
+            int rowPos = std::rand() % rows;
+            int colPos = std::rand() % cols;
+            int bytePos = std::rand() % sizeof(float);
+            int bitPos = std::rand() % 8;
+
+            float val = data.at<float>(rowPos, colPos);
+            uint8_t *bytes = reinterpret_cast<uint8_t*>(&val);
+            bytes[bytePos] ^= static_cast<uint8_t>(std::pow(2,bitPos));
+            data.at<float>(rowPos, colPos) = val;
+        }
+    }
+    
+    
+    
     injections++;
     return;
 }
