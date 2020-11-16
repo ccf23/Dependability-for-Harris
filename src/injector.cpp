@@ -38,6 +38,7 @@ template <typename T> void injector::inject(T &data, INJECTOR_MODE_TYPE mode)
         uint8_t mask = std::pow(2,bitPos); // generate bit mask
 
         bytes[bytePos] ^= mask; // flip bit in vale
+        injections++;
     }
     else if (mode == DOUBLE_DATA)
     {
@@ -54,10 +55,30 @@ template <typename T> void injector::inject(T &data, INJECTOR_MODE_TYPE mode)
         uint8_t mask2 = std::pow(2,bitPos2);
 
         bytes[bytePos1] ^= mask1;
-        bytes[bytePos2] ^= mask2;        
+        bytes[bytePos2] ^= mask2;
+        injections+=2;        
+    }
+    else if (mode == PROB_DATA)
+    {
+        unsigned long int oneOutOf = static_cast<unsigned long int>(1.0/reg_bit_hit_prob);
+        
+        // determine if each bit get's hit based on prob
+        for (int by = 0; by < size; ++by)
+        {
+            for (int bi = 0; bi < 8; bi++)
+            {
+                unsigned long int safe = std::rand() % oneOutOf;
+                if (!safe)
+                {
+                    bytes[by] ^= static_cast<uint8_t>(std::pow(2,bi));
+                    injections++;
+                }
+            }
+        }
+
     }
 
-    injections++;
+    
     return;
 }
 

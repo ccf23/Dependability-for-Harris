@@ -10,10 +10,10 @@ using namespace std::chrono;
 Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
 
     //test injector init
-    injector fi(NONE, 1e-6, 1e-6);
+    injector fi(NONE, .5, .5);
     int8_t test = 0;
     cout<<(int)test<<endl;
-    fi.inject(test,DOUBLE_DATA);
+    fi.inject(test,PROB_DATA);
     cout<<(int)test<<endl;
 
     std::cout<<fi.stats();
