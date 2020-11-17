@@ -86,12 +86,6 @@ int main(int argc, char** argv) {
           cout << "No image provided! Usage: ./Ex1 [path to image]" << endl << "Using default image: gullies_on_mars.jpeg" << endl;
 
           img = imread("../images/gullies_on_mars.jpeg");
-          Harris::harris.ck.originalA = img.clone();
-          img = imread("../images/gullies_on_mars.jpeg");
-          Harris::harris.ck.originalB = img.clone();
-          img = imread("../images/gullies_on_mars.jpeg");
-          Harris::harris.ck.originalC = img.clone();
-          //validate_state(harris.ck);
 
           if (!img.data){
             exit(1);
