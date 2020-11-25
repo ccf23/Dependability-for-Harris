@@ -19,26 +19,34 @@ To successfully compile for arm you need to have `arm-linux-gnueabihf-g++` insta
 For deployent to an arm based device run the following commands from the `build` directory:
 
 ```
+cd build
 rm -r *
 cmake -D arm=true ..
 make
 ```
-The executable won't run on your machine, you will need to scp it to the arm platform and run it there.
+The executable won't run on your machine, you will need to scp it to the arm platform and run it there. 
 
-## Dependencies
 
-- OpenCV, statically cross-compiled for ARM
-- ITPP, statically cross-compiled for ARM (see steps below)
+## Fault Injector
 
-### Steps to cross-compiling ITPP library statically for ARM:
- 
-1. Download and unzip itpp 4.3.1 library from here: https://sourceforge.net/projects/itpp/files/latest/download
-2. `cd itpp-4.3.1`
-3. `mkdir build && cd build`
-4. `mkdir /usr/local/itpp-arm` (path to install itpp statically compiled for arm)
-5. Run this `cmake -DITPP_SHARED_LIB=off -DCMAKE_INSTALL_PREFIX=/usr/local/itpp-arm -DCMAKE_C_COMPILER=/usr/bin/arm-linux-gnueabihf-gcc -DCMAKE_CXX_COMPILER=/usr/bin/arm-linux-gnueabihf-g++ -DCMAKE_STRIP=/usr/bin/arm-linux-gnueabihf-strip -DCMAKE_FIND_ROOT_PATH=/usr/arm-linux-gnueabihf -DCMAKE_CXX_LINK_EXECUTABLE=/usr/bin/arm-linux-gnueabihf-ld ..`
-6. `sudo make && sudo make install`
+A simple fault injector is included with the project. The fault injector is designed to be embedded into the code to inject data bit flips into the code based on a predefined operating strategy or "mode". There are three primary modes:
 
-Resources:
-	http://itpp.sourceforge.net/4.3.1/installation.html
+- **SINGLE_DATA:** Injects a single bit flip into whatever data object is passed into the `inject()` function.
 
+- **DOUBLE_DATA:** Injects two unique bit flips into whatever data object is passed into the `inject()` function.
+
+- **PROB_DATA:** Injects errors into each bit in the data object based on the `bit_hit_prob` passed into the injector constructor or set using the `setBHP()` function. For example if `bit_hit_prob = .1` there is a 10% chance that a given bit will be flipped. this corresponds to a 56.9% chance of at least one fault in a given byte. 
+
+### Example usage
+Specific usage will vary but may look like this:
+```
+injector fi(PROB_DATA, 1e-3);
+fi.enable();
+...
+fi.inject(aMatVar);
+...
+fi.inject(aDoubleVar, SINGLE_DATA); // uses SINGLE_DATA mode for this injection only
+...
+fi.disable()
+cout<<fi.stats()<<endl;
+```
