@@ -30,13 +30,7 @@ void doHarris(Mat m_img) {
     // compute harris
     auto t_before = high_resolution_clock::now();
     Harris harris(m_img, k, boxFilterSize, gauss);
-    //first stopping point
-    //#if TMR_ON
 
-      //m_img.copyTo(harris.ck.original);
-    //harris.ck.original = m_img.clone();
-    //printf("heeeeeeeeerrrrrrrrrrre: %ld", harris.ck_A.original.size());
-    //#endif
     auto t_after = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(t_after - t_before);
     #if DATA_COLLECTION_MODE
@@ -81,7 +75,7 @@ int main(int argc, char** argv) {
     Mat m_img;
     string filename;
 
-    # if TMR_ON
+    # if ASSERTIONS_ON
       if (argc == 1) {
           cout << "No image provided! Usage: ./Ex1 [path to image]" << endl << "Using default image: gullies_on_mars.jpeg" << endl;
 

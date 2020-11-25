@@ -5,54 +5,13 @@
 #include "../include/harris.h"
 #include <chrono>
 using namespace std::chrono;
-#if TMR_ON
-  Mat validate_tmr(Mat a, Mat b, Mat c) { //TMR logic
-  if (!a.empty() && !b.empty() && !c.empty()) {
-    // compare each with some kind of operator
-    double voteA = cv::sum(a)[0];
-    double voteB = cv::sum(b)[0];
-    double voteC = cv::sum(c)[0];
-    if (voteA == voteB == voteC)  { // all matrices are equal, no data errors
-      return c;
-    } else if (voteA == voteB)  { // two of them are equal, likely error in C
-      return b;
-    } else if (voteB == voteC)  { // two of them are equal, likely error in A
-      return c;
-    } else if (voteA == voteC)  { // two of them are equal, likely error in B
-      return c;
-    }
-    // A != B != C
-
-    return c; // c is potentially broken because none of them are equal
-    //
-    } else {
-      return a;
-    }
-  }
-
-  void validate_state(state_t& state) {
-    state.grey_actual = validate_tmr(state.greyA, state.greyB, state.greyC);
-    state.derivx_actual = validate_tmr(state.derivxA, state.derivxB, state.derivxC);
-    state.derivy_actual = validate_tmr(state.derivyA, state.derivyB, state.derivyC);
-    state.derivxy_actual = validate_tmr(state.derivxyA, state.derivxyB, state.derivxyC);
-    state.mderivx_actual = validate_tmr(state.mderivxA, state.mderivxB, state.mderivxC);
-    state.mderivy_actual = validate_tmr(state.mderivyA, state.mderivyB, state.mderivyC);
-    state.mderivxy_actual = validate_tmr(state.mderivxyA, state.mderivxyB, state.mderivxyC);
-    state.corners_actual = validate_tmr(state.cornersA, state.cornersB, state.cornersC);
-  }
-#endif
 
 Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
 
-    #if TMR_ON
+    #if ASSERTIONS_ON
       Mat greyscaleImg;
       greyscaleImg = convertRgbToGrayscale(img);// ck_a not only makes sure the prev checkpoint is used, but also makes sure the most updated data is used
       ck.greyA = greyscaleImg.clone();
-      greyscaleImg = convertRgbToGrayscale(img);
-      ck.greyB = greyscaleImg.clone();
-      greyscaleImg = convertRgbToGrayscale(img);
-      ck.greyC = greyscaleImg.clone();
-      validate_state(ck);
 
     #else
       // (1) Convert to greyscale image
@@ -67,7 +26,7 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
       #endif
     #endif
 
-    #if TMR_ON
+    #if ASSERTIONS_ON
 
     // (2) Compute Derivatives
       //Derivatives derivatives = computeDerivatives(greyscaleImg);
@@ -76,17 +35,7 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
       ck.derivxA = derivatives.Ix.clone();
       ck.derivyA = derivatives.Iy.clone();
       ck.derivxyA = derivatives.Ixy.clone();
-      validate_state(ck);
-      derivatives = computeDerivatives(greyscaleImg); //reyscaleImg
-      ck.derivxB = derivatives.Ix.clone();
-      ck.derivyB = derivatives.Iy.clone();
-      ck.derivxyB = derivatives.Ixy.clone();
-      validate_state(ck);
-      derivatives = computeDerivatives(greyscaleImg); //reyscaleImg
-      ck.derivxC = derivatives.Ix.clone();
-      ck.derivyC = derivatives.Iy.clone();
-      ck.derivxyC = derivatives.Ixy.clone();
-      validate_state(ck);
+
     #else
 
       // (2) Compute Derivatives
@@ -102,7 +51,7 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
 
     #endif
 
-    #if TMR_ON
+    #if ASSERTIONS_ON
       Derivatives mDerivatives; // could clean the code a bit more since the guass filter will always be applied
 
       if(gauss) {
@@ -114,29 +63,6 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
       ck.mderivxA = mDerivatives.Ix.clone();
       ck.mderivyA = mDerivatives.Iy.clone();
       ck.mderivxyA = mDerivatives.Ixy.clone();
-      validate_state(ck);
-
-      if(gauss) {
-          mDerivatives = applyGaussToDerivatives(derivatives, filterRange);
-      } else {
-          mDerivatives = applyMeanToDerivatives(derivatives, filterRange);
-      }
-
-      ck.mderivxB = mDerivatives.Ix.clone();
-      ck.mderivyB = mDerivatives.Iy.clone();
-      ck.mderivxyC = mDerivatives.Ixy.clone();
-      validate_state(ck);
-
-      if(gauss) {
-          mDerivatives = applyGaussToDerivatives(derivatives, filterRange);
-      } else {
-          mDerivatives = applyMeanToDerivatives(derivatives, filterRange);
-      }
-
-      ck.mderivxC = mDerivatives.Ix.clone();
-      ck.mderivyC = mDerivatives.Iy.clone();
-      ck.mderivxyC = mDerivatives.Ixy.clone();
-      validate_state(ck);
 
     #else
 
@@ -158,16 +84,11 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
 
     #endif
 
-    #if TMR_ON
+    #if ASSERTIONS_ON
       Mat harrisResponses;
 
       harrisResponses = computeHarrisResponses(k, mDerivatives);
       ck.cornersA = harrisResponses.clone();
-      harrisResponses = computeHarrisResponses(k, mDerivatives);
-      ck.cornersB = harrisResponses.clone();
-      harrisResponses = computeHarrisResponses(k, mDerivatives);
-      ck.cornersC = harrisResponses.clone();
-      validate_state(ck);
 
       m_harrisResponses = harrisResponses;
     #else
