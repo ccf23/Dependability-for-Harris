@@ -8,9 +8,6 @@ using namespace std::chrono;
 
 Harris::Harris(Mat img, float k, int32_t filterRange, bool gauss) 
 {
-    #if HAMMING_ON
-
-    #endif
     // (1) Convert to greyscale image
     auto t_start = high_resolution_clock::now();
     Mat greyscaleImg = convertRgbToGrayscale(img);
@@ -49,10 +46,6 @@ Harris::Harris(Mat img, float k, int32_t filterRange, bool gauss)
         cout << "Time to perform median filtering: " << duration.count()/1000 << " ms" << endl;
     #endif 
 
-    #if HAMMING_ON
-        
-    #endif
-
     // (4) Compute Harris Responses
     t_start = high_resolution_clock::now();
     Mat harrisResponses = computeHarrisResponses(k, mDerivatives);
@@ -77,11 +70,9 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int32_t filterRange,
     for (int32_t r = 0; r < m_harrisResponses.rows; r++) {
         for (int32_t c = 0; c < m_harrisResponses.cols; c++) {
             Point p(r,c); 
-
             pointData d;
             d.cornerResponse = m_harrisResponses.at<float>(r,c);
             d.point = p;
-
             points.push_back(d);
         }
     }
@@ -99,6 +90,14 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int32_t filterRange,
             break;
 
         int32_t supRows = maximaSuppressionMat.rows;
+
+        #if HAMMING_ON
+            // Apply Hamming to supRows
+            supRows = _hamming.encode(supRows);
+        #endif
+
+        // TODO: Inject single fault in supRows
+
         int32_t supCols = maximaSuppressionMat.cols;
     
         // Check if point marked in maximaSuppression matrix
@@ -110,8 +109,18 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int32_t filterRange,
                     int32_t sy = points[i].point.y+r;
 
                     // bound checking
-                    if(sx > supRows)
-                        sx = supRows;
+
+                    #if HAMMING_ON
+                        if (_hamming.isCorrectable(supRows))
+                            _hamming.correct(supRows);
+                        if(sx > _hamming.decode(supRows))
+                            sx = _hamming.decode(supRows);
+                    #else
+                        if(sx > supRows)
+                            sx = supRows;
+                    #endif
+                    
+                    
                     if(sx < 0)
                         sx = 0;
                     if(sy > supCols)
