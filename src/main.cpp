@@ -69,9 +69,9 @@ void doHarris() {
 int main(int argc, char** argv) {
 
     printf("Fault tolerance techniques enabled:\n");
-    printf("LDPC_ON:\t\t%d\n", (LDPC_ON == true));
-    printf("ASSERTIONS_ON:\t\t%d\n", (ASSERTIONS_ON == true));
-    printf("ABFT_ON:\t\t%d\n", (ABFT_ON == true));
+    printf("HAMMING_ON:\t\t%d\n",       (HAMMING_ON == true));
+    printf("ASSERTIONS_ON:\t\t%d\n",    (ASSERTIONS_ON == true));
+    printf("ABFT_ON:\t\t%d\n",          (ABFT_ON == true));
     printf("CHECKPOINTING_ON:\t%d\n\n", (CHECKPOINTING_ON == true));
 
     // read image from file + error handling

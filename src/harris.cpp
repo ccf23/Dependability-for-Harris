@@ -6,14 +6,10 @@
 #include <chrono>
 using namespace std::chrono;
 
-Harris::Harris(Mat img, float k, int filterRange, bool gauss) :
-
-    #if LDPC_ON
-       ldpc()
-    #endif
+Harris::Harris(Mat img, float k, int filterRange, bool gauss) 
 {
-    #if LDPC_ON
-        ldpc.encode(img);
+    #if HAMMING_ON
+
     #endif
     // (1) Convert to greyscale image
     auto t_start = high_resolution_clock::now();
@@ -53,8 +49,8 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) :
         cout << "Time to perform median filtering: " << duration.count()/1000 << " ms" << endl;
     #endif 
 
-    #if LDPC_ON
-        ldpc.decode(img);
+    #if HAMMING_ON
+        
     #endif
 
     // (4) Compute Harris Responses

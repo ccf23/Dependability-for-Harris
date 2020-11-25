@@ -44,7 +44,7 @@ add_executable( Harris
 	./src/util.cpp
 	./src/harris.cpp
 	./src/main.cpp
-	./src/ldpc.cpp
+	./src/hammingcode.cpp
 )
 
 target_include_directories( Harris
