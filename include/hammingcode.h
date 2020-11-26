@@ -50,13 +50,13 @@ class HammingCode
         HammingCode();
         ~HammingCode();
         
-        /* Functions for int32_t (int) encoding using (31,26) Hamming */
-        int32_t encode_H3126(int32_t rawData);
-        int32_t encode(int32_t data);
-        int32_t decode(int32_t encodedData);
-        bool isCorrectable(int32_t encodedData);
-        bool isCorrect(int32_t encodedData);
-        void correct (int32_t &encodedData);
+        /* Functions for uint32_t (int) encoding using (31,26) Hamming */
+        uint32_t encode_H3126(uint32_t rawData);
+        uint32_t encode(uint32_t data);
+        uint32_t decode(uint32_t encodedData);
+        bool isCorrectable(uint32_t encodedData);
+        bool isCorrect(uint32_t encodedData);
+        void correct (uint32_t &encodedData);
 
         // TODO : Change all floats (32 bits) in Harris to doubles (64 bits) so there's 
         // room for 6 extra bits of parity
@@ -70,9 +70,9 @@ class HammingCode
 
     private:
 
-        uint8_t bit_sum_32(int32_t b);
-        int32_t check_data(int32_t c);
-        int32_t add_parity(int32_t data);
+        uint8_t bit_sum_32(uint32_t b);
+        uint32_t check_data(uint32_t c);
+        uint32_t add_parity(uint32_t data);
 };
 
 #endif // _HAMMING_CODE_HPP_

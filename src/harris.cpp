@@ -9,8 +9,6 @@ using namespace std::chrono;
 
 Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
 
-    injector fi(NONE, .4);
-
     // (1) Convert to greyscale image
     auto t_start = high_resolution_clock::now();
     Mat greyscaleImg = convertRgbToGrayscale(img);
@@ -92,7 +90,9 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int32_t filterRange,
         if(i == points.size())
             break;
 
-        int32_t supRows = maximaSuppressionMat.rows;
+        uint32_t supRows = maximaSuppressionMat.rows;
+        int32_t supCols = maximaSuppressionMat.cols;
+
 
         #if HAMMING_ON
             // Apply Hamming to supRows
@@ -100,9 +100,35 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int32_t filterRange,
         #endif
 
         // TODO: Inject single fault in supRows
+        if (i == 0)
+        {
+            injector fi(NONE, .4);
 
-        int32_t supCols = maximaSuppressionMat.cols;
-    
+            uint32_t supRows_before = supRows;
+
+            printf("\noriginal supRows:\t\t0x%08x\n", supRows);
+        
+            supRows = _hamming.encode(supRows);
+            printf("encoded supRows:\t\t0x%08x\n", supRows);
+            printf("decoded supRows:\t\t0x%08x\n", _hamming.decode(supRows));
+
+            fi.inject(supRows, SINGLE_DATA);
+            printf("supRows after fault injection:\t0x%08x\n", supRows);
+            printf("decoded supRows after fi:\t0x%08x\n", _hamming.decode(supRows));
+
+
+            printf("\nisCorrect()?\t\t\t\t%d\n", _hamming.isCorrect(supRows));
+            printf("isCorrectable()?\t\t\t%d\n", _hamming.isCorrectable(supRows));
+
+            if (_hamming.isCorrectable(supRows))
+                _hamming.correct(supRows);
+            printf("isCorrect() after corrected?\t\t%d\n", _hamming.isCorrect(supRows));
+            printf("isCorrectable() after corrected?\t%d\n", _hamming.isCorrectable(supRows));
+            printf("supRows after correction:\t0x%08x\n", supRows);
+            printf("decoded supRows after correction:\t0x%08x\n", _hamming.decode(supRows));
+
+        }
+            
         // Check if point marked in maximaSuppression matrix
         if(maximaSuppressionMat.at<int32_t>(points[i].point.x,points[i].point.y) == 0) {
             
@@ -114,8 +140,6 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int32_t filterRange,
                     // bound checking
 
                     #if HAMMING_ON
-                        if (_hamming.isCorrectable(supRows))
-                            _hamming.correct(supRows);
                         if(sx > _hamming.decode(supRows))
                             sx = _hamming.decode(supRows);
                     #else
