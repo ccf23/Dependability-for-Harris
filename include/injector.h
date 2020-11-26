@@ -68,6 +68,9 @@ public:
     // finish timing injector and add count to total_time
     void toc(void);
 
+    // returns the current time expended by injector in us
+    unsigned long int getTime(void);
+
 };
 
 #endif
