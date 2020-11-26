@@ -33,7 +33,7 @@ void injector::disable(void)
     enabled = false;
 }
 
-void injetor::setBHP(double bhp)
+void injector::setBHP(double bhp)
 {
     bit_hit_prob = bhp;
 }
