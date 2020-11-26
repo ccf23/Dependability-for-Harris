@@ -87,9 +87,10 @@ bool abft_addChecksums(Mat img, Mat &rCheck, Mat &cCheck)
 {
     reduce(img, cCheck, 0, REDUCE_SUM);
     reduce(img, rCheck, 1, REDUCE_SUM);
+
 }
 
-bool abft_check(Mat img, Mat &rCheck, Mat &cCheck)
+bool abft_check(Mat &img, Mat &rCheck, Mat &cCheck)
 {
     Mat newCcheck, newRcheck, cDiff, rDiff, cErr, rErr;
 
@@ -126,7 +127,6 @@ bool abft_check(Mat img, Mat &rCheck, Mat &cCheck)
 
         float diff = newCcheck.at<float>(0,v) - img.at<float>(u,v);
         img.at<float>(u,v) = cCheck.at<float>(0,v) - diff;
-        cout<<img.at<float>(44,99)<<endl;
         return true;
     }
     else

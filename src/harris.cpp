@@ -348,16 +348,34 @@ Mat Harris::meanFilter(Mat& intImg, int range) {
 }
 
 Mat Harris::gaussFilter(Mat& img, int range) {
+    Mat m(1,2*range+1, CV_32F); // gaussian Kernel
+    for (int i = -range; i<= range; ++i)
+    {
+        float val = 1/sqrt(2*M_PI)*exp(-0.5*i*i);
+        m.at<float>(0,i+range) = val;
+    }
+    #if ABFT_ON
+        Mat mRcheck, mCcheck;
+        abft_addChecksums(m,mRcheck,mCcheck);
+    #endif
+    
+    
     // Helper Mats for better time complexity
     Mat gaussHelperV(img.rows-range*2, img.cols-range*2, CV_32F);
     for(int r=range; r<img.rows-range; r++) {
         for(int c=range; c<img.cols-range; c++) {
             float res = 0;
 
-            for(int x = -range; x<=range; x++) {
-                float m = 1/sqrt(2*M_PI)*exp(-0.5*x*x);
+            #if ABFT_ON
+                bool kernel_good = abft_check(m,mRcheck,mCcheck);
+                if (!kernel_good)
+                {
+                    // TODO: take action to restart? return to checkpoint?
+                }
+            #endif
 
-                res += m * img.at<float>(r-range,c-range);
+            for(int x = -range; x<=range; x++) {
+                res += m.at<float>(0,x+3) * img.at<float>(r-range,c-range);
             }
 
             gaussHelperV.at<float>(r-range,c-range) = res;
@@ -369,10 +387,16 @@ Mat Harris::gaussFilter(Mat& img, int range) {
         for(int c=range; c<img.cols-range; c++) {
             float res = 0;
 
-            for(int x = -range; x<=range; x++) {
-                float m = 1/sqrt(2*M_PI)*exp(-0.5*x*x);
+            #if ABFT_ON
+                bool kernel_good = abft_check(m,mRcheck,mCcheck);
+                if (!kernel_good)
+                {
+                    // TODO: take action to restart? return to checkpoint?
+                }
+            #endif
 
-                res += m * gaussHelperV.at<float>(r-range,c-range);
+            for(int x = -range; x<=range; x++) {
+                res += m.at<float>(0,x+3) * gaussHelperV.at<float>(r-range,c-range);
             }
 
             gauss.at<float>(r-range,c-range) = res;
