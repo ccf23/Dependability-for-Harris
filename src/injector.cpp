@@ -18,6 +18,7 @@ injector::injector(INJECTOR_MODE_TYPE mode = NONE, double bhp = 0)
     bit_hit_prob = bhp;
     default_mode = mode;
     injections = 0;
+    total_time = 0;
 
     std::srand(time(NULL)); // seed rng
 }
@@ -171,6 +172,18 @@ std::string injector::stats(void)
     
     return ("Default Mode: " + mode_str + "\nTotal Injections: " + \
              std::to_string(injections) + "\n");
+}
+
+void injector::tic(void)
+{
+    last_time = std::chrono::high_resolution_clock::now();
+}
+
+void injector::toc(void)
+{
+    injector_time_t stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - last_time);
+    total_time += duration;
 }
 
 // explicitly defines valid template types
