@@ -39,7 +39,11 @@ using namespace cv;
 
     Mat cornersA; //E
 
+
   } state_t;
+
+  //iterate through values in matrix
+  int iterate(Mat matrix, int lB, int uB);
 
 #endif
 

@@ -6,9 +6,30 @@
 #include <chrono>
 using namespace std::chrono;
 
+
+int iterate(Mat matrix, int lB, int uB){
+
+  //check each element of matrix
+  for (int i = 0; i <matrix.rows; i++)
+  {
+    for (int j = 0; j <matrix.cols; j++)
+    {
+      //cout << matrix.at<float>(i,j) << "              " << endl;
+      if (matrix.at<float>(i,j) <= lB || matrix.at<float>(i,j) > uB)
+      {
+        return 1; //there is a fault, so stop checking rest of matrix
+      }
+    }
+  }
+  return 0; //there is no fault
+
+}
+
 Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
 
     #if ASSERTIONS_ON
+
+
       Mat greyscaleImg;
       greyscaleImg = convertRgbToGrayscale(img);// ck_a not only makes sure the prev checkpoint is used, but also makes sure the most updated data is used
       ck.greyA = greyscaleImg.clone();
@@ -86,9 +107,30 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
 
     #if ASSERTIONS_ON
       Mat harrisResponses;
+      int count_fault =0;
+      do { //there is a fault
+        harrisResponses = computeHarrisResponses(k, mDerivatives);
+        ck.cornersA = harrisResponses.clone();
+        cout << harrisResponses ;
+        count_fault += 1;
+        if (count_fault >= 3){
+          break;
+        }
+      } while (iterate(ck.cornersA,0,255) == 1);
 
-      harrisResponses = computeHarrisResponses(k, mDerivatives);
-      ck.cornersA = harrisResponses.clone();
+
+
+      // for (int i = 0; i <ck.cornersA.rows; i++)
+      // {
+      //   for (int j = 0; j <ck.cornersA.cols; j++)
+      //   {
+      //     if (ck.cornersA.at<double>(i,j) <= 0)
+      //     {
+      //       cout << "here";
+      //     }
+      //   }
+      // }
+
 
       m_harrisResponses = harrisResponses;
     #else
@@ -173,6 +215,15 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
 
         i++;
     }
+
+    cout << ck.greyA <<endl;
+    cout << ck.derivxA<<endl;
+    cout << ck.derivyA <<endl;
+    cout << ck.mderivxA<<endl;
+    cout << ck.mderivyA <<endl;
+
+    // cout << ck.greyA <<endl;
+    // cout << ck.greyA <<endl;
 
     return topPoints;
 }

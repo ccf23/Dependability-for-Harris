@@ -14,7 +14,7 @@ using namespace cv;
 using namespace std;
 
 // uncomment to allow for visual test on local machine
-//#define LOCAL
+#define LOCAL
 
 //Mat m_img;-- var needs to be local
 string filename;
