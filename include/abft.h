@@ -7,7 +7,7 @@ using namespace std;
 using namespace cv;
 
 // limit of acceptable maximum number of errors
-const int maxErrorLimit = 5000;
+const int maxErrorLimit = 25000;
 
 // adds checksums to grayscale abft and returns to be used for conversion
 Mat doGrayscaleABFT(Mat);

@@ -61,7 +61,7 @@ bool grayscaleABFTCheck(Mat& img, bool useThresh)
         {
             sum += img.at<float>(r,i);
         }
-        if (abs(sum - img.at<float>(r,cols - 1))> .01)
+        if (abs(sum - img.at<float>(r,cols - 1))> .001)
         {
             //cout<<setprecision(10)<<sum<<"\t"<<img.at<float>(r,cols - 1)<<"\t"<<r<<endl;
             rErrs++;
@@ -76,7 +76,7 @@ bool grayscaleABFTCheck(Mat& img, bool useThresh)
         {
             sum += img.at<float>(i,c);
         }
-        if (abs(sum - img.at<float>(rows - 1,c)) > .01)
+        if (abs(sum - img.at<float>(rows - 1,c)) > .001)
         {
             //cout<<setprecision(10)<<sum<<"\t"<<img.at<float>(rows - 1,c)<<"\t"<<c<<endl;
             cErrs++;
@@ -111,8 +111,8 @@ bool abft_check(Mat &img, Mat &rCheck, Mat &cCheck, bool useThresh)
     absdiff(newCcheck, cCheck, cDiff);
     absdiff(newRcheck, rCheck, rDiff);
 
-    Mat zeroCheckC = Mat(cDiff.rows, cDiff.cols, cDiff.type(),Scalar::all(.01));
-    Mat zeroCheckR = Mat(rDiff.rows, rDiff.cols, rDiff.type(), Scalar::all(.01));
+    Mat zeroCheckC = Mat(cDiff.rows, cDiff.cols, cDiff.type(),Scalar::all(.001));
+    Mat zeroCheckR = Mat(rDiff.rows, rDiff.cols, rDiff.type(), Scalar::all(.001));
 
 
     compare(cDiff, zeroCheckC, cErr, CMP_GE);

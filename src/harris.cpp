@@ -10,6 +10,8 @@ using namespace std::chrono;
 
 Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
 
+    injector fi(PROB_DATA, 2e-5);
+
     // (1) Convert to greyscale image
     auto t_start = high_resolution_clock::now();
     #if ABFT_ON
@@ -44,7 +46,7 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
         bool valid = false;
         do
         {
-            // TODO: Inject faults here
+            // TODO: inject faults here
             valid = abft_check(greyscaleImg,a,b,true);
         } while (!valid);
     #endif
@@ -146,6 +148,7 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
                     points.push_back(d);
                 }
             }
+            //TODO: inject faults here
         }
     }while (!valid);
 
