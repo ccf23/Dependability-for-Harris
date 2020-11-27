@@ -242,7 +242,6 @@ Mat Harris::computeHarrisResponses(float k, Derivatives& d) {
 
             float det = a11*a22 - a12*a21;
             float trace = a11 + a22;
-
             M.at<float>(r,c) = abs(det - k * trace*trace);
         }
     }
