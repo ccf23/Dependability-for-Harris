@@ -4,6 +4,7 @@
 
 #include "../include/harris.h"
 #include <chrono>
+#include <opencv2/core.hpp> //minMaxLoc
 using namespace std::chrono;
 
 #if ASSERTIONS_ON
@@ -16,7 +17,7 @@ using namespace std::chrono;
       for (int j = 0; j <matrix.cols; j++)
       {
         //cout << matrix.at<float>(i,j) << "              " << endl;
-        if (matrix.at<float>(i,j) <= lB || matrix.at<float>(i,j) > uB)
+        if (matrix.at<float>(i,j) <= lB || matrix.at<float>(i,j) > uB) // make sure to delete = sign
         {
           return 1; //there is a fault, so stop checking rest of matrix
         }
@@ -113,26 +114,12 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
       do { //there is a fault
         harrisResponses = computeHarrisResponses(k, mDerivatives);
         ck.cornersA = harrisResponses.clone();
-        cout << harrisResponses ;
+        //cout << harrisResponses ;
         count_fault += 1;
         if (count_fault >= 3){
           break;
         }
       } while (iterate(ck.cornersA,0,255) == 1);
-
-
-
-      // for (int i = 0; i <ck.cornersA.rows; i++)
-      // {
-      //   for (int j = 0; j <ck.cornersA.cols; j++)
-      //   {
-      //     if (ck.cornersA.at<double>(i,j) <= 0)
-      //     {
-      //       cout << "here";
-      //     }
-      //   }
-      // }
-
 
       m_harrisResponses = harrisResponses;
     #else
@@ -218,11 +205,25 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
         i++;
     }
 
-    cout << ck.greyA <<endl;
-    cout << ck.derivxA<<endl;
-    cout << ck.derivyA <<endl;
-    cout << ck.mderivxA<<endl;
-    cout << ck.mderivyA <<endl;
+    //cout << ck.greyA <<endl;
+    double min, max;
+    minMaxLoc(ck.greyA, &min, &max);
+    cout << min << "   grey  "<< max <<endl;
+    minMaxLoc(ck.derivxA, &min, &max);
+    cout << min << "   derivx  "<< max <<endl;
+    minMaxLoc(ck.derivyA, &min, &max);
+    cout << min << "  derivy   "<< max <<endl;
+    minMaxLoc(ck.mderivxA, &min, &max);
+    cout << min << "  gaussX   "<< max <<endl;
+    minMaxLoc(ck.mderivyA, &min, &max);
+    cout << min << "  gaussY   "<< max <<endl;
+    minMaxLoc(ck.cornersA, &min, &max);
+    cout << min << "  corners   "<< max <<endl;
+
+
+    //cout << ck.derivyA <<endl;
+    //cout << ck.mderivxA<<endl;
+    //cout << ck.mderivyA <<endl;
 
     // cout << ck.greyA <<endl;
     // cout << ck.greyA <<endl;
@@ -299,10 +300,16 @@ Derivatives Harris::computeDerivatives(Mat& greyscaleImg) {
             float a1 = greyscaleImg.at<float>(r,c-1);
             float a2 = greyscaleImg.at<float>(r,c);
             float a3 = greyscaleImg.at<float>(r,c+1);
+            // cout << a1 << "    " << a2 << "    " << a3 << "    " <<  endl;
+            // cout << a1 + a2 + a2 + a3 <<endl;
 
             sobelHelperH.at<float>(r,c-1) = a1 + a2 + a2 + a3;
         }
     }
+    // double min, max;
+    // minMaxLoc(sobelHelperH, &min, &max);
+    // cout << min << "  csobelHHHHH  "<< max <<endl;
+    //cout << sobelHelperH <<endl;
 
     // Apply Sobel filter to compute 1st derivatives
     Mat Ix(greyscaleImg.rows-2, greyscaleImg.cols-2, CV_32F);
@@ -312,15 +319,26 @@ Derivatives Harris::computeDerivatives(Mat& greyscaleImg) {
     for(int r=0; r<greyscaleImg.rows-2; r++) {
         for(int c=0; c<greyscaleImg.cols-2; c++) {
             Ix.at<float>(r,c) = sobelHelperH.at<float>(r,c) - sobelHelperH.at<float>(r+2,c);
+
+
+
             Iy.at<float>(r,c) = - sobelHelperV.at<float>(r,c) + sobelHelperV.at<float>(r,c+2);
             Ixy.at<float>(r,c) = Ix.at<float>(r,c) * Iy.at<float>(r,c);
         }
     }
 
+    // double min, max;
+    // minMaxLoc(Iy, &min, &max);
+    // cout << min << "  Iy "<< max <<endl;
+
     Derivatives d;
     d.Ix = Ix;
     d.Iy = Iy;
     d.Ixy = Iy;
+
+    double min, max;
+    minMaxLoc(d.Ix, &min, &max);
+    cout << min << "  Iyddd "<< max <<endl;
 
     return d;
 }
