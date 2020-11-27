@@ -14,24 +14,22 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
     auto t_start = high_resolution_clock::now();
     #if ABFT_ON
         img = doGrayscaleABFT(img);
-    #else
-        img.convertTo(img, CV_32F);    
-    #endif
-    Mat greyscaleImg = convertRgbToGrayscale(img);
-    #if ABFT_ON
-        bool correct = grayscaleABFTCheck(greyscaleImg);
+        Mat greyscaleImg;
+        bool correct = false;
+        do
+        {
+            greyscaleImg = convertRgbToGrayscale(img);
+            correct = grayscaleABFTCheck(greyscaleImg, true);
+        } while (!correct);
         
-        if (correct)
-        {
-            greyscaleImg = cv::Mat(greyscaleImg,cv::Range(0,greyscaleImg.rows - 2), cv::Range(0,greyscaleImg.cols - 2));
-        }
-        else
-        {
-
-            //TODO: handle error
-        }
-
+        // remove checksums from image
+        greyscaleImg = cv::Mat(greyscaleImg,cv::Range(0,greyscaleImg.rows - 2), cv::Range(0,greyscaleImg.cols - 2));
+        
+    #else
+        img.convertTo(img, CV_32F);   
+        Mat greyscaleImg = convertRgbToGrayscale(img); 
     #endif
+
     auto t_stop = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(t_stop - t_start);
     #if DATA_COLLECTION_MODE
@@ -43,7 +41,12 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
     #if ABFT_ON
         Mat a, b;
         abft_addChecksums(greyscaleImg,a,b);
-        bool val = abft_check(greyscaleImg,a,b,true);
+        bool valid = false;
+        do
+        {
+            // TODO: Inject faults here
+            valid = abft_check(greyscaleImg,a,b,true);
+        } while (!valid);
     #endif
 
     // (2) Compute Derivatives
@@ -56,19 +59,12 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
         abft_addChecksums(derivatives.Ix, IxR, IxC);
         abft_addChecksums(derivatives.Iy, IyR, IyC);
         abft_addChecksums(derivatives.Ixy, IxyR, IxyC);
-
-        // error injection
-        bool matchX, matchY, matchXY;
-        matchX = matchY = matchXY = false; 
-        matchX = abft_check(derivatives.Ix, IxR, IxC, true);
-        matchY = abft_check(derivatives.Iy, IyR, IyC, true);
-        matchXY = abft_check(derivatives.Ixy, IxyR, IxyC, true);
-
-        if (!matchX || !matchY || !matchXY)
-        {
-            // repeat derivatives?
-        }
-
+        do
+        {       
+        // TODO: inject faults here
+        }while (!abft_check(derivatives.Ix, IxR, IxC, true) || \
+                !abft_check(derivatives.Iy, IyR, IyC, true) || \
+                 !abft_check(derivatives.Ixy, IxyR, IxyC, true));
     #endif
     t_stop = high_resolution_clock::now();
     duration = duration_cast<microseconds>(t_stop - t_start);
@@ -123,31 +119,35 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
         }
     }
 
-    // Create a vector of all Points
-    std::vector<pointData> points;
-    for (int r = 0; r < m_harrisResponses.rows; r++) {
-        #if ABFT_ON
-            // perform continual verification during this critical part
-            
-            if (!abft_check(m_harrisResponses,hrRc,hrCc,true))
-            {
-                // corrupted, go back to begining
-            }//*/
+    std::vector<pointData> points; // Create a vector of all Points
+    bool valid; // used by abft to flag restart
+    do 
+    {
+        valid = true;
+        for (int r = 0; r < m_harrisResponses.rows; r++) {
+            #if ABFT_ON
+                // perform continual verification during this critical part
+                if (!abft_check(m_harrisResponses,hrRc,hrCc,true))
+                {
+                    // corrupted, go back to begining
+                    valid = false;
+                    break;
+                }
+            #endif
+            for (int c = 0; c < m_harrisResponses.cols; c++) {
+                if (m_harrisResponses.at<float>(r,c) > .5) // set corner response threshold
+                {
+                    Point p(r,c); 
 
-        #endif
-        for (int c = 0; c < m_harrisResponses.cols; c++) {
-            if (m_harrisResponses.at<float>(r,c) > .5) // set corner response threshold
-            {
-                Point p(r,c); 
-
-                pointData d;
-                d.cornerResponse = m_harrisResponses.at<float>(r,c);
-                d.point = p;
-                
-                points.push_back(d);
+                    pointData d;
+                    d.cornerResponse = m_harrisResponses.at<float>(r,c);
+                    d.point = p;
+                    
+                    points.push_back(d);
+                }
             }
         }
-    }
+    }while (!valid);
 
     // Sort points by corner Response
     sort(points.begin(), points.end(), by_cornerResponse());
@@ -237,10 +237,12 @@ Derivatives Harris::applyGaussToDerivatives(Derivatives& dMats, int filterRange)
 
     #if ABFT_ON
         // validate ABFT before returning
-        if (!abft_check(mdMats.Ix,IxRc,IxCc, true) || !abft_check(mdMats.Iy,IyRc,IyCc, true) || !abft_check(mdMats.Ixy,IxyRc,IxyCc, true))
+        do
         {
-            // repeat calculations
-        }
+            // TODO: Inject faults here
+        } while (!abft_check(mdMats.Ix,IxRc,IxCc, true) || \
+                 !abft_check(mdMats.Iy,IyRc,IyCc, true) || \
+                 !abft_check(mdMats.Ixy,IxyRc,IxyCc, true));
     #endif
     return mdMats;
 }
@@ -332,43 +334,64 @@ Mat Harris::gaussFilter(Mat& img, int range) {
     
     // Helper Mats for better time complexity
     Mat gaussHelperV(img.rows-range*2, img.cols-range*2, CV_32F);
-    for(int r=range; r<img.rows-range; r++) {
-        #if ABFT_ON
+    bool valid;
+    do 
+    {
+        valid = true;
+        for(int r=range; r<img.rows-range; r++) 
+        {
+            #if ABFT_ON
                 bool kernel_good = abft_check(m,mRcheck,mCcheck, false);
                 if (!kernel_good)
                 {
-                    // TODO: take action to restart? return to checkpoint?
+                    valid = false;
+                    break;
                 }
             #endif
-        for(int c=range; c<img.cols-range; c++) {
-            float res = 0;
+            for(int c=range; c<img.cols-range; c++)
+            {
+                float res = 0;
 
-            for(int x = -range; x<=range; x++) {
-                res += m.at<float>(0,x+3) * img.at<float>(r-range,c-range);
+                for(int x = -range; x<=range; x++)
+                 {
+                    res += m.at<float>(0,x+3) * img.at<float>(r-range,c-range);
+                }
+
+                gaussHelperV.at<float>(r-range,c-range) = res;
+
+                // TODO: inject faults into m here
             }
-
-            gaussHelperV.at<float>(r-range,c-range) = res;
         }
-    }
+    } while(!valid);
 
     Mat gauss(img.rows-range*2, img.cols-range*2, CV_32F);
-    for(int r=range; r<img.rows-range; r++) {
-         #if ABFT_ON
-                bool kernel_good = abft_check(m,mRcheck,mCcheck, false);
-                if (!kernel_good)
+    do 
+    {
+
+        valid = true;
+        for(int r=range; r<img.rows-range; r++) 
+        {
+            #if ABFT_ON
+                    bool kernel_good = abft_check(m,mRcheck,mCcheck, false);
+                    if (!kernel_good)
+                    {
+                        valid = false;
+                        break;
+                    }
+                #endif
+            for(int c=range; c<img.cols-range; c++)
+             {
+                float res = 0;
+                for(int x = -range; x<=range; x++) 
                 {
-                    // TODO: take action to restart? return to checkpoint?
+                    res += m.at<float>(0,x+3) * gaussHelperV.at<float>(r-range,c-range);
                 }
-            #endif
-        for(int c=range; c<img.cols-range; c++) {
-            float res = 0;
-            for(int x = -range; x<=range; x++) {
-                res += m.at<float>(0,x+3) * gaussHelperV.at<float>(r-range,c-range);
+
+                gauss.at<float>(r-range,c-range) = res;
+
+                // TODO: inject kernel faults here
             }
-
-            gauss.at<float>(r-range,c-range) = res;
         }
-    }
-
+    } while (!valid);
     return gauss;
 }

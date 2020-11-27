@@ -46,12 +46,14 @@ Mat doGrayscaleABFT(Mat im)
     return im;
 }
 
-bool grayscaleABFTCheck(Mat& img)
+bool grayscaleABFTCheck(Mat& img, bool useThresh)
 {
     //cout<<img.at<float>(1,img.cols - 1)<<endl;
     int rows = img.rows;
     int cols = img.cols;
     float sum;
+    int rErrs = 0;
+    int cErrs = 0;
     for (int r = 0; r < rows - 1; ++r)
     {
         sum = 0;
@@ -59,10 +61,10 @@ bool grayscaleABFTCheck(Mat& img)
         {
             sum += img.at<float>(r,i);
         }
-        if (abs(sum - img.at<float>(r,cols - 1))> 1)
+        if (abs(sum - img.at<float>(r,cols - 1))> .01)
         {
             //cout<<setprecision(10)<<sum<<"\t"<<img.at<float>(r,cols - 1)<<"\t"<<r<<endl;
-            return false;
+            rErrs++;
         }
     }
 
@@ -74,13 +76,22 @@ bool grayscaleABFTCheck(Mat& img)
         {
             sum += img.at<float>(i,c);
         }
-        if (abs(sum - img.at<float>(rows - 1,c)) > 1)
+        if (abs(sum - img.at<float>(rows - 1,c)) > .01)
         {
             //cout<<setprecision(10)<<sum<<"\t"<<img.at<float>(rows - 1,c)<<"\t"<<c<<endl;
-            return false;
+            cErrs++;
         }
     }
-    return true;
+    int maxErrors = cErrs*rErrs;
+
+    if (maxErrors == 0)
+    {
+        return true;
+    }
+    else
+    {
+        return (useThresh && maxErrors < maxErrorLimit);
+    }
 }
 
 bool abft_addChecksums(Mat img, Mat &rCheck, Mat &cCheck)

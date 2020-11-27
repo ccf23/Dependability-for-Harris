@@ -6,19 +6,14 @@
 using namespace std;
 using namespace cv;
 
-typedef enum
-{
-    NONE,
-    GRAYSCALE
-} abftMode;
-
+// limit of acceptable maximum number of errors
 const int maxErrorLimit = 5000;
 
 // adds checksums to grayscale abft and returns to be used for conversion
 Mat doGrayscaleABFT(Mat);
 
 // performs check for greyscale abft
-bool grayscaleABFTCheck(Mat&);
+bool grayscaleABFTCheck(Mat&, bool);
 
 // generates checksums for rows and columns of the input matrix
 bool abft_addChecksums(Mat, Mat&, Mat&);
