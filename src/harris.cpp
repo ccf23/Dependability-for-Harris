@@ -65,7 +65,7 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
       //Derivatives derivatives = computeDerivatives(greyscaleImg);
       Derivatives derivatives;
 
-      int count_fault =0;
+      count_fault =0;
       do { // runs through loop once and checks if there is a fault
         derivatives = computeDerivatives(greyscaleImg);// watch out for multiple matrices saved
         ck.derivxA = derivatives.Ix.clone();
@@ -76,7 +76,7 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
           break;
         }
       } while (iterate(ck.derivxA,-1024,1024) == 1 || iterate(ck.derivyA,-1024,1024) == 1);
-      
+
 
       ck.derivxyA = derivatives.Ixy.clone(); //could delete
 
@@ -132,7 +132,7 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
 
     #if ASSERTIONS_ON
       Mat harrisResponses;
-      int count_fault =0;
+      count_fault =0;
       do { // runs through loop once and checks if there is a fault
         harrisResponses = computeHarrisResponses(k, mDerivatives);
         ck.cornersA = harrisResponses.clone();
