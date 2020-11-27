@@ -44,7 +44,7 @@ using namespace cv;
   } state_t;
 
   //iterate through values in matrix
-  int iterate(Mat matrix, float lB, float uB);
+  int iterateMat(Mat matrix, float lB, float uB);
 //  int iterateFlo(float Flo, int lB, int uB);
 
 #endif

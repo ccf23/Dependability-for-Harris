@@ -9,7 +9,7 @@ using namespace std::chrono;
 
 #if ASSERTIONS_ON
   // function to check range of each saved matrix element
-  int iterate(Mat matrix, float lB, float uB){
+  int iterateMat(Mat matrix, float lB, float uB){
 
     //check each element of matrix
     for (int i = 0; i <matrix.rows; i++)
@@ -91,7 +91,7 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
         if (count_fault > 3){
           break;
         }
-      } while (iterate(ck.derivxA,-1024,1024) == 1 || iterate(ck.derivyA,-1024,1024) == 1);
+      } while (iterateMat(ck.derivxA,-1024,1024) == 1 || iterateMat(ck.derivyA,-1024,1024) == 1);
 
 
       ck.derivxyA = derivatives.Ixy.clone(); //could delete
@@ -128,7 +128,7 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
         if (count_fault > 3){
           break;
         }
-      } while (iterate(ck.mderivxA,-1024,1024) == 1 || iterate(ck.mderivyA,-1024,1024) == 1);
+      } while (iterateMat(ck.mderivxA,-1024,1024) == 1 || iterateMat(ck.mderivyA,-1024,1024) == 1);
 
       ck.mderivxyA = mDerivatives.Ixy.clone(); //could delete
 
@@ -168,7 +168,7 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
         if (count_fault > 3){
           break;
         }
-      } while (iterate(ck.cornersA,0,4.398*pow(10,12)) == 1); ///overflow, so remove this checkpoint
+      } while (iterateMat(ck.cornersA,0,4.398*pow(10,12)) == 1); ///overflow, so remove this checkpoint
 
       m_harrisResponses = harrisResponses;
     #else
