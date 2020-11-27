@@ -12,35 +12,11 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss)
     // (1) Convert to greyscale image
     auto t_start = high_resolution_clock::now();
 #if THREADS_ON
-    
-    // flag for error detection
-    bool match = false;
-    Mat greyscaleImg, greyscaleImg2;
-
-    while (!match)
-    {
-#pragma omp parallel num_threads(2)
-        {
-            int i = omp_get_thread_num();
-            if (i == 0)
-            {
-                greyscaleImg = convertRgbToGrayscale(img);
-            }
-            if (i == 1 || omp_get_num_threads() != 2)
-            {
-                greyscaleImg2 = convertRgbToGrayscale(img);
-            }
-        }
-
-        // verify that they match
-        match = (sum(greyscaleImg2 != greyscaleImg) == Scalar(0));
-
-        cout << "Grayscale match: " << boolalpha << match << endl;
-    }
-
+    Mat greyscaleImg = runParallel_convertRgbToGrayscale(img);
 #else
     Mat greyscaleImg = convertRgbToGrayscale(img);
 #endif
+
     auto t_stop = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(t_stop - t_start);
 #if DATA_COLLECTION_MODE
@@ -52,47 +28,7 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss)
     // (2) Compute Derivatives
     t_start = high_resolution_clock::now();
 #if THREADS_ON
-    Derivatives derivatives, derivatives2;
-    Mat greyscaleImg1 = greyscaleImg.clone();
-    greyscaleImg2 = greyscaleImg.clone();
-    match = false;
-    while (!match)
-    {
-#pragma omp parallel num_threads(2)
-        {
-            int i = omp_get_thread_num();
-            if (i == 0)
-            {
-                derivatives = computeDerivatives(greyscaleImg1);
-
-            }
-            if (i == 1 || omp_get_num_threads() != 2)
-            {
-                derivatives2 = computeDerivatives(greyscaleImg2);
-            }
-        }
-
-        //verify match
-        bool matchX = (sum(derivatives2.Ix != derivatives.Ix) == Scalar(0));
-        bool matchY = (sum(derivatives2.Iy != derivatives.Iy) == Scalar(0));
-        bool matchXY = (sum(derivatives2.Ixy != derivatives.Ixy) == Scalar(0));
-        match = matchX & matchY & matchXY;
-
-        cout << "Derivatives match: " << boolalpha << match << endl;
-        
-        if (!match)
-        {
-            // If threads don't match, reset greyscaleImgs for next run 
-            // (computeDerivatives() modifies greyscaleImg)
-            greyscaleImg1 = greyscaleImg.clone();
-            greyscaleImg2 = greyscaleImg.clone();
-        }
-        else
-        {
-            // otherwise, set greyscaleImg equal to one of the results
-            greyscaleImg = greyscaleImg1.clone();        
-        }
-    }
+    Derivatives derivatives = runParallel_computeDerivatives(greyscaleImg);
 #else
     Derivatives derivatives = computeDerivatives(greyscaleImg);
 #endif
@@ -107,46 +43,7 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss)
     // (3) Median Filtering
     t_start = high_resolution_clock::now();
 #if THREADS_ON
-    Derivatives mDerivatives, mDerivatives2;
-    match = false;
-    while (!match)
-    {
-#pragma omp parallel num_threads(2)
-        {
-            int i = omp_get_thread_num();
-            if (i == 0)
-            {
-                if (gauss)
-                {
-                    mDerivatives = applyGaussToDerivatives(derivatives, filterRange);
-                }
-                else
-                {
-                    mDerivatives = applyMeanToDerivatives(derivatives, filterRange);
-                }
-            }
-            if (i == 1 || omp_get_num_threads() != 2)
-            {
-                if (gauss)
-                {
-                    mDerivatives2 = applyGaussToDerivatives(derivatives, filterRange);
-                }
-                else
-                {
-                    mDerivatives2 = applyMeanToDerivatives(derivatives, filterRange);
-                }
-            }
-        }
-
-        //verify match
-        bool mMatchX = (sum(mDerivatives2.Ix != mDerivatives.Ix) == Scalar(0));
-        bool mMatchY = (sum(mDerivatives2.Iy != mDerivatives.Iy) == Scalar(0));
-        bool mMatchXY = (sum(mDerivatives2.Ixy != mDerivatives.Ixy) == Scalar(0));
-        match = mMatchX & mMatchY & mMatchXY;
-
-        cout << "M Derivatives match: " << boolalpha << match << endl;
-    }
-
+    Derivatives mDerivatives = runParallel_applyToDerivatives(derivatives, filterRange, gauss);
 #else
     Derivatives mDerivatives;
     if (gauss)
@@ -169,29 +66,8 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss)
     // (4) Compute Harris Responses
     t_start = high_resolution_clock::now();
 #if THREADS_ON
-    Mat harrisResponses, harrisResponses2;
-    match = false;
-    while (!match)
-    {
-#pragma omp parallel num_threads(2)
-        {
-            int i = omp_get_thread_num();
-            if (i == 0)
-            {
-                harrisResponses = computeHarrisResponses(k,mDerivatives);
-            }
-            if (i == 1 || omp_get_num_threads() != 2)
-            {
-                harrisResponses2 = computeHarrisResponses(k,mDerivatives);
-            }
-        }
-        match = (sum(harrisResponses2 != harrisResponses) == Scalar(0));
-
-        cout << "Harris Responses match: " << boolalpha << match << endl;
-
-        m_harrisResponses = harrisResponses;
-    }
-
+    Mat harrisResponses = runParallel_computeHarrisResponses(k, mDerivatives);
+    m_harrisResponses = harrisResponses;
 #else
     Mat harrisResponses = computeHarrisResponses(k, mDerivatives);
     m_harrisResponses = harrisResponses;
@@ -506,3 +382,147 @@ Mat Harris::gaussFilter(Mat &img, int range)
 
     return gauss;
 }
+
+#if THREADS_ON
+Mat Harris::runParallel_convertRgbToGrayscale(Mat& img)
+{
+    // flag for error detection
+    bool match = false;
+    Mat greyscaleImg, greyscaleImg2;
+    Mat img2 = img.clone();
+
+    while (!match)
+    {
+#pragma omp parallel num_threads(2)
+        {
+            int i = omp_get_thread_num();
+            if (i == 0)
+            {
+                greyscaleImg = convertRgbToGrayscale(img);
+            }
+            if (i == 1 || omp_get_num_threads() != 2)
+            {
+                greyscaleImg2 = convertRgbToGrayscale(img2);
+            }
+        }
+
+        // verify that they match
+        match = (sum(greyscaleImg2 != greyscaleImg) == Scalar(0));
+
+        cout << "Grayscale match: " << boolalpha << match << endl;
+    }
+    return greyscaleImg;
+}
+
+Derivatives Harris::runParallel_computeDerivatives(Mat& greyscaleImg)
+{
+    Derivatives derivatives, derivatives2;
+    Mat greyscaleImg1, greyscaleImg2;
+    bool match = false;
+
+    while (!match)
+    {
+        // If threads don't match, reset greyscaleImgs for next run 
+        // (computeDerivatives() modifies greyscaleImg)
+        greyscaleImg1 = greyscaleImg.clone();
+        greyscaleImg2 = greyscaleImg.clone();
+#pragma omp parallel num_threads(2)
+        {
+            int i = omp_get_thread_num();
+            if (i == 0)
+            {
+                derivatives = computeDerivatives(greyscaleImg1);
+
+            }
+            if (i == 1 || omp_get_num_threads() != 2)
+            {
+                derivatives2 = computeDerivatives(greyscaleImg2);
+            }
+        }
+
+        //verify match
+        bool matchX = (sum(derivatives2.Ix != derivatives.Ix) == Scalar(0));
+        bool matchY = (sum(derivatives2.Iy != derivatives.Iy) == Scalar(0));
+        bool matchXY = (sum(derivatives2.Ixy != derivatives.Ixy) == Scalar(0));
+        match = matchX & matchY & matchXY;
+
+        cout << "Derivatives match: " << boolalpha << match << endl;
+    }
+    // set greyscaleImg equal to one of the results
+    greyscaleImg = greyscaleImg1.clone();   
+    return derivatives;
+}
+
+Derivatives Harris::runParallel_applyToDerivatives(Derivatives& derivatives, int filterRange, bool gauss)
+{
+    Derivatives mDerivatives, mDerivatives2;
+    bool match = false;
+
+    while (!match)
+    {
+#pragma omp parallel num_threads(2)
+        {
+            int i = omp_get_thread_num();
+            if (i == 0)
+            {
+                if (gauss)
+                {
+                    mDerivatives = applyGaussToDerivatives(derivatives, filterRange);
+                }
+                else
+                {
+                    mDerivatives = applyMeanToDerivatives(derivatives, filterRange);
+                }
+            }
+            if (i == 1 || omp_get_num_threads() != 2)
+            {
+                if (gauss)
+                {
+                    mDerivatives2 = applyGaussToDerivatives(derivatives, filterRange);
+                }
+                else
+                {
+                    mDerivatives2 = applyMeanToDerivatives(derivatives, filterRange);
+                }
+            }
+        }
+
+        //verify match
+        bool mMatchX = (sum(mDerivatives2.Ix != mDerivatives.Ix) == Scalar(0));
+        bool mMatchY = (sum(mDerivatives2.Iy != mDerivatives.Iy) == Scalar(0));
+        bool mMatchXY = (sum(mDerivatives2.Ixy != mDerivatives.Ixy) == Scalar(0));
+        match = mMatchX & mMatchY & mMatchXY;
+
+        cout << "M Derivatives match: " << boolalpha << match << endl;
+    }
+    return mDerivatives;
+}
+
+Mat Harris::runParallel_computeHarrisResponses(float k, Derivatives& mDerivatives)
+{
+    Mat harrisResponses, harrisResponses2;
+    bool match = false;
+    while (!match)
+    {
+#pragma omp parallel num_threads(2)
+        {
+            int i = omp_get_thread_num();
+            if (i == 0)
+            {
+                harrisResponses = computeHarrisResponses(k,mDerivatives);
+            }
+            if (i == 1 || omp_get_num_threads() != 2)
+            {
+                harrisResponses2 = computeHarrisResponses(k,mDerivatives);
+            }
+        }
+        match = (sum(harrisResponses2 != harrisResponses) == Scalar(0));
+
+        cout << "Harris Responses match: " << boolalpha << match << endl;
+
+        m_harrisResponses = harrisResponses;
+    }
+
+    return harrisResponses;
+}
+#endif
