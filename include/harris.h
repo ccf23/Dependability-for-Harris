@@ -40,9 +40,9 @@ private:
 private:
 	Mat m_harrisResponses;
 
-	// #if INJECT_FAULTS
-	// 	injector inj;
-	// #endif
+	#if INJECT_FAULTS
+		injector inj;
+	#endif
 };
 
 #endif // _HARRIS_H_

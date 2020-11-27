@@ -6,7 +6,11 @@
 #include <chrono>
 using namespace std::chrono;
 
-Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
+Harris::Harris(Mat img, float k, int filterRange, bool gauss)  
+#if INJECT_FAULTS
+    : inj(SINGLE_DATA, 0.4)
+#endif
+{
 
     // (1) Convert to greyscale image
     auto t_start = high_resolution_clock::now();
