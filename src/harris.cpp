@@ -7,8 +7,11 @@
 #include <chrono>
 using namespace std::chrono;
 
-Harris::Harris(Mat img, float k, uint32_t filterRange, bool gauss) :
-    inj(SINGLE_DATA, 0.4)
+Harris::Harris(Mat img, float k, uint32_t filterRange, bool gauss) 
+    #if INJECT_FAULTS
+        :
+        inj(SINGLE_DATA, 0.4)
+    #endif
 {
 
     // (1) Convert to greyscale image
@@ -88,7 +91,6 @@ vector<pointData> Harris::getMaximaPoints(float percentage, uint32_t filterRange
     std::vector<pointData> topPoints;
 
     int32_t i=0;
-    bool hamming_done = false;
     while(topPoints.size() < numberTopPoints) {
         if(i == points.size())
             break;
@@ -104,40 +106,8 @@ vector<pointData> Harris::getMaximaPoints(float percentage, uint32_t filterRange
                     int32_t sx = points[i].point.x+c;
                     int32_t sy = points[i].point.y+r;
 
-                    #if HAMMING_ON
-                        if (!hamming_done) 
-                        {
-                            uint32_t supRows_before = supRows;
-                            supRows = ofxHammingCode::H3126::SECDED::encode(supRows); // Apply hamming to supRows
-                        }
-                    #endif
-
-                    #if INJECT_FAULTS
-                        if (!hamming_done)
-                            inj.inject(supRows, SINGLE_DATA);    // inject single fault in supRows once
-                    #endif
-
-                    #if HAMMING_ON
-                        if (!hamming_done)
-                        {
-                            assert(ofxHammingCode::H3126::SECDED::isCorrect(supRows) == 0);  // TODO: remove this after testing to improve performance
-                            assert(ofxHammingCode::H3126::SECDED::isCorrectable(supRows) == 1); // TODO: remove this after testing to improve performance
-                            if (ofxHammingCode::H3126::SECDED::isCorrectable(supRows))
-                                ofxHammingCode::H3126::SECDED::correct(supRows);      // Use hamming to correct fault
-
-                            assert(ofxHammingCode::H3126::SECDED::isCorrect(supRows) == 1); // TODO: remove this after testing to improve performance
-                            assert(ofxHammingCode::H3126::SECDED::isCorrectable(supRows) == 0); // TODO: remove this after testing to improve performance
-                            assert(supRows_before == ofxHammingCode::H3126::SECDED::decode(supRows));
-                            hamming_done = true;
-                        }
-                        
-                        if(sx > ofxHammingCode::H3126::SECDED::decode(supRows))
-                            sx = ofxHammingCode::H3126::SECDED::decode(supRows);
-                        
-                    #else
-                        if(sx > supRows)
-                            sx = supRows;
-                    #endif
+                    if(sx > supRows)
+                        sx = supRows;
                     
                     if(sx < 0)
                         sx = 0;
@@ -187,25 +157,17 @@ Derivatives Harris::applyGaussToDerivatives(Derivatives& dMats, uint32_t filterR
     #endif
 
     #if INJECT_FAULTS
-        inj.inject(filterRange, SINGLE_DATA);    // inject single fault in filterRange once
+        inj.inject(filterRange, SINGLE_DATA);    // inject single fault into filterRange
     #endif
 
     #if HAMMING_ON
-        assert(ofxHammingCode::H3126::SECDED::isCorrect(filterRange) == 0);  // TODO: remove this after testing to improve performance
-        assert(ofxHammingCode::H3126::SECDED::isCorrectable(filterRange) == 1); // TODO: remove this after testing to improve performance
         if (ofxHammingCode::H3126::SECDED::isCorrectable(filterRange))
             ofxHammingCode::H3126::SECDED::correct(filterRange);      // Use hamming to correct fault
-
-        assert(ofxHammingCode::H3126::SECDED::isCorrect(filterRange) == 1); // TODO: remove this after testing to improve performance
-        assert(ofxHammingCode::H3126::SECDED::isCorrectable(filterRange) == 0); // TODO: remove this after testing to improve performance
-        
-        if(ofxHammingCode::H3126::SECDED::decode(filterRange) == 0)
-            return dMats;
-    #else
-        if(filterRange == 0)
-            return dMats;
+        filterRange = ofxHammingCode::H3126::SECDED::decode(filterRange);
     #endif
 
+    if(filterRange == 0)
+        return dMats;
     Derivatives mdMats;
 
     mdMats.Ix = gaussFilter(dMats.Ix, filterRange);
