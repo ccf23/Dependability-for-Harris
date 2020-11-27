@@ -8,6 +8,7 @@
 using namespace std::chrono;
 
 #include "../include/harris.h"
+#include "../include/processing.h"
 
 using namespace cv;
 using namespace std;
@@ -57,6 +58,20 @@ void doHarris() {
         cout << "Total time to get vector of points: " << duration.count()/1000 << " ms" << endl;
         cout << "Features Detected: "<<resPts.size()<<endl;
     #endif
+
+    processing::saveVector(resPts, std::string("test"));
+
+    std::vector<pointData> readPts;
+    processing::readVector(readPts, std::string("test"));
+    //std::cout<<resPts.size()<<endl;
+    if (resPts == readPts)
+    {
+        cout<<"values match"<<endl;
+    }
+    else
+    {
+        cout<<"values DO NOT match"<<endl;
+    }
 
     #ifdef LOCAL
     t_before = high_resolution_clock::now();

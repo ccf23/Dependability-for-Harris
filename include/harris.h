@@ -9,6 +9,8 @@
 using namespace std;
 using namespace cv;
 
+#define BENCHMARK_RUN true
+
 #define ASSERTIONS_ON false
 #define LDPC_ON false
 #define CHECKPOINTING_ON false

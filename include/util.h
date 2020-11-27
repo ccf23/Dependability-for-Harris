@@ -1,6 +1,8 @@
 /*
  *      Author: alexanderb
  */
+#ifndef UTIL_H
+#define UTIL_H
 
 #include <opencv2/opencv.hpp>
 
@@ -11,6 +13,8 @@ struct pointData {
     float cornerResponse;
 
     Point point;
+	bool operator==(const pointData &) const;
+	
 };
 
 struct by_cornerResponse { 
@@ -33,3 +37,5 @@ public:
 
 	static Mat MarkInImage(Mat& img, vector<pointData> points, int radius);
 };
+
+#endif // UTIL_H
