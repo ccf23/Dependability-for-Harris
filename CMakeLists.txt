@@ -27,6 +27,7 @@ if(arm)
 
 	set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
 	set(BUILD_SHARED_LIBS OFF)
+	set(CMAKE_CXX_FLAGS "-std=c++1z")
 	set(CMAKE_EXE_LINKER_FLAGS "-static")
 
 else()
@@ -44,7 +45,6 @@ add_executable( Harris
 	./src/util.cpp
 	./src/harris.cpp
 	./src/main.cpp
-	./src/hammingcode.cpp
 	./src/injector.cpp
 )
 

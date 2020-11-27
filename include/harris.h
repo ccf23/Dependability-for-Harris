@@ -8,7 +8,8 @@
 #include <opencv2/opencv.hpp>
 
 #include "util.h"
-#include "../include/hammingcode.h"
+#include "../include/injector.h"
+#include "../include/hamming_codes.h"
 
 using namespace std;
 using namespace cv;
@@ -22,14 +23,14 @@ using namespace cv;
 
 class Harris {
 public:
-    Harris(Mat img, float k, int32_t filterRange, bool gauss);
-	std::vector<pointData> getMaximaPoints(float percentage, int32_t filterRange, int32_t suppressionRadius);
+    Harris(Mat img, float k, uint32_t filterRange, bool gauss);
+	std::vector<pointData> getMaximaPoints(float percentage, uint32_t filterRange, int32_t suppressionRadius);
 
 private:
 	Mat convertRgbToGrayscale(Mat& img);
 	Derivatives computeDerivatives(Mat& greyscaleImg);	
-	Derivatives applyMeanToDerivatives(Derivatives& dMats, int32_t filterRange);
-	Derivatives applyGaussToDerivatives(Derivatives& dMats, int32_t filterRange);
+	Derivatives applyMeanToDerivatives(Derivatives& dMats, uint32_t filterRange);
+	Derivatives applyGaussToDerivatives(Derivatives& dMats, uint32_t filterRange);
 	Mat computeHarrisResponses(float k, Derivatives& intMats);
 
 	Mat computeIntegralImg(Mat& img);
@@ -38,7 +39,10 @@ private:
 
 private:
 	Mat m_harrisResponses;
-	HammingCode _hamming;
+
+	#if INJECT_FAULTS
+		injector inj;
+	#endif
 };
 
 #endif // _HARRIS_H_

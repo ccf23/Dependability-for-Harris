@@ -7,7 +7,9 @@
 #include <chrono>
 using namespace std::chrono;
 
-Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
+Harris::Harris(Mat img, float k, uint32_t filterRange, bool gauss) :
+    inj(SINGLE_DATA, 0.4)
+{
 
     // (1) Convert to greyscale image
     auto t_start = high_resolution_clock::now();
@@ -62,7 +64,7 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
 }
 
 //-----------------------------------------------------------------------------------------------
-vector<pointData> Harris::getMaximaPoints(float percentage, int32_t filterRange, int32_t suppressionRadius) {
+vector<pointData> Harris::getMaximaPoints(float percentage, uint32_t filterRange, int32_t suppressionRadius) {
     // Declare a max suppression matrix
     Mat maximaSuppressionMat(m_harrisResponses.rows, m_harrisResponses.cols, CV_32F, Scalar::all(0));
 
@@ -86,22 +88,13 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int32_t filterRange,
     std::vector<pointData> topPoints;
 
     int32_t i=0;
+    bool hamming_done = false;
     while(topPoints.size() < numberTopPoints) {
         if(i == points.size())
             break;
 
         uint32_t supRows = maximaSuppressionMat.rows;
         int32_t supCols = maximaSuppressionMat.cols;
-
-        #if HAMMING_ON
-            // Apply Hamming to supRows
-            if (i == 0) 
-            {
-                printf("\noriginal supRows:\t\t0x%08x\n", supRows);
-                supRows = _hamming.encode(supRows);
-                printf("encoded supRows:\t\t0x%08x\n", supRows);
-            }
-        #endif
 
         // Check if point marked in maximaSuppression matrix
         if(maximaSuppressionMat.at<int32_t>(points[i].point.x,points[i].point.y) == 0) {
@@ -112,32 +105,35 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int32_t filterRange,
                     int32_t sy = points[i].point.y+r;
 
                     #if HAMMING_ON
-                        if (i == 0) supRows = _hamming.encode(supRows);
+                        if (!hamming_done) 
+                        {
+                            uint32_t supRows_before = supRows;
+                            supRows = ofxHammingCode::H3126::SECDED::encode(supRows); // Apply hamming to supRows
+                        }
                     #endif
 
                     #if INJECT_FAULTS
-                        if (i == 0)
-                        {
-                            injector inj;
-                            inj.inject(supRows, SINGLE_DATA);    
-                        } 
+                        if (!hamming_done)
+                            inj.inject(supRows, SINGLE_DATA);    // inject single fault in supRows once
                     #endif
 
                     #if HAMMING_ON
-                        if (i == 0)
+                        if (!hamming_done)
                         {
-                            printf("\nisCorrect()?\t\t\t\t%d\n", _hamming.isCorrect(supRows));
-                            printf("isCorrectable()?\t\t\t%d\n", _hamming.isCorrectable(supRows));
-                            if (_hamming.isCorrectable(supRows))
-                                _hamming.correct(supRows);
+                            assert(ofxHammingCode::H3126::SECDED::isCorrect(supRows) == 0);  // TODO: remove this after testing to improve performance
+                            assert(ofxHammingCode::H3126::SECDED::isCorrectable(supRows) == 1); // TODO: remove this after testing to improve performance
+                            if (ofxHammingCode::H3126::SECDED::isCorrectable(supRows))
+                                ofxHammingCode::H3126::SECDED::correct(supRows);      // Use hamming to correct fault
 
-                            printf("isCorrect() after corrected?\t\t%d\n", _hamming.isCorrect(supRows));
-                            printf("isCorrectable() after corrected?\t%d\n", _hamming.isCorrectable(supRows));
-                            printf("supRows after correction:\t0x%08x\n", supRows);
-                            printf("decoded supRows after correction:\t0x%08x\n", _hamming.decode(supRows));
+                            assert(ofxHammingCode::H3126::SECDED::isCorrect(supRows) == 1); // TODO: remove this after testing to improve performance
+                            assert(ofxHammingCode::H3126::SECDED::isCorrectable(supRows) == 0); // TODO: remove this after testing to improve performance
+                            assert(supRows_before == ofxHammingCode::H3126::SECDED::decode(supRows));
+                            hamming_done = true;
                         }
-                        if(sx > _hamming.decode(supRows))
-                            sx = _hamming.decode(supRows);
+                        
+                        if(sx > ofxHammingCode::H3126::SECDED::decode(supRows))
+                            sx = ofxHammingCode::H3126::SECDED::decode(supRows);
+                        
                     #else
                         if(sx > supRows)
                             sx = supRows;
@@ -184,9 +180,31 @@ Mat Harris::convertRgbToGrayscale(Mat& img) {
 }
 
 //-----------------------------------------------------------------------------------------------
-Derivatives Harris::applyGaussToDerivatives(Derivatives& dMats, int32_t filterRange) {
-    if(filterRange == 0)
-        return dMats;
+Derivatives Harris::applyGaussToDerivatives(Derivatives& dMats, uint32_t filterRange) {
+
+    #if HAMMING_ON
+        filterRange = ofxHammingCode::H3126::SECDED::encode(filterRange);
+    #endif
+
+    #if INJECT_FAULTS
+        inj.inject(filterRange, SINGLE_DATA);    // inject single fault in filterRange once
+    #endif
+
+    #if HAMMING_ON
+        assert(ofxHammingCode::H3126::SECDED::isCorrect(filterRange) == 0);  // TODO: remove this after testing to improve performance
+        assert(ofxHammingCode::H3126::SECDED::isCorrectable(filterRange) == 1); // TODO: remove this after testing to improve performance
+        if (ofxHammingCode::H3126::SECDED::isCorrectable(filterRange))
+            ofxHammingCode::H3126::SECDED::correct(filterRange);      // Use hamming to correct fault
+
+        assert(ofxHammingCode::H3126::SECDED::isCorrect(filterRange) == 1); // TODO: remove this after testing to improve performance
+        assert(ofxHammingCode::H3126::SECDED::isCorrectable(filterRange) == 0); // TODO: remove this after testing to improve performance
+        
+        if(ofxHammingCode::H3126::SECDED::decode(filterRange) == 0)
+            return dMats;
+    #else
+        if(filterRange == 0)
+            return dMats;
+    #endif
 
     Derivatives mdMats;
 
@@ -198,7 +216,7 @@ Derivatives Harris::applyGaussToDerivatives(Derivatives& dMats, int32_t filterRa
 }
 
 //-----------------------------------------------------------------------------------------------
-Derivatives Harris::applyMeanToDerivatives(Derivatives& dMats, int32_t filterRange) {
+Derivatives Harris::applyMeanToDerivatives(Derivatives& dMats, uint32_t filterRange) {
     if(filterRange == 0)
         return dMats;
 

@@ -19,7 +19,7 @@ Mat m_img;
 string filename;
 
 void doHarris() {
-    int boxFilterSize = 3;
+    uint32_t boxFilterSize = 3;
     int maximaSuppressionDimension = 10;
     bool gauss = true;
     float percentage = 50e-5;
