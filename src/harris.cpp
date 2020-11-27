@@ -24,8 +24,8 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
         {
             greyscaleImg = cv::Mat(greyscaleImg,cv::Range(0,greyscaleImg.rows - 2), cv::Range(0,greyscaleImg.cols - 2));
             cout<<"greyscale correct"<<endl;
-        }
-        else
+        }else
+        
         {
 
             //TODO: handle error
@@ -136,14 +136,14 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
 
         #endif
         for (int c = 0; c < m_harrisResponses.cols; c++) {
-            if (m_harrisResponses.at<float>(r,c) > 1e9) // set corner response threshold
+            if (m_harrisResponses.at<float>(r,c) > .5) // set corner response threshold
             {
                 Point p(r,c); 
 
                 pointData d;
                 d.cornerResponse = m_harrisResponses.at<float>(r,c);
                 d.point = p;
-
+                
                 points.push_back(d);
             }
         }
@@ -203,6 +203,7 @@ Mat Harris::convertRgbToGrayscale(Mat& img) {
             	0.2126 * img.at<cv::Vec3f>(r,c)[0] +
             	0.7152 * img.at<cv::Vec3f>(r,c)[1] +
             	0.0722 * img.at<cv::Vec3f>(r,c)[2];
+            greyscaleImg.at<float>(r,c) /= 255;
         }
 
     }
@@ -308,7 +309,7 @@ Mat Harris::computeHarrisResponses(float k, Derivatives& d) {
 
             float det = a11*a22 - a12*a21;
             float trace = a11 + a22;
-
+            
             M.at<float>(r,c) = abs(det - k * trace*trace);
         }
     }
