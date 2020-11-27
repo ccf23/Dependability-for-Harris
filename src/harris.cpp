@@ -377,7 +377,7 @@ Mat Harris::computeHarrisResponses(float k, Derivatives& d) {
     Mat M(d.Iy.rows, d.Ix.cols, CV_32F);
     #if ASSERTIONS_ON
       float det, trace;
-
+      int count_fault =0;
       for(int r=0; r<d.Iy.rows; r++) {
           for(int c=0; c<d.Iy.cols; c++) {
               float   a11, a12,
@@ -388,7 +388,7 @@ Mat Harris::computeHarrisResponses(float k, Derivatives& d) {
               a21 = d.Ix.at<float>(r,c) * d.Iy.at<float>(r,c);
               a12 = d.Ix.at<float>(r,c) * d.Iy.at<float>(r,c);
 
-              count_fault =0;
+
               do { // runs through loop once and checks if there is a fault
 
                 det = a11*a22 - a12*a21; //always 0 unless fault
