@@ -30,16 +30,18 @@ uint32_t HammingCode::encode_H3126(uint32_t rawData)
 uint32_t HammingCode::encode(uint32_t data)
 {
     add_parity(encode_H3126(data));
-
 }
+
 uint32_t HammingCode::decode(uint32_t encodedData)
 {
     return ((encodedData >> 6) & 0x3ffffff);
 }
+
 bool HammingCode::isCorrectable(uint32_t encodedData)
 {
     return check_data(encodedData) & 1;
 }
+
 bool HammingCode::isCorrect(uint32_t encodedData)
 {
     return check_data(encodedData) == 0;
@@ -51,14 +53,68 @@ void HammingCode::correct(uint32_t &encodedData)
     if (f & 1) encodedData ^= correct_bit[f >> 1];
 }
 
-/**************************** double Hamming ****************************/ 
-// double HammingCode::encode(double rawData) { return 0.0;}
-// double HammingCode::decode(double encodedData) { return 0.0;}
-// bool HammingCode::isCorrect(double encodedData) { return false;}
-// bool HammingCode::isCorrectable(double encodedData) { return false;}
-// void HammingCode::correct (double &encodedData) {}
+/**************************** float Hamming ****************************/ 
+float HammingCode::encode_H3126(float rawData)
+{
+    uint32_t as_int = float2int(rawData);
+    as_int = encode_H3126(as_int);
+    return int2float(as_int);
+}
+
+float HammingCode::encode(float data)
+{
+    uint32_t as_int = float2int(data);
+    add_parity(encode_H3126(data));
+    return int2float(as_int);
+}
+
+float HammingCode::decode(float encodedData)
+{
+    uint32_t as_int = float2int(encodedData);
+    as_int = ((as_int >> 6) & 0x3ffffff);
+    return int2float(as_int);
+}
+
+bool HammingCode::isCorrectable(float encodedData)
+{
+    uint32_t as_int = float2int(encodedData);
+    as_int = check_data(as_int) & 1;
+    return int2float(as_int);
+}
+
+bool HammingCode::isCorrect(float encodedData)
+{
+    uint32_t as_int = float2int(encodedData);
+    as_int = check_data(as_int) == 0;
+    return int2float(as_int);
+}
+
+void HammingCode::correct(float &encodedData)
+{
+    uint32_t as_int = float2int(encodedData);
+    uint32_t f = check_data(as_int);
+    if (f & 1) as_int ^= correct_bit[f >> 1];
+    encodedData = int2float(as_int);
+}
+
 
 /************************ helper functions ***************************/
+uint32_t HammingCode::float2int(float f)
+{
+    static_assert(sizeof(float) == sizeof f, "`float` has a weird size.");
+    uint32_t ret;
+    std::memcpy(&ret, &f, sizeof(float));
+    return ret;
+}
+
+float HammingCode::int2float(uint32_t f)
+{
+    static_assert(sizeof(float) == sizeof f, "`float` has a weird size.");
+    float ret;
+    std::memcpy(&ret, &f, sizeof(float));
+    return ret;
+}
+
 uint8_t HammingCode::bit_sum_32(uint32_t b)
 {
     b = ((b & 0xAAAAAAAA) >>  1) + (b & 0x55555555);

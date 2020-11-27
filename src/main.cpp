@@ -68,11 +68,13 @@ void doHarris() {
 //-----------------------------------------------------------------------------------------------
 int main(int argc, char** argv) {
 
-    printf("Fault tolerance techniques enabled:\n");
-    printf("HAMMING_ON:\t\t%d\n",       (HAMMING_ON == true));
-    printf("ASSERTIONS_ON:\t\t%d\n",    (ASSERTIONS_ON == true));
-    printf("ABFT_ON:\t\t%d\n",          (ABFT_ON == true));
-    printf("CHECKPOINTING_ON:\t%d\n\n", (CHECKPOINTING_ON == true));
+    printf("\nCONFIGURATION::\n");
+    printf("\tHAMMING_ON:\t\t%d\n",       (HAMMING_ON == true));
+    printf("\tASSERTIONS_ON:\t\t%d\n",    (ASSERTIONS_ON == true));
+    printf("\tABFT_ON:\t\t%d\n",          (ABFT_ON == true));
+    printf("\tCHECKPOINTING_ON:\t%d\n\n", (CHECKPOINTING_ON == true));
+
+    printf("\tINJECT_FAULTS:\t\t%d\n\n",     (INJECT_FAULTS == true));
 
     // read image from file + error handling
     Mat img;

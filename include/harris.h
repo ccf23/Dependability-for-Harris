@@ -18,6 +18,8 @@ using namespace cv;
 #define CHECKPOINTING_ON 	false
 #define ABFT_ON 			false
 
+#define INJECT_FAULTS		true
+
 class Harris {
 public:
     Harris(Mat img, float k, int32_t filterRange, bool gauss);

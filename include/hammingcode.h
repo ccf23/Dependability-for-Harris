@@ -58,18 +58,18 @@ class HammingCode
         bool isCorrect(uint32_t encodedData);
         void correct (uint32_t &encodedData);
 
-        // TODO : Change all floats (32 bits) in Harris to doubles (64 bits) so there's 
-        // room for 6 extra bits of parity
-
-        /* Functions for double encoding using (32,26) Hamming */
-        // static double encode(double rawData);
-        // static double decode(double encodedData);
-        // static bool isCorrect(double encodedData);
-        // static bool isCorrectable(double encodedData);
-        // static void correct (double &encodedData);
+        /* Functions for float encoding using (32,26) Hamming */
+        float encode_H3126(float rawData);
+        float encode(float data);
+        float decode(float encodedData);
+        bool isCorrectable(float encodedData);
+        bool isCorrect(float encodedData);
+        void correct (float &encodedData);
 
     private:
 
+        uint32_t float2int(float f);
+        float int2float(uint32_t);
         uint8_t bit_sum_32(uint32_t b);
         uint32_t check_data(uint32_t c);
         uint32_t add_parity(uint32_t data);

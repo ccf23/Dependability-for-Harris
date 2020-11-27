@@ -93,42 +93,16 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int32_t filterRange,
         uint32_t supRows = maximaSuppressionMat.rows;
         int32_t supCols = maximaSuppressionMat.cols;
 
-
         #if HAMMING_ON
             // Apply Hamming to supRows
-            supRows = _hamming.encode(supRows);
+            if (i == 0) 
+            {
+                printf("\noriginal supRows:\t\t0x%08x\n", supRows);
+                supRows = _hamming.encode(supRows);
+                printf("encoded supRows:\t\t0x%08x\n", supRows);
+            }
         #endif
 
-        // TODO: Inject single fault in supRows
-        if (i == 0)
-        {
-            injector fi(NONE, .4);
-
-            uint32_t supRows_before = supRows;
-
-            printf("\noriginal supRows:\t\t0x%08x\n", supRows);
-        
-            supRows = _hamming.encode(supRows);
-            printf("encoded supRows:\t\t0x%08x\n", supRows);
-            printf("decoded supRows:\t\t0x%08x\n", _hamming.decode(supRows));
-
-            fi.inject(supRows, SINGLE_DATA);
-            printf("supRows after fault injection:\t0x%08x\n", supRows);
-            printf("decoded supRows after fi:\t0x%08x\n", _hamming.decode(supRows));
-
-
-            printf("\nisCorrect()?\t\t\t\t%d\n", _hamming.isCorrect(supRows));
-            printf("isCorrectable()?\t\t\t%d\n", _hamming.isCorrectable(supRows));
-
-            if (_hamming.isCorrectable(supRows))
-                _hamming.correct(supRows);
-            printf("isCorrect() after corrected?\t\t%d\n", _hamming.isCorrect(supRows));
-            printf("isCorrectable() after corrected?\t%d\n", _hamming.isCorrectable(supRows));
-            printf("supRows after correction:\t0x%08x\n", supRows);
-            printf("decoded supRows after correction:\t0x%08x\n", _hamming.decode(supRows));
-
-        }
-            
         // Check if point marked in maximaSuppression matrix
         if(maximaSuppressionMat.at<int32_t>(points[i].point.x,points[i].point.y) == 0) {
             
@@ -137,16 +111,37 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int32_t filterRange,
                     int32_t sx = points[i].point.x+c;
                     int32_t sy = points[i].point.y+r;
 
-                    // bound checking
+                    #if HAMMING_ON
+                        if (i == 0) supRows = _hamming.encode(supRows);
+                    #endif
+
+                    #if INJECT_FAULTS
+                        if (i == 0)
+                        {
+                            injector inj;
+                            inj.inject(supRows, SINGLE_DATA);    
+                        } 
+                    #endif
 
                     #if HAMMING_ON
+                        if (i == 0)
+                        {
+                            printf("\nisCorrect()?\t\t\t\t%d\n", _hamming.isCorrect(supRows));
+                            printf("isCorrectable()?\t\t\t%d\n", _hamming.isCorrectable(supRows));
+                            if (_hamming.isCorrectable(supRows))
+                                _hamming.correct(supRows);
+
+                            printf("isCorrect() after corrected?\t\t%d\n", _hamming.isCorrect(supRows));
+                            printf("isCorrectable() after corrected?\t%d\n", _hamming.isCorrectable(supRows));
+                            printf("supRows after correction:\t0x%08x\n", supRows);
+                            printf("decoded supRows after correction:\t0x%08x\n", _hamming.decode(supRows));
+                        }
                         if(sx > _hamming.decode(supRows))
                             sx = _hamming.decode(supRows);
                     #else
                         if(sx > supRows)
                             sx = supRows;
                     #endif
-                    
                     
                     if(sx < 0)
                         sx = 0;
