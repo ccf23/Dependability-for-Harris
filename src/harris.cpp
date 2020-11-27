@@ -6,24 +6,26 @@
 #include <chrono>
 using namespace std::chrono;
 
+#if ASSERTIONS_ON
+  // function to check range of each saved matrix element
+  int iterate(Mat matrix, int lB, int uB){
 
-int iterate(Mat matrix, int lB, int uB){
-
-  //check each element of matrix
-  for (int i = 0; i <matrix.rows; i++)
-  {
-    for (int j = 0; j <matrix.cols; j++)
+    //check each element of matrix
+    for (int i = 0; i <matrix.rows; i++)
     {
-      //cout << matrix.at<float>(i,j) << "              " << endl;
-      if (matrix.at<float>(i,j) <= lB || matrix.at<float>(i,j) > uB)
+      for (int j = 0; j <matrix.cols; j++)
       {
-        return 1; //there is a fault, so stop checking rest of matrix
+        //cout << matrix.at<float>(i,j) << "              " << endl;
+        if (matrix.at<float>(i,j) <= lB || matrix.at<float>(i,j) > uB)
+        {
+          return 1; //there is a fault, so stop checking rest of matrix
+        }
       }
     }
-  }
-  return 0; //there is no fault
+    return 0; //there is no fault
 
-}
+  }
+#endif
 
 Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
 
