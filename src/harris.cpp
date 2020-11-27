@@ -151,7 +151,6 @@ Mat Harris::convertRgbToGrayscale(Mat& img) {
 
 //-----------------------------------------------------------------------------------------------
 Derivatives Harris::applyGaussToDerivatives(Derivatives& dMats, uint32_t filterRange) {
-
     #if HAMMING_ON
         filterRange = ofxHammingCode::H3126::SECDED::encode(filterRange);
     #endif

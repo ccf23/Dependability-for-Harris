@@ -196,50 +196,6 @@ namespace H3126 {
             std::uint32_t f = check_data(h);
             if(f & 1) h ^= correct_bit[f >> 1];
         }
-
-        /* for 32-bit floats*/
-        inline static uint32_t float2int(float f) {
-            uint32_t ret;
-            std::memcpy(&ret, &f, sizeof(float));
-            return ret;
-        }
-
-        inline static float int2float(uint32_t f) {
-            float ret;
-            std::memcpy(&ret, &f, sizeof(float));
-            return ret;
-        }
-
-        inline static float encodeF(float data) {
-            uint32_t as_int = float2int(data);
-            as_int = add_parity(H3126::encode(as_int));
-            return int2float(as_int);
-        }
-        
-        inline static float decodeF(float h) {
-            uint32_t as_int = float2int(h);
-            as_int = ((as_int >> 6) & 0x3ffffff);
-            return int2float(as_int);
-        }
-
-        inline static bool isCorrectF(float h) {
-            uint32_t as_int = float2int(h);
-            as_int = check_data(as_int) == 0;
-            return int2float(as_int);
-        }
-        
-        inline static bool isCorrectableF(float h) {
-            uint32_t as_int = float2int(h);
-            as_int = check_data(as_int) & 1;
-            return int2float(as_int);
-        }
-        
-        inline static void correctF(float &h) {
-            uint32_t as_int = float2int(h);
-            uint32_t f = check_data(as_int);
-            if(f & 1) as_int ^= correct_bit[f >> 1];
-            h = int2float(as_int);
-        }
     };
 };
 
