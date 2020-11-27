@@ -114,12 +114,12 @@ bool abft_check(Mat &img, Mat &rCheck, Mat &cCheck)
 
     if (rErrPts.size() == 0 && cErrPts.size() == 0)
     {
-        cout<<"ABFT: NO ERRORS DETECTED"<<endl;
+        //cout<<"ABFT: NO ERRORS DETECTED"<<endl;
         return true;
     }
     else if (rErrPts.size() == 1 && cErrPts.size() == 1)
     {
-        cout<<"ABFT: CORRECTABLE ERROR DETECTED"<<endl;
+        //cout<<"ABFT: CORRECTABLE ERROR DETECTED"<<endl;
 
         // correct value
         int v = cErrPts[0].x;
@@ -131,7 +131,7 @@ bool abft_check(Mat &img, Mat &rCheck, Mat &cCheck)
     }
     else
     {
-        cout<<"ABFT: UN-CORRECTABLE ERRORS DETECTED"<<endl;
+        //cout<<"ABFT: UN-CORRECTABLE ERRORS DETECTED"<<endl;
         return false;
     }
 

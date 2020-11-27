@@ -12,7 +12,7 @@ using namespace cv;
 #define ASSERTIONS_ON false
 #define LDPC_ON false
 #define CHECKPOINTING_ON false
-#define ABFT_ON false
+#define ABFT_ON true
 
 #define DATA_COLLECTION_MODE false
 
@@ -24,12 +24,9 @@ public:
 private:
 	Mat convertRgbToGrayscale(Mat& img);
 	Derivatives computeDerivatives(Mat& greyscaleImg);	
-	Derivatives applyMeanToDerivatives(Derivatives& dMats, int filterRange);
 	Derivatives applyGaussToDerivatives(Derivatives& dMats, int filterRange);
 	Mat computeHarrisResponses(float k, Derivatives& intMats);
 
-	Mat computeIntegralImg(Mat& img);
-	Mat meanFilter(Mat& intImg, int range);
 	Mat gaussFilter(Mat& img, int range);
 
 private:
