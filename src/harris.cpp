@@ -136,7 +136,7 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
 
         #endif
         for (int c = 0; c < m_harrisResponses.cols; c++) {
-            if (m_harrisResponses.at<float>(r,c) > 1e10) // set corner response threshold
+            if (m_harrisResponses.at<float>(r,c) > 1e9) // set corner response threshold
             {
                 Point p(r,c); 
 
@@ -154,14 +154,11 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
 
     int numberTopPoints = points.size();
     std::vector<pointData> topPoints;
-    cout<<numberTopPoints<<endl;
-    int i=0;
-    for (int _loopvar = 0; _loopvar < numberTopPoints; ++_loopvar) 
-    {
+    int supRows = m_harrisResponses.rows - 1;
+    int supCols = m_harrisResponses.cols - 1;
 
-        int supRows = m_harrisResponses.rows - 1;
-        int supCols = m_harrisResponses.cols - 1;
-        
+    for (int i = 0; i < numberTopPoints; ++i) 
+    {        
         // Check if point marked in maximaSuppression matrix
         if(maxSuppresionMat[points[i].point.x][points[i].point.y] == 0) 
         {   
@@ -191,9 +188,7 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
             points[i].point.y += 1 + filterRange;
             topPoints.push_back(points[i]);
         }
-
-        i++;
-        
+       
     }
     return topPoints;
 }

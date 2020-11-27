@@ -13,7 +13,7 @@ using namespace cv;
 using namespace std;
 
 // uncomment to allow for visual test on local machine
-#define LOCAL
+//#define LOCAL
 
 Mat m_img;
 string filename;
@@ -24,7 +24,7 @@ void doHarris() {
     bool gauss = true;
     float percentage = 50e-5;
     int markDimension = 5;
-    float k = 0.25;
+    float k = 0.05;
 
     // Temporary: Pattern to follow for enabling/disabling FT:
     #if ASSERTIONS_ON
