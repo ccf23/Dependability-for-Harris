@@ -37,6 +37,8 @@ using namespace cv;
 
     Mat mderivxyA; //D
 
+    Mat traceA;
+
     Mat cornersA; //E
 
 

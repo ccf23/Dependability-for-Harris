@@ -97,6 +97,7 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
 
     #if ASSERTIONS_ON
       Derivatives mDerivatives; // could clean the code a bit more since the guass filter will always be applied
+
       count_fault =0;
       do { // runs through loop once and checks if there is a fault
         if(gauss) {
@@ -139,6 +140,9 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
 
     #if ASSERTIONS_ON
       Mat harrisResponses;
+
+      float maxHarrisResponse;
+
       count_fault =0;
       do { // runs through loop once and checks if there is a fault
         harrisResponses = computeHarrisResponses(k, mDerivatives);
@@ -148,7 +152,7 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
         if (count_fault > 3){
           break;
         }
-      } while (iterate(ck.cornersA,0,4.398*pow(10,11)) == 1); 
+      } while (iterate(ck.cornersA,0,4.398*pow(10,11)) == 1); ///overflow, so remove this checkpoint
 
       m_harrisResponses = harrisResponses;
     #else
@@ -371,25 +375,63 @@ Derivatives Harris::computeDerivatives(Mat& greyscaleImg) {
 //-----------------------------------------------------------------------------------------------
 Mat Harris::computeHarrisResponses(float k, Derivatives& d) {
     Mat M(d.Iy.rows, d.Ix.cols, CV_32F);
+    #if ASSERTIONS_ON
+      float det, trace;
 
-    for(int r=0; r<d.Iy.rows; r++) {
-        for(int c=0; c<d.Iy.cols; c++) {
-            float   a11, a12,
-                    a21, a22;
+      for(int r=0; r<d.Iy.rows; r++) {
+          for(int c=0; c<d.Iy.cols; c++) {
+              float   a11, a12,
+                      a21, a22;
 
-            a11 = d.Ix.at<float>(r,c) * d.Ix.at<float>(r,c);
-            a22 = d.Iy.at<float>(r,c) * d.Iy.at<float>(r,c);
-            a21 = d.Ix.at<float>(r,c) * d.Iy.at<float>(r,c);
-            a12 = d.Ix.at<float>(r,c) * d.Iy.at<float>(r,c);
+              a11 = d.Ix.at<float>(r,c) * d.Ix.at<float>(r,c);
+              a22 = d.Iy.at<float>(r,c) * d.Iy.at<float>(r,c);
+              a21 = d.Ix.at<float>(r,c) * d.Iy.at<float>(r,c);
+              a12 = d.Ix.at<float>(r,c) * d.Iy.at<float>(r,c);
 
-            float det = a11*a22 - a12*a21; //always 0 unless fault
-            cout << det << "the det issssss" <<endl;
-            float trace = a11 + a22; // cant be larger than 2.1 million
+              count_fault =0;
+              do { // runs through loop once and checks if there is a fault
 
-            M.at<float>(r,c) = abs(det - k * trace*trace);// coud be over 4 Tera
-        }
-    }
+                det = a11*a22 - a12*a21; //always 0 unless fault
+                cout << det << "the det issssss" <<endl;
+                trace = a11 + a22; // cant be larger than 2.1 million
 
+                ck.traceA = trace.clone();
+
+
+
+                count_fault += 1;
+                if (count_fault > 3){
+                  break;
+                }
+              } while (iterate(ck.traceA,0,2.1*pow(10,6)) == 1);
+
+
+
+              M.at<float>(r,c) = abs(det - k * trace*trace);// coud be over 4 Tera
+          }
+      }
+
+    #else
+
+      for(int r=0; r<d.Iy.rows; r++) {
+          for(int c=0; c<d.Iy.cols; c++) {
+              float   a11, a12,
+                      a21, a22;
+
+              a11 = d.Ix.at<float>(r,c) * d.Ix.at<float>(r,c);
+              a22 = d.Iy.at<float>(r,c) * d.Iy.at<float>(r,c);
+              a21 = d.Ix.at<float>(r,c) * d.Iy.at<float>(r,c);
+              a12 = d.Ix.at<float>(r,c) * d.Iy.at<float>(r,c);
+
+              float det = a11*a22 - a12*a21; //always 0 unless fault
+              cout << det << "the det issssss" <<endl;
+              float trace = a11 + a22; // cant be larger than 2.1 million
+
+              M.at<float>(r,c) = abs(det - k * trace*trace);// coud be over 4 Tera
+          }
+      }
+
+    #endif
     return M;
 }
 
