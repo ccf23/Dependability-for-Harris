@@ -12,6 +12,8 @@ typedef enum
     GRAYSCALE
 } abftMode;
 
+const int maxErrorLimit = 5000;
+
 // adds checksums to grayscale abft and returns to be used for conversion
 Mat doGrayscaleABFT(Mat);
 
@@ -22,7 +24,7 @@ bool grayscaleABFTCheck(Mat&);
 bool abft_addChecksums(Mat, Mat&, Mat&);
 
 // performs verification and correction using matrix and row/column checks
-bool abft_check(Mat & , Mat&, Mat&);
+bool abft_check(Mat & , Mat&, Mat&, bool);
 
 
 

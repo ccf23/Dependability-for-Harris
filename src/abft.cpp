@@ -90,7 +90,7 @@ bool abft_addChecksums(Mat img, Mat &rCheck, Mat &cCheck)
 
 }
 
-bool abft_check(Mat &img, Mat &rCheck, Mat &cCheck)
+bool abft_check(Mat &img, Mat &rCheck, Mat &cCheck, bool useThresh)
 {
     Mat newCcheck, newRcheck, cDiff, rDiff, cErr, rErr;
 
@@ -100,8 +100,8 @@ bool abft_check(Mat &img, Mat &rCheck, Mat &cCheck)
     absdiff(newCcheck, cCheck, cDiff);
     absdiff(newRcheck, rCheck, rDiff);
 
-    Mat zeroCheckC = Mat::ones(cDiff.rows, cDiff.cols, cDiff.type());
-    Mat zeroCheckR = Mat::ones(rDiff.rows, rDiff.cols, rDiff.type());
+    Mat zeroCheckC = Mat(cDiff.rows, cDiff.cols, cDiff.type(),Scalar::all(.01));
+    Mat zeroCheckR = Mat(rDiff.rows, rDiff.cols, rDiff.type(), Scalar::all(.01));
 
 
     compare(cDiff, zeroCheckC, cErr, CMP_GE);
@@ -129,9 +129,23 @@ bool abft_check(Mat &img, Mat &rCheck, Mat &cCheck)
         img.at<float>(u,v) = cCheck.at<float>(0,v) - diff;
         return true;
     }
+    else if (useThresh)
+    {
+        // maximum number of possible errors
+        int maxErrors = rErrPts.size()*cErrPts.size();
+
+        if (maxErrors < maxErrorLimit)
+        {
+            // error quantity in image does not justify repeat
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
     else
     {
-        //cout<<"ABFT: UN-CORRECTABLE ERRORS DETECTED"<<endl;
         return false;
     }
 

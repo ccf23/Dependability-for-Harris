@@ -1,5 +1,5 @@
 /*
- *      Author: alexanderb
+ *      addapted from work done by alexanderb
  */
 
 #include "../include/harris.h"
@@ -23,9 +23,8 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
         if (correct)
         {
             greyscaleImg = cv::Mat(greyscaleImg,cv::Range(0,greyscaleImg.rows - 2), cv::Range(0,greyscaleImg.cols - 2));
-            cout<<"greyscale correct"<<endl;
-        }else
-        
+        }
+        else
         {
 
             //TODO: handle error
@@ -43,7 +42,7 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
     #if ABFT_ON
         Mat a, b;
         abft_addChecksums(greyscaleImg,a,b);
-        bool val = abft_check(greyscaleImg,a,b);
+        bool val = abft_check(greyscaleImg,a,b,true);
     #endif
 
     // (2) Compute Derivatives
@@ -60,9 +59,9 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
         // error injection
         bool matchX, matchY, matchXY;
         matchX = matchY = matchXY = false; 
-        matchX = abft_check(derivatives.Ix, IxR, IxC);
-        matchY = abft_check(derivatives.Iy, IyR, IyC);
-        matchXY = abft_check(derivatives.Ixy, IxyR, IxyC);
+        matchX = abft_check(derivatives.Ix, IxR, IxC, true);
+        matchY = abft_check(derivatives.Iy, IyR, IyC, true);
+        matchXY = abft_check(derivatives.Ixy, IxyR, IxyC, true);
 
         if (!matchX || !matchY || !matchXY)
         {
@@ -129,7 +128,7 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
         #if ABFT_ON
             // perform continual verification during this critical part
             
-            if (!abft_check(m_harrisResponses,hrRc,hrCc))
+            if (!abft_check(m_harrisResponses,hrRc,hrCc,true))
             {
                 // corrupted, go back to begining
             }//*/
@@ -237,7 +236,7 @@ Derivatives Harris::applyGaussToDerivatives(Derivatives& dMats, int filterRange)
 
     #if ABFT_ON
         // validate ABFT before returning
-        if (!abft_check(mdMats.Ix,IxRc,IxCc) || !abft_check(mdMats.Iy,IyRc,IyCc) || !abft_check(mdMats.Ixy,IxyRc,IxyCc))
+        if (!abft_check(mdMats.Ix,IxRc,IxCc, true) || !abft_check(mdMats.Iy,IyRc,IyCc, true) || !abft_check(mdMats.Ixy,IxyRc,IxyCc, true))
         {
             // repeat calculations
         }
@@ -334,7 +333,7 @@ Mat Harris::gaussFilter(Mat& img, int range) {
     Mat gaussHelperV(img.rows-range*2, img.cols-range*2, CV_32F);
     for(int r=range; r<img.rows-range; r++) {
         #if ABFT_ON
-                bool kernel_good = abft_check(m,mRcheck,mCcheck);
+                bool kernel_good = abft_check(m,mRcheck,mCcheck, false);
                 if (!kernel_good)
                 {
                     // TODO: take action to restart? return to checkpoint?
@@ -354,7 +353,7 @@ Mat Harris::gaussFilter(Mat& img, int range) {
     Mat gauss(img.rows-range*2, img.cols-range*2, CV_32F);
     for(int r=range; r<img.rows-range; r++) {
          #if ABFT_ON
-                bool kernel_good = abft_check(m,mRcheck,mCcheck);
+                bool kernel_good = abft_check(m,mRcheck,mCcheck, false);
                 if (!kernel_good)
                 {
                     // TODO: take action to restart? return to checkpoint?
