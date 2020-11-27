@@ -25,6 +25,10 @@ using namespace cv;
 
     float greyA; // B
 
+    float sobelV; //C
+
+    float sobelH; //C
+
     Mat derivxA;// C
 
     Mat derivyA;  //C

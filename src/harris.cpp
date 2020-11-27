@@ -38,6 +38,9 @@ using namespace std::chrono;
 #endif
 
 Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
+  #if ASSERTIONS_ON
+    int count_fault;
+  #endif
 
 
     // (1) Convert to greyscale image
@@ -51,42 +54,17 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
         cout << "Time to convert to greyscale image: " << duration.count()/1000 << " ms" << endl;
     #endif
 
-
-    #if ASSERTIONS_ON
-
-    // (2) Compute Derivatives
-      //Derivatives derivatives = computeDerivatives(greyscaleImg);
-      Derivatives derivatives;
-
-      int count_fault =0;
-      do { // runs through loop once and checks if there is a fault
-        derivatives = computeDerivatives(greyscaleImg);// watch out for multiple matrices saved
-        ck.derivxA = derivatives.Ix.clone();
-        ck.derivyA = derivatives.Iy.clone();
-
-        count_fault += 1;
-        if (count_fault > 3){
-          break;
-        }
-      } while (iterateMat(ck.derivxA,-1024,1024) == 1 || iterateMat(ck.derivyA,-1024,1024) == 1);
-
-
-      ck.derivxyA = derivatives.Ixy.clone(); //could delete
-
+    // (2) Compute Derivatives-- sobel filter
+    t_start = high_resolution_clock::now();
+    Derivatives derivatives = computeDerivatives(greyscaleImg);
+    t_stop = high_resolution_clock::now();
+    duration = duration_cast<microseconds>(t_stop - t_start);
+    #if DATA_COLLECTION_MODE
+        cout << duration.count()/1000 << ",";
     #else
-
-      // (2) Compute Derivatives-- sobel filter
-      t_start = high_resolution_clock::now();
-      Derivatives derivatives = computeDerivatives(greyscaleImg);
-      t_stop = high_resolution_clock::now();
-      duration = duration_cast<microseconds>(t_stop - t_start);
-      #if DATA_COLLECTION_MODE
-          cout << duration.count()/1000 << ",";
-      #else
-          cout << "Time to compute derivatives: " << duration.count()/1000 << " ms" << endl;
-      #endif
-
+        cout << "Time to compute derivatives: " << duration.count()/1000 << " ms" << endl;
     #endif
+
 
     #if ASSERTIONS_ON
       Derivatives mDerivatives; // could clean the code a bit more since the guass filter will always be applied
@@ -264,7 +242,9 @@ Mat Harris::convertRgbToGrayscale(Mat& img) {
     Mat greyscaleImg(img.rows, img.cols, CV_32F);
 
     #if ASSERTIONS_ON
-      int count_f = 0;
+      int count_f;
+
+      count_f = 0;
       for (int c = 0; c < img.cols; c++) {
           for (int r = 0; r < img.rows; r++) {
 
@@ -274,7 +254,7 @@ Mat Harris::convertRgbToGrayscale(Mat& img) {
                     0.7152 * img.at<cv::Vec3b>(r,c)[1] +
                     0.0722 * img.at<cv::Vec3b>(r,c)[2];
                     greyscaleImg.at<float>(r,c) /= 255;
-                                    
+
                   ck.greyA = greyscaleImg.at<float>(r,c);
 
                   count_f += 1;
@@ -282,7 +262,6 @@ Mat Harris::convertRgbToGrayscale(Mat& img) {
                     break;
                   }
                 } while (iterateFlo(ck.greyA,0,1) == 1 );
-
           }
       }
 
@@ -338,36 +317,92 @@ Derivatives Harris::applyMeanToDerivatives(Derivatives& dMats, int filterRange) 
 Derivatives Harris::computeDerivatives(Mat& greyscaleImg) {
     // Helper Mats for better time complexity
     Mat sobelHelperV(greyscaleImg.rows-2, greyscaleImg.cols, CV_32F);
-    for(int r=1; r<greyscaleImg.rows-1; r++) {
-        for(int c=0; c<greyscaleImg.cols; c++) {
-
-            float a1 = greyscaleImg.at<float>(r-1,c);
-            float a2 = greyscaleImg.at<float>(r,c);
-            float a3 = greyscaleImg.at<float>(r+1,c);
-
-            sobelHelperV.at<float>(r-1,c) = a1 + a2 + a2 + a3;
-        }
-    }
-
     Mat sobelHelperH(greyscaleImg.rows, greyscaleImg.cols-2, CV_32F);
-    for(int r=0; r<greyscaleImg.rows; r++) {
-        for(int c=1; c<greyscaleImg.cols-1; c++) {
 
-            float a1 = greyscaleImg.at<float>(r,c-1);
-            float a2 = greyscaleImg.at<float>(r,c);
-            float a3 = greyscaleImg.at<float>(r,c+1);
-            // cout << a1 << "    " << a2 << "    " << a3 << "    " <<  endl;
-            // cout << a1 + a2 + a2 + a3 <<endl;
 
-            sobelHelperH.at<float>(r,c-1) = a1 + a2 + a2 + a3;
+    #if ASSERTIONS_ON
+      // Vertical
+      int count_f;
+
+      count_f =0;
+      do { // runs through loop once and checks if there is a fault
+        for(int r=1; r<greyscaleImg.rows-1; r++) {
+            for(int c=0; c<greyscaleImg.cols; c++) {
+
+                float a1 = greyscaleImg.at<float>(r-1,c);
+                float a2 = greyscaleImg.at<float>(r,c);
+                float a3 = greyscaleImg.at<float>(r+1,c);
+
+                sobelHelperV.at<float>(r-1,c) = a1 + a2 + a2 + a3;
+                ck.sobelV = sobelHelperV.at<float>(r-1,c);
+            }
         }
-    }
-    // double min, max;
-    // minMaxLoc(sobelHelperH, &min, &max);
-    // cout << min << "  csobelHHHHH  "<< max <<endl;
-    //cout << sobelHelperH <<endl;
 
-    // Apply Sobel filter to compute 1st derivatives
+        count_f += 1;
+        if (count_f > 3){
+          break;
+        }
+      } while (iterateFlo(ck.sobelV,0,4) == 1 );
+
+      // Horizontal
+      count_f =0;
+      do { // runs through loop once and checks if there is a fault
+
+        for(int r=0; r<greyscaleImg.rows; r++) {
+            for(int c=1; c<greyscaleImg.cols-1; c++) {
+
+                float a1 = greyscaleImg.at<float>(r,c-1);
+                float a2 = greyscaleImg.at<float>(r,c);
+                float a3 = greyscaleImg.at<float>(r,c+1);
+                // cout << a1 << "    " << a2 << "    " << a3 << "    " <<  endl;
+                // cout << a1 + a2 + a2 + a3 <<endl;
+
+                sobelHelperH.at<float>(r,c-1) = a1 + a2 + a2 + a3;
+                ck.sobelH = sobelHelperH.at<float>(r,c-1);
+            }
+        }
+        double min, max;
+        minMaxLoc(sobelHelperH, &min, &max);
+        cout << min << "  csobelHHHHH  "<< max <<endl;
+
+        count_f += 1;
+        if (count_f > 3){
+          break;
+        }
+      } while (iterateFlo(ck.sobelH,0,4) == 1 );
+
+
+    #else
+      for(int r=1; r<greyscaleImg.rows-1; r++) {
+          for(int c=0; c<greyscaleImg.cols; c++) {
+
+              float a1 = greyscaleImg.at<float>(r-1,c);
+              float a2 = greyscaleImg.at<float>(r,c);
+              float a3 = greyscaleImg.at<float>(r+1,c);
+
+              sobelHelperV.at<float>(r-1,c) = a1 + a2 + a2 + a3;
+          }
+      }
+
+      for(int r=0; r<greyscaleImg.rows; r++) {
+          for(int c=1; c<greyscaleImg.cols-1; c++) {
+
+              float a1 = greyscaleImg.at<float>(r,c-1);
+              float a2 = greyscaleImg.at<float>(r,c);
+              float a3 = greyscaleImg.at<float>(r,c+1);
+              // cout << a1 << "    " << a2 << "    " << a3 << "    " <<  endl;
+              // cout << a1 + a2 + a2 + a3 <<endl;
+
+              sobelHelperH.at<float>(r,c-1) = a1 + a2 + a2 + a3;
+          }
+      }
+      // double min, max;
+      // minMaxLoc(sobelHelperH, &min, &max);
+      // cout << min << "  csobelHHHHH  "<< max <<endl;
+      //cout << sobelHelperH <<endl;
+
+      // Apply Sobel filter to compute 1st derivatives
+    #endif
     Mat Ix(greyscaleImg.rows-2, greyscaleImg.cols-2, CV_32F);
     Mat Iy(greyscaleImg.rows-2, greyscaleImg.cols-2, CV_32F);
     Mat Ixy(greyscaleImg.rows-2, greyscaleImg.cols-2, CV_32F);
@@ -391,6 +426,7 @@ Derivatives Harris::computeDerivatives(Mat& greyscaleImg) {
     d.Ix = Ix;
     d.Iy = Iy;
     d.Ixy = Iy;
+
 
     return d;
 }
