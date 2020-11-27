@@ -19,7 +19,7 @@ using namespace std;
 Mat m_img;
 string filename;
 
-void doHarris(std::string filename) {
+void doHarris(std::string filename, bool benchmark) {
     int boxFilterSize = 3;
     int maximaSuppressionDimension = 15;
     bool gauss = true;
@@ -59,7 +59,7 @@ void doHarris(std::string filename) {
         cout << "Features Detected: "<<resPts.size()<<endl;
     #endif
 
-    if (BENCHMARK_RUN)
+    if (benchmark)
     {
         // save benchmark data to file
         processing::saveVector(resPts, filename);
@@ -108,12 +108,25 @@ void doHarris(std::string filename) {
 int main(int argc, char** argv) {
     // read image from file + error handling
     Mat img;
+    bool benchmark = false;
 
     if (argc == 1) {
         cout << "No image provided! Usage: ./Ex1 [path to image]" << endl << "Using default image: haus.jpg" << endl;
 
         img = imread("haus.jpg");
-    } else {
+    }
+    else if (argc == 3)
+    {
+        filename = argv[1];
+        img = imread(argv[1]);
+
+        if (std::string(argv[2]) == "benchmark")
+        {
+            benchmark = true;
+        }
+    } 
+    else 
+    {
         filename = argv[1];
         img = imread(argv[1]);
     }
@@ -121,7 +134,7 @@ int main(int argc, char** argv) {
     img.copyTo(m_img);
 
     auto t_before = high_resolution_clock::now();
-    doHarris(std::string(argv[1]));
+    doHarris(std::string(argv[1]),benchmark);
     auto t_after = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(t_after - t_before);
 
