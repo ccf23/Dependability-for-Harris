@@ -37,15 +37,15 @@ using namespace cv;
 
     Mat mderivxyA; //D
 
-    Mat traceA;
+    float traceA;
 
     Mat cornersA; //E
-
 
   } state_t;
 
   //iterate through values in matrix
-  int iterate(Mat matrix, int lB, int uB);
+  int iterate(Mat matrix, float lB, float uB);
+//  int iterateFlo(float Flo, int lB, int uB);
 
 #endif
 
