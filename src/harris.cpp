@@ -31,11 +31,20 @@ using namespace std::chrono;
 Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
 
     #if ASSERTIONS_ON
-
-
       Mat greyscaleImg;
-      greyscaleImg = convertRgbToGrayscale(img);// ck_a not only makes sure the prev checkpoint is used, but also makes sure the most updated data is used
-      ck.greyA = greyscaleImg.clone();
+
+      int count_fault =0;
+      do { // runs through loop once and checks if there is a fault
+        greyscaleImg = convertRgbToGrayscale(img);
+        ck.greyA = greyscaleImg.clone();
+
+        // will only loop at most three times so that conitinuous (permanent?) fault doesnt make the program stuck
+        // if break is needed, the rest of program will most likely use a break as well, which will cause latency in overall program
+        count_fault += 1;
+        if (count_fault > 3){
+          break;
+        }
+      } while (iterate(ck.greyA,0,256) == 1);
 
     #else
       // (1) Convert to greyscale image
@@ -55,14 +64,25 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
     // (2) Compute Derivatives
       //Derivatives derivatives = computeDerivatives(greyscaleImg);
       Derivatives derivatives;
-      derivatives = computeDerivatives(greyscaleImg); //reyscaleImg
-      ck.derivxA = derivatives.Ix.clone();
-      ck.derivyA = derivatives.Iy.clone();
-      ck.derivxyA = derivatives.Ixy.clone();
+
+      int count_fault =0;
+      do { // runs through loop once and checks if there is a fault
+        derivatives = computeDerivatives(greyscaleImg);// watch out for multiple matrices saved
+        ck.derivxA = derivatives.Ix.clone();
+        ck.derivyA = derivatives.Iy.clone();
+
+        count_fault += 1;
+        if (count_fault > 3){
+          break;
+        }
+      } while (iterate(ck.derivxA,-1024,1024) == 1 || iterate(ck.derivyA,-1024,1024) == 1);
+      
+
+      ck.derivxyA = derivatives.Ixy.clone(); //could delete
 
     #else
 
-      // (2) Compute Derivatives
+      // (2) Compute Derivatives-- sobel filter
       t_start = high_resolution_clock::now();
       Derivatives derivatives = computeDerivatives(greyscaleImg);
       t_stop = high_resolution_clock::now();
@@ -93,9 +113,11 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
       // (3) Median Filtering
       t_start = high_resolution_clock::now();
       Derivatives mDerivatives;
+
+      //could delete if statement
       if(gauss) {
           mDerivatives = applyGaussToDerivatives(derivatives, filterRange);
-      } else {
+      } else { //could delete
           mDerivatives = applyMeanToDerivatives(derivatives, filterRange);
       }
       t_stop = high_resolution_clock::now();
@@ -111,12 +133,14 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
     #if ASSERTIONS_ON
       Mat harrisResponses;
       int count_fault =0;
-      do { //there is a fault
+      do { // runs through loop once and checks if there is a fault
         harrisResponses = computeHarrisResponses(k, mDerivatives);
         ck.cornersA = harrisResponses.clone();
-        //cout << harrisResponses ;
+
+        // will only loop at most three times so that conitinuous (permanent?) fault doesnt make the program stuck
+        // if break is needed, the rest of program will most likely use a break as well, which will cause latency in overall program
         count_fault += 1;
-        if (count_fault >= 3){
+        if (count_fault > 3){
           break;
         }
       } while (iterate(ck.cornersA,0,255) == 1);
@@ -335,10 +359,6 @@ Derivatives Harris::computeDerivatives(Mat& greyscaleImg) {
     d.Ix = Ix;
     d.Iy = Iy;
     d.Ixy = Iy;
-
-    double min, max;
-    minMaxLoc(d.Ix, &min, &max);
-    cout << min << "  Iyddd "<< max <<endl;
 
     return d;
 }
