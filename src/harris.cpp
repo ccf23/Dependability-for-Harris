@@ -33,7 +33,7 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
     #if ASSERTIONS_ON
       Mat greyscaleImg;
 
-      int count_fault =0;
+      int count_fault =0;// gets int since it is the first time it is called
       do { // runs through loop once and checks if there is a fault
         greyscaleImg = convertRgbToGrayscale(img);
         ck.greyA = greyscaleImg.clone();
@@ -97,22 +97,29 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
 
     #if ASSERTIONS_ON
       Derivatives mDerivatives; // could clean the code a bit more since the guass filter will always be applied
+      count_fault =0;
+      do { // runs through loop once and checks if there is a fault
+        if(gauss) {
+            mDerivatives = applyGaussToDerivatives(derivatives, filterRange);
+        } else {// could delete
+            mDerivatives = applyMeanToDerivatives(derivatives, filterRange);
+        }// watch out for multiple matrices saved
+        ck.mderivxA = mDerivatives.Ix.clone();
+        ck.mderivyA = mDerivatives.Iy.clone();
 
-      if(gauss) {
-          mDerivatives = applyGaussToDerivatives(derivatives, filterRange);
-      } else {
-          mDerivatives = applyMeanToDerivatives(derivatives, filterRange);
-      }
+        count_fault += 1;
+        if (count_fault > 3){
+          break;
+        }
+      } while (iterate(ck.mderivxA,-1024,1024) == 1 || iterate(ck.mderivyA,-1024,1024) == 1);
 
-      ck.mderivxA = mDerivatives.Ix.clone();
-      ck.mderivyA = mDerivatives.Iy.clone();
-      ck.mderivxyA = mDerivatives.Ixy.clone();
+      ck.mderivxyA = mDerivatives.Ixy.clone(); //could delete
 
     #else
 
       // (3) Median Filtering
       t_start = high_resolution_clock::now();
-      Derivatives mDerivatives;
+      Derivatives tives;
 
       //could delete if statement
       if(gauss) {
@@ -137,13 +144,11 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
         harrisResponses = computeHarrisResponses(k, mDerivatives);
         ck.cornersA = harrisResponses.clone();
 
-        // will only loop at most three times so that conitinuous (permanent?) fault doesnt make the program stuck
-        // if break is needed, the rest of program will most likely use a break as well, which will cause latency in overall program
         count_fault += 1;
         if (count_fault > 3){
           break;
         }
-      } while (iterate(ck.cornersA,0,255) == 1);
+      } while (iterate(ck.cornersA,0,4.398*pow(10,11)) == 1); 
 
       m_harrisResponses = harrisResponses;
     #else
@@ -377,10 +382,11 @@ Mat Harris::computeHarrisResponses(float k, Derivatives& d) {
             a21 = d.Ix.at<float>(r,c) * d.Iy.at<float>(r,c);
             a12 = d.Ix.at<float>(r,c) * d.Iy.at<float>(r,c);
 
-            float det = a11*a22 - a12*a21;
-            float trace = a11 + a22;
+            float det = a11*a22 - a12*a21; //always 0 unless fault
+            cout << det << "the det issssss" <<endl;
+            float trace = a11 + a22; // cant be larger than 2.1 million
 
-            M.at<float>(r,c) = abs(det - k * trace*trace);
+            M.at<float>(r,c) = abs(det - k * trace*trace);// coud be over 4 Tera
         }
     }
 
@@ -461,6 +467,7 @@ Mat Harris::gaussFilter(Mat& img, int range) {
                 float m = 1/sqrt(2*M_PI)*exp(-0.5*x*x);
 
                 res += m * gaussHelperV.at<float>(r-range,c-range);
+                //cout << res << endl;
             }
 
             gauss.at<float>(r-range,c-range) = res;
