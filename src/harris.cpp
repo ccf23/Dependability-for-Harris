@@ -43,17 +43,24 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
       Mat greyscaleImg;
 
       int count_fault =0;// gets int since it is the first time it is called
-      do { // runs through loop once and checks if there is a fault
-        greyscaleImg = convertRgbToGrayscale(img);
-        ck.greyA = greyscaleImg.clone();
 
-        // will only loop at most three times so that conitinuous (permanent?) fault doesnt make the program stuck
-        // if break is needed, the rest of program will most likely use a break as well, which will cause latency in overall program
-        count_fault += 1;
-        if (count_fault > 3){
-          break;
-        }
-      } while (iterate(ck.greyA,0,256) == 1);
+      greyscaleImg = convertRgbToGrayscale(img);
+      ck.greyA = greyscaleImg.clone();
+
+////////////////////////////////////////////////////////////////
+      // int count_fault =0;// gets int since it is the first time it is called
+      // do { // runs through loop once and checks if there is a fault
+      //   greyscaleImg = convertRgbToGrayscale(img);
+      //   ck.greyA = greyscaleImg.clone();
+      //
+      //   // will only loop at most three times so that conitinuous (permanent?) fault doesnt make the program stuck
+      //   // if break is needed, the rest of program will most likely use a break as well, which will cause latency in overall program
+      //   count_fault += 1;
+      //   if (count_fault > 3){
+      //     break;
+      //   }
+      // } while (iterate(ck.greyA,0,256) == 1);
+////////////////////////////////////////////
 
     #else
       // (1) Convert to greyscale image
@@ -285,6 +292,7 @@ Mat Harris::convertRgbToGrayscale(Mat& img) {
             	0.2126 * img.at<cv::Vec3b>(r,c)[0] +
             	0.7152 * img.at<cv::Vec3b>(r,c)[1] +
             	0.0722 * img.at<cv::Vec3b>(r,c)[2];
+
         }
     }
     return greyscaleImg;
