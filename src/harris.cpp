@@ -26,15 +26,15 @@ using namespace std::chrono;
     return 0; //there is no fault
   }
 
-    // int iterateFlo(float Flo, int lB, int uB){
-    //
-    //   if (Flo < lB || Flo > uB) // make sure to delete = sign
-    //   {
-    //     return 1; //there is a fault, so stop checking rest of matrix
-    //   }
-    //
-    //   return 0; //there is no fault
-//  }
+    int iterateFlo(float Flo, float lB, float uB){
+
+      if (Flo < lB || Flo > uB) // make sure to delete = sign
+      {
+        return 1; //there is a fault, so stop checking rest of matrix
+      }
+
+      return 0; //there is no fault
+    }
 #endif
 
 Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
