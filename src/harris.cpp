@@ -114,7 +114,14 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
 //-----------------------------------------------------------------------------------------------
 vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int suppressionRadius) {
     // Declare a max suppression matrix
-    Mat maximaSuppressionMat(m_harrisResponses.rows, m_harrisResponses.cols, CV_32F, Scalar::all(0));
+    bool maxSuppresionMat[m_harrisResponses.rows][m_harrisResponses.cols];
+    for (int r = 0; r < m_harrisResponses.rows; ++r)
+    {
+        for (int c = 0; c < m_harrisResponses.cols; ++c)
+        {
+            maxSuppresionMat[r][c] = false;
+        }
+    }
 
     // Create a vector of all Points
     std::vector<pointData> points;
@@ -129,36 +136,40 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
 
         #endif
         for (int c = 0; c < m_harrisResponses.cols; c++) {
-            Point p(r,c); 
+            if (m_harrisResponses.at<float>(r,c) > 1e10) // set corner response threshold
+            {
+                Point p(r,c); 
 
-            pointData d;
-            d.cornerResponse = m_harrisResponses.at<float>(r,c);
-            d.point = p;
+                pointData d;
+                d.cornerResponse = m_harrisResponses.at<float>(r,c);
+                d.point = p;
 
-            points.push_back(d);
+                points.push_back(d);
+            }
         }
     }
 
     // Sort points by corner Response
     sort(points.begin(), points.end(), by_cornerResponse());
 
-    // Get top points, given by the percentage
-    int numberTopPoints = m_harrisResponses.cols * m_harrisResponses.rows * percentage;
+    int numberTopPoints = points.size();
     std::vector<pointData> topPoints;
-
+    cout<<numberTopPoints<<endl;
     int i=0;
-    while(topPoints.size() < numberTopPoints) {
-        if(i == points.size())
-            break;
+    for (int _loopvar = 0; _loopvar < numberTopPoints; ++_loopvar) 
+    {
 
-        int supRows = maximaSuppressionMat.rows;
-        int supCols = maximaSuppressionMat.cols;
-    
+        int supRows = m_harrisResponses.rows - 1;
+        int supCols = m_harrisResponses.cols - 1;
+        
         // Check if point marked in maximaSuppression matrix
-        if(maximaSuppressionMat.at<int>(points[i].point.x,points[i].point.y) == 0) {
-            
-            for (int r = -suppressionRadius; r <= suppressionRadius; r++) {
-                for (int c = -suppressionRadius; c <= suppressionRadius; c++) {
+        if(maxSuppresionMat[points[i].point.x][points[i].point.y] == 0) 
+        {   
+            for (int r = -suppressionRadius; r <= suppressionRadius; r++) 
+            {
+                for (int c = -suppressionRadius; c <= suppressionRadius; c++) 
+                {
+                    
                     int sx = points[i].point.x+c;
                     int sy = points[i].point.y+r;
 
@@ -172,11 +183,9 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
                     if(sy < 0)
                         sy = 0;
 
-                    //cout <<maximaSuppressionMat.size()<< points[i].point.x + c<<"\t"<<points[i].point.y+r<<endl;
-                    maximaSuppressionMat.at<int>(sx, sy) = 1;
+                    maxSuppresionMat[sx][sy] = 1;
                 }
-            }
-            
+            } 
             // Convert back to original image coordinate system 
             points[i].point.x += 1 + filterRange;
             points[i].point.y += 1 + filterRange;
@@ -184,8 +193,8 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
         }
 
         i++;
+        
     }
-
     return topPoints;
 }
 
