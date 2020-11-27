@@ -4,6 +4,7 @@
 
 #include "../include/harris.h"
 #include "../include/abft.h"
+#include "../include/injector.h"
 #include <chrono>
 using namespace std::chrono;
 
