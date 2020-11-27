@@ -13,29 +13,21 @@ using namespace cv;
 using namespace std;
 
 // uncomment to allow for visual test on local machine
-//#define LOCAL
+// #define LOCAL
 
 Mat m_img;
 string filename;
 
 void doHarris() {
     int boxFilterSize = 3;
-    int maximaSuppressionDimension = 10;
-    bool gauss = true;
+    int maximaSuppressionDimension = 15;
     float percentage = 50e-5;
     int markDimension = 5;
-    float k = 0.25;
-
-    // Temporary: Pattern to follow for enabling/disabling FT:
-    #if ASSERTIONS_ON
-        // Do assertions code here
-
-    #endif 
-    
+    float k = 0.05;
     
     // compute harris
     auto t_before = high_resolution_clock::now();
-    Harris harris(m_img, k, boxFilterSize, gauss);
+    Harris harris(m_img, k, boxFilterSize);
     auto t_after = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(t_after - t_before);
     #if DATA_COLLECTION_MODE

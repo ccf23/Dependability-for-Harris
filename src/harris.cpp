@@ -1,20 +1,42 @@
 /*
- *      Author: alexanderb
+ *      addapted from work done by alexanderb
  */
 
 #include "../include/harris.h"
+#include "../include/abft.h"
 #include <omp.h>
 #include <chrono>
 using namespace std::chrono;
 
-Harris::Harris(Mat img, float k, int filterRange, bool gauss)
+Harris::Harris(Mat img, float k, int filterRange) 
+#if INJECT_FAULTS
+ :
+ fi(PROB_DATA, 2e-5)
+#endif
 {
     // (1) Convert to greyscale image
     auto t_start = high_resolution_clock::now();
-#if THREADS_ON
-    Mat greyscaleImg = runParallel_convertRgbToGrayscale(img);
+    Mat greyscaleImg;
+#if ABFT_ON
+    img = doGrayscaleABFT(img);
+    bool correct = false;
+    do
+    {
+        greyscaleImg = convertRgbToGrayscale(img);
+        correct = grayscaleABFTCheck(greyscaleImg, true);
+    } while (!correct);
+    
+    // remove checksums from image
+    greyscaleImg = cv::Mat(greyscaleImg,cv::Range(0,greyscaleImg.rows - 2), cv::Range(0,greyscaleImg.cols - 2));
+    
 #else
-    Mat greyscaleImg = convertRgbToGrayscale(img);
+    img.convertTo(img, CV_32F);   
+    greyscaleImg = convertRgbToGrayscale(img); 
+#endif
+#if THREADS_ON
+    greyscaleImg = runParallel_convertRgbToGrayscale(img);
+#else
+    greyscaleImg = convertRgbToGrayscale(img);
 #endif
 
     auto t_stop = high_resolution_clock::now();
@@ -25,12 +47,37 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss)
     cout << "Time to convert to greyscale image: " << duration.count() / 1000 << " ms" << endl;
 #endif
 
+#if ABFT_ON
+    Mat a, b;
+    abft_addChecksums(greyscaleImg,a,b);
+    bool valid = false;
+    do
+    {
+        // TODO: inject faults here
+        valid = abft_check(greyscaleImg,a,b,true);
+    } while (!valid);
+#endif
+
     // (2) Compute Derivatives
     t_start = high_resolution_clock::now();
 #if THREADS_ON
     Derivatives derivatives = runParallel_computeDerivatives(greyscaleImg);
 #else
     Derivatives derivatives = computeDerivatives(greyscaleImg);
+#endif
+
+#if ABFT_ON
+    //generate checksums for Derivatives
+    Mat IxC, IxR, IyC, IyR, IxyC, IxyR;
+    abft_addChecksums(derivatives.Ix, IxR, IxC);
+    abft_addChecksums(derivatives.Iy, IyR, IyC);
+    abft_addChecksums(derivatives.Ixy, IxyR, IxyC);
+    do
+    {       
+    // TODO: inject faults here
+    }while (!abft_check(derivatives.Ix, IxR, IxC, true) || \
+            !abft_check(derivatives.Iy, IyR, IyC, true) || \
+                !abft_check(derivatives.Ixy, IxyR, IxyC, true));
 #endif
     t_stop = high_resolution_clock::now();
     duration = duration_cast<microseconds>(t_stop - t_start);
@@ -40,20 +87,13 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss)
     cout << "Time to compute derivatives: " << duration.count() / 1000 << " ms" << endl;
 #endif
 
-    // (3) Median Filtering
+    // (3) Gaussian Filtering
     t_start = high_resolution_clock::now();
 #if THREADS_ON
-    Derivatives mDerivatives = runParallel_applyToDerivatives(derivatives, filterRange, gauss);
+    Derivatives mDerivatives = runParallel_applyToDerivatives(derivatives, filterRange);
 #else
-    Derivatives mDerivatives;
-    if (gauss)
-    {
-        mDerivatives = applyGaussToDerivatives(derivatives, filterRange);
-    }
-    else
-    {
-        mDerivatives = applyMeanToDerivatives(derivatives, filterRange);
-    }
+    Derivatives mDerivatives = applyGaussToDerivatives(derivatives, filterRange);
+    
 #endif
     t_stop = high_resolution_clock::now();
     duration = duration_cast<microseconds>(t_stop - t_start);
@@ -72,6 +112,10 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss)
     Mat harrisResponses = computeHarrisResponses(k, mDerivatives);
     m_harrisResponses = harrisResponses;
 #endif
+#if ABFT_ON
+    // check created here, verified when get Maxima Points is called
+    abft_addChecksums(m_harrisResponses,hrRc,hrCc);
+#endif
     t_stop = high_resolution_clock::now();
     duration = duration_cast<microseconds>(t_stop - t_start);
 
@@ -86,50 +130,66 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss)
 vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int suppressionRadius)
 {
     // Declare a max suppression matrix
-    Mat maximaSuppressionMat(m_harrisResponses.rows, m_harrisResponses.cols, CV_32F, Scalar::all(0));
-
-    // Create a vector of all Points
-    std::vector<pointData> points;
-    for (int r = 0; r < m_harrisResponses.rows; r++)
+    bool maxSuppresionMat[m_harrisResponses.rows][m_harrisResponses.cols];
+    for (int r = 0; r < m_harrisResponses.rows; ++r)
     {
-        for (int c = 0; c < m_harrisResponses.cols; c++)
+        for (int c = 0; c < m_harrisResponses.cols; ++c)
         {
-            Point p(r, c);
-
-            pointData d;
-            d.cornerResponse = m_harrisResponses.at<float>(r, c);
-            d.point = p;
-
-            points.push_back(d);
+            maxSuppresionMat[r][c] = false;
         }
     }
+
+    std::vector<pointData> points; // Create a vector of all Points
+    bool valid; // used by abft to flag restart
+    do 
+    {
+        valid = true;
+        for (int r = 0; r < m_harrisResponses.rows; r++) {
+            #if ABFT_ON
+                // perform continual verification during this critical part
+                if (!abft_check(m_harrisResponses,hrRc,hrCc,true))
+                {
+                    // corrupted, go back to begining
+                    valid = false;
+                    break;
+                }
+            #endif
+            for (int c = 0; c < m_harrisResponses.cols; c++) {
+                if (m_harrisResponses.at<float>(r,c) > .5) // set corner response threshold
+                {
+                    Point p(r,c); 
+
+                    pointData d;
+                    d.cornerResponse = m_harrisResponses.at<float>(r,c);
+                    d.point = p;
+                    
+                    points.push_back(d);
+                }
+            }
+            //TODO: inject faults here
+        }
+    }while (!valid);
 
     // Sort points by corner Response
     sort(points.begin(), points.end(), by_cornerResponse());
 
-    // Get top points, given by the percentage
-    int numberTopPoints = m_harrisResponses.cols * m_harrisResponses.rows * percentage;
+    int numberTopPoints = points.size();
     std::vector<pointData> topPoints;
+    int supRows = m_harrisResponses.rows - 1;
+    int supCols = m_harrisResponses.cols - 1;
 
-    int i = 0;
-    while (topPoints.size() < numberTopPoints)
-    {
-        if (i == points.size())
-            break;
-
-        int supRows = maximaSuppressionMat.rows;
-        int supCols = maximaSuppressionMat.cols;
-
+    for (int i = 0; i < numberTopPoints; ++i) 
+    {        
         // Check if point marked in maximaSuppression matrix
-        if (maximaSuppressionMat.at<int>(points[i].point.x, points[i].point.y) == 0)
-        {
-
-            for (int r = -suppressionRadius; r <= suppressionRadius; r++)
+        if(maxSuppresionMat[points[i].point.x][points[i].point.y] == 0) 
+        {   
+            for (int r = -suppressionRadius; r <= suppressionRadius; r++) 
             {
-                for (int c = -suppressionRadius; c <= suppressionRadius; c++)
+                for (int c = -suppressionRadius; c <= suppressionRadius; c++) 
                 {
-                    int sx = points[i].point.x + c;
-                    int sy = points[i].point.y + r;
+                    
+                    int sx = points[i].point.x+c;
+                    int sy = points[i].point.y+r;
 
                     // bound checking
                     if (sx > supRows)
@@ -141,20 +201,16 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
                     if (sy < 0)
                         sy = 0;
 
-                    //cout <<maximaSuppressionMat.size()<< points[i].point.x + c<<"\t"<<points[i].point.y+r<<endl;
-                    maximaSuppressionMat.at<int>(sx, sy) = 1;
+                    maxSuppresionMat[sx][sy] = 1;
                 }
-            }
-
-            // Convert back to original image coordinate system
+            } 
+            // Convert back to original image coordinate system 
             points[i].point.x += 1 + filterRange;
             points[i].point.y += 1 + filterRange;
             topPoints.push_back(points[i]);
         }
-
-        i++;
+       
     }
-
     return topPoints;
 }
 
@@ -163,17 +219,16 @@ Mat Harris::convertRgbToGrayscale(Mat &img)
 {
     Mat greyscaleImg(img.rows, img.cols, CV_32F);
 
-    for (int c = 0; c < img.cols; c++)
-    {
-        for (int r = 0; r < img.rows; r++)
-        {
-            greyscaleImg.at<float>(r, c) =
-                0.2126 * img.at<cv::Vec3b>(r, c)[0] +
-                0.7152 * img.at<cv::Vec3b>(r, c)[1] +
-                0.0722 * img.at<cv::Vec3b>(r, c)[2];
+    for (int c = 0; c < img.cols; c++) {
+        for (int r = 0; r < img.rows; r++) {
+            greyscaleImg.at<float>(r,c) = 
+            	0.2126 * img.at<cv::Vec3f>(r,c)[0] +
+            	0.7152 * img.at<cv::Vec3f>(r,c)[1] +
+            	0.0722 * img.at<cv::Vec3f>(r,c)[2];
+            greyscaleImg.at<float>(r,c) /= 255;
         }
-    }
 
+    }
     return greyscaleImg;
 }
 
@@ -186,28 +241,32 @@ Derivatives Harris::applyGaussToDerivatives(Derivatives &dMats, int filterRange)
     Derivatives mdMats;
 
     mdMats.Ix = gaussFilter(dMats.Ix, filterRange);
+#if ABFT_ON // protect after generation
+    Mat IxRc, IxCc;
+    abft_addChecksums(mdMats.Ix, IxRc, IxCc);
+#endif
+
     mdMats.Iy = gaussFilter(dMats.Iy, filterRange);
+#if ABFT_ON // protect after generation
+    Mat IyRc, IyCc;
+    abft_addChecksums(mdMats.Iy, IyRc, IyCc);
+#endif
+
     mdMats.Ixy = gaussFilter(dMats.Ixy, filterRange);
+#if ABFT_ON // protect after generation
+    Mat IxyRc, IxyCc;
+    abft_addChecksums(mdMats.Ixy, IxyRc, IxyCc);
+#endif
 
-    return mdMats;
-}
-
-//-----------------------------------------------------------------------------------------------
-Derivatives Harris::applyMeanToDerivatives(Derivatives &dMats, int filterRange)
-{
-    if (filterRange == 0)
-        return dMats;
-
-    Derivatives mdMats;
-
-    Mat mIx = computeIntegralImg(dMats.Ix);
-    Mat mIy = computeIntegralImg(dMats.Iy);
-    Mat mIxy = computeIntegralImg(dMats.Ixy);
-
-    mdMats.Ix = meanFilter(mIx, filterRange);
-    mdMats.Iy = meanFilter(mIy, filterRange);
-    mdMats.Ixy = meanFilter(mIxy, filterRange);
-
+#if ABFT_ON
+    // validate ABFT before returning
+    do
+    {
+        // TODO: Inject faults here
+    } while (!abft_check(mdMats.Ix,IxRc,IxCc, true) || \
+                !abft_check(mdMats.Iy,IyRc,IyCc, true) || \
+                !abft_check(mdMats.Ixy,IxyRc,IxyCc, true));
+#endif
     return mdMats;
 }
 
@@ -285,101 +344,88 @@ Mat Harris::computeHarrisResponses(float k, Derivatives &d)
 
             float det = a11 * a22 - a12 * a21;
             float trace = a11 + a22;
-
-            M.at<float>(r, c) = abs(det - k * trace * trace);
+            
+            M.at<float>(r,c) = abs(det - k * trace*trace);
         }
     }
 
     return M;
 }
 
-//-----------------------------------------------------------------------------------------------
-Mat Harris::computeIntegralImg(Mat &img)
-{
-    Mat integralMat(img.rows, img.cols, CV_32F);
-
-    integralMat.at<float>(0, 0) = img.at<float>(0, 0);
-
-    for (int i = 1; i < img.cols; i++)
+Mat Harris::gaussFilter(Mat& img, int range) {
+    Mat m(1,2*range+1, CV_32F); // gaussian Kernel
+    for (int i = -range; i<= range; ++i)
     {
-        integralMat.at<float>(0, i) =
-            integralMat.at<float>(0, i - 1) + img.at<float>(0, i);
+        float val = 1/sqrt(2*M_PI)*exp(-0.5*i*i);
+        m.at<float>(0,i+range) = val;
     }
-
-    for (int j = 1; j < img.rows; j++)
-    {
-        integralMat.at<float>(j, 0) =
-            integralMat.at<float>(j - 1, 0) + img.at<float>(j, 0);
-    }
-
-    for (int i = 1; i < img.cols; i++)
-    {
-        for (int j = 1; j < img.rows; j++)
-        {
-            integralMat.at<float>(j, i) =
-                img.at<float>(j, i) + integralMat.at<float>(j - 1, i) + integralMat.at<float>(j, i - 1) - integralMat.at<float>(j - 1, i - 1);
-        }
-    }
-
-    return integralMat;
-}
-
-//-----------------------------------------------------------------------------------------------
-Mat Harris::meanFilter(Mat &intImg, int range)
-{
-    Mat medianFilteredMat(intImg.rows - range * 2, intImg.cols - range * 2, CV_32F);
-
-    for (int r = range; r < intImg.rows - range; r++)
-    {
-        for (int c = range; c < intImg.cols - range; c++)
-        {
-            medianFilteredMat.at<float>(r - range, c - range) =
-                intImg.at<float>(r + range, c + range) + intImg.at<float>(r - range, c - range) - intImg.at<float>(r + range, c - range) - intImg.at<float>(r - range, c + range);
-        }
-    }
-
-    return medianFilteredMat;
-}
-
-Mat Harris::gaussFilter(Mat &img, int range)
-{
+    #if ABFT_ON
+        Mat mRcheck, mCcheck;
+        abft_addChecksums(m,mRcheck,mCcheck);
+    #endif
+    
+    
     // Helper Mats for better time complexity
-    Mat gaussHelperV(img.rows - range * 2, img.cols - range * 2, CV_32F);
-    for (int r = range; r < img.rows - range; r++)
+    Mat gaussHelperV(img.rows-range*2, img.cols-range*2, CV_32F);
+    bool valid;
+    do 
     {
-        for (int c = range; c < img.cols - range; c++)
+        valid = true;
+        for(int r=range; r<img.rows-range; r++) 
         {
-            float res = 0;
-
-            for (int x = -range; x <= range; x++)
+            #if ABFT_ON
+                bool kernel_good = abft_check(m,mRcheck,mCcheck, false);
+                if (!kernel_good)
+                {
+                    valid = false;
+                    break;
+                }
+            #endif
+            for(int c=range; c<img.cols-range; c++)
             {
-                float m = 1 / sqrt(2 * M_PI) * exp(-0.5 * x * x);
+                float res = 0;
 
-                res += m * img.at<float>(r - range, c - range);
+                for(int x = -range; x<=range; x++)
+                 {
+                    res += m.at<float>(0,x+3) * img.at<float>(r-range,c-range);
+                }
+
+                gaussHelperV.at<float>(r-range,c-range) = res;
+
+                // TODO: inject faults into m here
             }
-
-            gaussHelperV.at<float>(r - range, c - range) = res;
         }
-    }
+    } while(!valid);
 
-    Mat gauss(img.rows - range * 2, img.cols - range * 2, CV_32F);
-    for (int r = range; r < img.rows - range; r++)
+    Mat gauss(img.rows-range*2, img.cols-range*2, CV_32F);
+    do 
     {
-        for (int c = range; c < img.cols - range; c++)
+
+        valid = true;
+        for(int r=range; r<img.rows-range; r++) 
         {
-            float res = 0;
+            #if ABFT_ON
+                    bool kernel_good = abft_check(m,mRcheck,mCcheck, false);
+                    if (!kernel_good)
+                    {
+                        valid = false;
+                        break;
+                    }
+                #endif
+            for(int c=range; c<img.cols-range; c++)
+             {
+                float res = 0;
+                for(int x = -range; x<=range; x++) 
+                {
+                    res += m.at<float>(0,x+3) * gaussHelperV.at<float>(r-range,c-range);
+                }
 
-            for (int x = -range; x <= range; x++)
-            {
-                float m = 1 / sqrt(2 * M_PI) * exp(-0.5 * x * x);
+                gauss.at<float>(r-range,c-range) = res;
 
-                res += m * gaussHelperV.at<float>(r - range, c - range);
+                // TODO: inject kernel faults here
             }
-
-            gauss.at<float>(r - range, c - range) = res;
         }
-    }
-
+    } while (!valid);
     return gauss;
 }
 
@@ -389,16 +435,18 @@ Mat Harris::runParallel_convertRgbToGrayscale(Mat& img)
     // flag for error detection
     bool match = false;
     Mat greyscaleImg, greyscaleImg2;
-    Mat img2 = img.clone();
+    Mat img2, img1;
 
     while (!match)
     {
+        img1 = img.clone();
+        img2 = img.clone();
 #pragma omp parallel num_threads(2)
         {
             int i = omp_get_thread_num();
             if (i == 0)
             {
-                greyscaleImg = convertRgbToGrayscale(img);
+                greyscaleImg = convertRgbToGrayscale(img1);
             }
             if (i == 1 || omp_get_num_threads() != 2)
             {
@@ -409,8 +457,9 @@ Mat Harris::runParallel_convertRgbToGrayscale(Mat& img)
         // verify that they match
         match = (sum(greyscaleImg2 != greyscaleImg) == Scalar(0));
 
-        cout << "Grayscale match: " << boolalpha << match << endl;
+        // cout << "Grayscale match: " << boolalpha << match << endl;
     }
+    img = img1;
     return greyscaleImg;
 }
 
@@ -453,7 +502,7 @@ Derivatives Harris::runParallel_computeDerivatives(Mat& greyscaleImg)
     return derivatives;
 }
 
-Derivatives Harris::runParallel_applyToDerivatives(Derivatives& derivatives, int filterRange, bool gauss)
+Derivatives Harris::runParallel_applyToDerivatives(Derivatives& derivatives, int filterRange)
 {
     Derivatives mDerivatives, mDerivatives2;
     bool match = false;
@@ -465,25 +514,11 @@ Derivatives Harris::runParallel_applyToDerivatives(Derivatives& derivatives, int
             int i = omp_get_thread_num();
             if (i == 0)
             {
-                if (gauss)
-                {
-                    mDerivatives = applyGaussToDerivatives(derivatives, filterRange);
-                }
-                else
-                {
-                    mDerivatives = applyMeanToDerivatives(derivatives, filterRange);
-                }
+                mDerivatives = applyGaussToDerivatives(derivatives, filterRange);
             }
             if (i == 1 || omp_get_num_threads() != 2)
             {
-                if (gauss)
-                {
-                    mDerivatives2 = applyGaussToDerivatives(derivatives, filterRange);
-                }
-                else
-                {
-                    mDerivatives2 = applyMeanToDerivatives(derivatives, filterRange);
-                }
+                mDerivatives2 = applyGaussToDerivatives(derivatives, filterRange);
             }
         }
 

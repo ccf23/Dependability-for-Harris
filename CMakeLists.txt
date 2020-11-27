@@ -39,7 +39,9 @@ message( STATUS "------------------" ${OpenCV_INCLUDE_DIRS} )
 add_executable( Harris 
 	./src/util.cpp
 	./src/harris.cpp
+	./src/abft.cpp
 	./src/main.cpp
+	./src/injector.cpp
 )
 
 target_include_directories( Harris
