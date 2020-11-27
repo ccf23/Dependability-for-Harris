@@ -29,11 +29,15 @@ using namespace cv;
 
     float sobelH; //C
 
-    Mat derivxA;// C
+    // Mat derivxA;// C
+    //
+    // Mat derivyA;  //C
+    //
+    // Mat derivxyA; //C
 
-    Mat derivyA;  //C
+    float gaussV; //D
 
-    Mat derivxyA; //C
+    float gauss; //D
 
     Mat mderivxA;// D
 

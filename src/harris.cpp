@@ -66,48 +66,24 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
     #endif
 
 
-    #if ASSERTIONS_ON
-      Derivatives mDerivatives; // could clean the code a bit more since the guass filter will always be applied
+    // (3) Median Filtering
+    t_start = high_resolution_clock::now();
+    Derivatives mDerivatives;
 
-      count_fault =0;
-      do { // runs through loop once and checks if there is a fault
-        if(gauss) {
-            mDerivatives = applyGaussToDerivatives(derivatives, filterRange);
-        } else {// could delete
-            mDerivatives = applyMeanToDerivatives(derivatives, filterRange);
-        }// watch out for multiple matrices saved
-        ck.mderivxA = mDerivatives.Ix.clone();
-        ck.mderivyA = mDerivatives.Iy.clone();
-
-        count_fault += 1;
-        if (count_fault > 3){
-          break;
-        }
-      } while (iterateMat(ck.mderivxA,-1024,1024) == 1 || iterateMat(ck.mderivyA,-1024,1024) == 1);
-
-      ck.mderivxyA = mDerivatives.Ixy.clone(); //could delete
-
+    //could delete if statement
+    if(gauss) {
+        mDerivatives = applyGaussToDerivatives(derivatives, filterRange);
+    } else { //could delete
+        mDerivatives = applyMeanToDerivatives(derivatives, filterRange);
+    }
+    t_stop = high_resolution_clock::now();
+    duration = duration_cast<microseconds>(t_stop - t_start);
+    #if DATA_COLLECTION_MODE
+        cout << duration.count()/1000  << ",";
     #else
-
-      // (3) Median Filtering
-      t_start = high_resolution_clock::now();
-      Derivatives tives;
-
-      //could delete if statement
-      if(gauss) {
-          mDerivatives = applyGaussToDerivatives(derivatives, filterRange);
-      } else { //could delete
-          mDerivatives = applyMeanToDerivatives(derivatives, filterRange);
-      }
-      t_stop = high_resolution_clock::now();
-      duration = duration_cast<microseconds>(t_stop - t_start);
-      #if DATA_COLLECTION_MODE
-          cout << duration.count()/1000  << ",";
-      #else
-          cout << "Time to perform median filtering: " << duration.count()/1000 << " ms" << endl;
-      #endif
-
+        cout << "Time to perform median filtering: " << duration.count()/1000 << " ms" << endl;
     #endif
+
 
     #if ASSERTIONS_ON
       Mat harrisResponses;
@@ -214,14 +190,11 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
     double min, max;
     minMaxLoc(ck.greyA, &min, &max);
     cout << min << "   grey  "<< max <<endl;
-    minMaxLoc(ck.derivxA, &min, &max);
-    cout << min << "   derivx  "<< max <<endl;
-    minMaxLoc(ck.derivyA, &min, &max);
-    cout << min << "  derivy   "<< max <<endl;
-    minMaxLoc(ck.mderivxA, &min, &max);
-    cout << min << "  mDerivx  "<< max <<endl;
-    minMaxLoc(ck.mderivyA, &min, &max);
-    cout << min << "  mDerivy  "<< max <<endl;
+
+    // minMaxLoc(ck.gauss, &min, &max);
+    // cout << min << "  mDerivx  "<< max <<endl;
+    // minMaxLoc(ck.mderivyA, &min, &max);
+    // cout << min << "  mDerivy  "<< max <<endl;
     minMaxLoc(ck.cornersA, &min, &max);
     cout << min << "  corners   "<< max <<endl;
     ////////////debugging for assertions///////////////////////////
@@ -558,6 +531,68 @@ Mat Harris::meanFilter(Mat& intImg, int range) {
 }
 
 Mat Harris::gaussFilter(Mat& img, int range) {
+
+
+  #if ASSERTIONS_ON
+    Mat gaussHelperV(img.rows-range*2, img.cols-range*2, CV_32F);
+    Mat gauss(img.rows-range*2, img.cols-range*2, CV_32F);
+
+    int count_f;
+
+    count_f =0;
+    do { // runs through loop once and checks if there is a fault
+
+
+      for(int r=range; r<img.rows-range; r++) {
+          for(int c=range; c<img.cols-range; c++) {
+              float res = 0;
+
+              for(int x = -range; x<=range; x++) {
+                  float m = 1/sqrt(2*M_PI)*exp(-0.5*x*x);
+
+                  res += m * img.at<float>(r-range,c-range);
+              }
+
+              gaussHelperV.at<float>(r-range,c-range) = res;
+              ck.gaussV = res;
+          }
+      }
+
+      count_f += 1;
+      if (count_f > 3){
+        break;
+      }
+    } while (iterateFlo(ck.gaussV,-4,4) == 1);
+
+    count_f = 0;
+    do { // runs through loop once and checks if there is a fault
+
+
+
+      for(int r=range; r<img.rows-range; r++) {
+          for(int c=range; c<img.cols-range; c++) {
+              float res = 0;
+
+              for(int x = -range; x<=range; x++) {
+                  float m = 1/sqrt(2*M_PI)*exp(-0.5*x*x);
+
+                  res += m * gaussHelperV.at<float>(r-range,c-range);
+                  //cout << res << endl;
+              }
+
+              gauss.at<float>(r-range,c-range) = res;
+              ck.gauss = res;
+          }
+      }
+
+      count_f += 1;
+      if (count_f> 3){
+        break;
+      }
+    } while (iterateFlo(ck.gauss,-4,4) == 1);
+
+
+  #else
     // Helper Mats for better time complexity
     Mat gaussHelperV(img.rows-range*2, img.cols-range*2, CV_32F);
     for(int r=range; r<img.rows-range; r++) {
@@ -589,6 +624,7 @@ Mat Harris::gaussFilter(Mat& img, int range) {
             gauss.at<float>(r-range,c-range) = res;
         }
     }
+    #endif
 
     return gauss;
 }
