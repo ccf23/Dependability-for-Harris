@@ -23,26 +23,26 @@ using namespace cv;
 
 class Harris {
 public:
-    Harris(Mat img, float k, uint32_t filterRange, bool gauss);
-	std::vector<pointData> getMaximaPoints(float percentage, uint32_t filterRange, int32_t suppressionRadius);
+    Harris(Mat img, float k, int filterRange, bool gauss);
+	vector<pointData> getMaximaPoints(float percentage, int filterRange, int suppressionRadius);
 
 private:
 	Mat convertRgbToGrayscale(Mat& img);
 	Derivatives computeDerivatives(Mat& greyscaleImg);	
-	Derivatives applyMeanToDerivatives(Derivatives& dMats, uint32_t filterRange);
-	Derivatives applyGaussToDerivatives(Derivatives& dMats, uint32_t filterRange);
+	Derivatives applyMeanToDerivatives(Derivatives& dMats, int filterRange);
+	Derivatives applyGaussToDerivatives(Derivatives& dMats, int filterRange);
 	Mat computeHarrisResponses(float k, Derivatives& intMats);
 
 	Mat computeIntegralImg(Mat& img);
-	Mat meanFilter(Mat& intImg, int32_t range);
-	Mat gaussFilter(Mat& img, int32_t range);
+	Mat meanFilter(Mat& intImg, int range);
+	Mat gaussFilter(Mat& img, int range);
 
 private:
 	Mat m_harrisResponses;
 
-	#if INJECT_FAULTS
-		injector inj;
-	#endif
+	// #if INJECT_FAULTS
+	// 	injector inj;
+	// #endif
 };
 
 #endif // _HARRIS_H_

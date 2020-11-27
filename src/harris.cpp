@@ -3,16 +3,10 @@
  */
 
 #include "../include/harris.h"
-#include "../include/injector.h"
 #include <chrono>
 using namespace std::chrono;
 
-Harris::Harris(Mat img, float k, uint32_t filterRange, bool gauss) 
-    #if INJECT_FAULTS
-        :
-        inj(SINGLE_DATA, 0.4)
-    #endif
-{
+Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
 
     // (1) Convert to greyscale image
     auto t_start = high_resolution_clock::now();
@@ -67,18 +61,20 @@ Harris::Harris(Mat img, float k, uint32_t filterRange, bool gauss)
 }
 
 //-----------------------------------------------------------------------------------------------
-vector<pointData> Harris::getMaximaPoints(float percentage, uint32_t filterRange, int32_t suppressionRadius) {
+vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int suppressionRadius) {
     // Declare a max suppression matrix
     Mat maximaSuppressionMat(m_harrisResponses.rows, m_harrisResponses.cols, CV_32F, Scalar::all(0));
 
     // Create a vector of all Points
     std::vector<pointData> points;
-    for (int32_t r = 0; r < m_harrisResponses.rows; r++) {
-        for (int32_t c = 0; c < m_harrisResponses.cols; c++) {
+    for (int r = 0; r < m_harrisResponses.rows; r++) {
+        for (int c = 0; c < m_harrisResponses.cols; c++) {
             Point p(r,c); 
+
             pointData d;
             d.cornerResponse = m_harrisResponses.at<float>(r,c);
             d.point = p;
+
             points.push_back(d);
         }
     }
@@ -87,28 +83,28 @@ vector<pointData> Harris::getMaximaPoints(float percentage, uint32_t filterRange
     sort(points.begin(), points.end(), by_cornerResponse());
 
     // Get top points, given by the percentage
-    int32_t numberTopPoints = m_harrisResponses.cols * m_harrisResponses.rows * percentage;
+    int numberTopPoints = m_harrisResponses.cols * m_harrisResponses.rows * percentage;
     std::vector<pointData> topPoints;
 
-    int32_t i=0;
+    int i=0;
     while(topPoints.size() < numberTopPoints) {
         if(i == points.size())
             break;
 
-        uint32_t supRows = maximaSuppressionMat.rows;
-        int32_t supCols = maximaSuppressionMat.cols;
-
+        int supRows = maximaSuppressionMat.rows;
+        int supCols = maximaSuppressionMat.cols;
+    
         // Check if point marked in maximaSuppression matrix
-        if(maximaSuppressionMat.at<int32_t>(points[i].point.x,points[i].point.y) == 0) {
+        if(maximaSuppressionMat.at<int>(points[i].point.x,points[i].point.y) == 0) {
             
-            for (int32_t r = -suppressionRadius; r <= suppressionRadius; r++) {
-                for (int32_t c = -suppressionRadius; c <= suppressionRadius; c++) {
-                    int32_t sx = points[i].point.x+c;
-                    int32_t sy = points[i].point.y+r;
+            for (int r = -suppressionRadius; r <= suppressionRadius; r++) {
+                for (int c = -suppressionRadius; c <= suppressionRadius; c++) {
+                    int sx = points[i].point.x+c;
+                    int sy = points[i].point.y+r;
 
+                    // bound checking
                     if(sx > supRows)
                         sx = supRows;
-                    
                     if(sx < 0)
                         sx = 0;
                     if(sy > supCols)
@@ -117,7 +113,7 @@ vector<pointData> Harris::getMaximaPoints(float percentage, uint32_t filterRange
                         sy = 0;
 
                     //cout <<maximaSuppressionMat.size()<< points[i].point.x + c<<"\t"<<points[i].point.y+r<<endl;
-                    maximaSuppressionMat.at<int32_t>(sx, sy) = 1;
+                    maximaSuppressionMat.at<int>(sx, sy) = 1;
                 }
             }
             
@@ -137,8 +133,8 @@ vector<pointData> Harris::getMaximaPoints(float percentage, uint32_t filterRange
 Mat Harris::convertRgbToGrayscale(Mat& img) {
     Mat greyscaleImg(img.rows, img.cols, CV_32F);
 
-    for (int32_t c = 0; c < img.cols; c++) {
-        for (int32_t r = 0; r < img.rows; r++) {
+    for (int c = 0; c < img.cols; c++) {
+        for (int r = 0; r < img.rows; r++) {
             greyscaleImg.at<float>(r,c) = 
             	0.2126 * img.at<cv::Vec3b>(r,c)[0] +
             	0.7152 * img.at<cv::Vec3b>(r,c)[1] +
@@ -150,23 +146,10 @@ Mat Harris::convertRgbToGrayscale(Mat& img) {
 }
 
 //-----------------------------------------------------------------------------------------------
-Derivatives Harris::applyGaussToDerivatives(Derivatives& dMats, uint32_t filterRange) {
-    #if HAMMING_ON
-        filterRange = ofxHammingCode::H3126::SECDED::encode(filterRange);
-    #endif
-
-    #if INJECT_FAULTS
-        inj.inject(filterRange, SINGLE_DATA);    // inject single fault into filterRange
-    #endif
-
-    #if HAMMING_ON
-        if (ofxHammingCode::H3126::SECDED::isCorrectable(filterRange))
-            ofxHammingCode::H3126::SECDED::correct(filterRange);      // Use hamming to correct fault
-        filterRange = ofxHammingCode::H3126::SECDED::decode(filterRange);
-    #endif
-
+Derivatives Harris::applyGaussToDerivatives(Derivatives& dMats, int filterRange) {
     if(filterRange == 0)
         return dMats;
+
     Derivatives mdMats;
 
     mdMats.Ix = gaussFilter(dMats.Ix, filterRange);
@@ -177,7 +160,7 @@ Derivatives Harris::applyGaussToDerivatives(Derivatives& dMats, uint32_t filterR
 }
 
 //-----------------------------------------------------------------------------------------------
-Derivatives Harris::applyMeanToDerivatives(Derivatives& dMats, uint32_t filterRange) {
+Derivatives Harris::applyMeanToDerivatives(Derivatives& dMats, int filterRange) {
     if(filterRange == 0)
         return dMats;
 
@@ -198,8 +181,8 @@ Derivatives Harris::applyMeanToDerivatives(Derivatives& dMats, uint32_t filterRa
 Derivatives Harris::computeDerivatives(Mat& greyscaleImg) {
     // Helper Mats for better time complexity
     Mat sobelHelperV(greyscaleImg.rows-2, greyscaleImg.cols, CV_32F);
-    for(int32_t r=1; r<greyscaleImg.rows-1; r++) {
-        for(int32_t c=0; c<greyscaleImg.cols; c++) {
+    for(int r=1; r<greyscaleImg.rows-1; r++) {
+        for(int c=0; c<greyscaleImg.cols; c++) {
 
             float a1 = greyscaleImg.at<float>(r-1,c);
             float a2 = greyscaleImg.at<float>(r,c);
@@ -210,8 +193,8 @@ Derivatives Harris::computeDerivatives(Mat& greyscaleImg) {
     }
 
     Mat sobelHelperH(greyscaleImg.rows, greyscaleImg.cols-2, CV_32F);
-    for(int32_t r=0; r<greyscaleImg.rows; r++) {
-        for(int32_t c=1; c<greyscaleImg.cols-1; c++) {
+    for(int r=0; r<greyscaleImg.rows; r++) {
+        for(int c=1; c<greyscaleImg.cols-1; c++) {
 
             float a1 = greyscaleImg.at<float>(r,c-1);
             float a2 = greyscaleImg.at<float>(r,c);
@@ -226,8 +209,8 @@ Derivatives Harris::computeDerivatives(Mat& greyscaleImg) {
     Mat Iy(greyscaleImg.rows-2, greyscaleImg.cols-2, CV_32F);
     Mat Ixy(greyscaleImg.rows-2, greyscaleImg.cols-2, CV_32F);
 
-    for(int32_t r=0; r<greyscaleImg.rows-2; r++) {
-        for(int32_t c=0; c<greyscaleImg.cols-2; c++) {
+    for(int r=0; r<greyscaleImg.rows-2; r++) {
+        for(int c=0; c<greyscaleImg.cols-2; c++) {
             Ix.at<float>(r,c) = sobelHelperH.at<float>(r,c) - sobelHelperH.at<float>(r+2,c);
             Iy.at<float>(r,c) = - sobelHelperV.at<float>(r,c) + sobelHelperV.at<float>(r,c+2);
             Ixy.at<float>(r,c) = Ix.at<float>(r,c) * Iy.at<float>(r,c);
@@ -246,8 +229,8 @@ Derivatives Harris::computeDerivatives(Mat& greyscaleImg) {
 Mat Harris::computeHarrisResponses(float k, Derivatives& d) {
     Mat M(d.Iy.rows, d.Ix.cols, CV_32F);
 
-    for(int32_t r=0; r<d.Iy.rows; r++) {  
-        for(int32_t c=0; c<d.Iy.cols; c++) {
+    for(int r=0; r<d.Iy.rows; r++) {  
+        for(int c=0; c<d.Iy.cols; c++) {
             float   a11, a12,
                     a21, a22;
 
@@ -272,20 +255,20 @@ Mat Harris::computeIntegralImg(Mat& img) {
 
     integralMat.at<float>(0,0) = img.at<float>(0,0);
 
-    for (int32_t i = 1; i < img.cols; i++) {
+    for (int i = 1; i < img.cols; i++) {
         integralMat.at<float>(0,i) = 
             integralMat.at<float>(0,i-1) 
             + img.at<float>(0,i);
     }
 
-    for (int32_t j = 1; j < img.rows; j++) {
+    for (int j = 1; j < img.rows; j++) {
         integralMat.at<float>(j,0) = 
             integralMat.at<float>(j-1,0) 
             + img.at<float>(j,0);
     }    
 
-    for (int32_t i = 1; i < img.cols; i++) {
-        for (int32_t j = 1; j < img.rows; j++) {
+    for (int i = 1; i < img.cols; i++) {
+        for (int j = 1; j < img.rows; j++) {
             integralMat.at<float>(j,i) = 
                 img.at<float>(j,i)
                 + integralMat.at<float>(j-1,i)
@@ -298,11 +281,11 @@ Mat Harris::computeIntegralImg(Mat& img) {
 }
 
 //-----------------------------------------------------------------------------------------------
-Mat Harris::meanFilter(Mat& intImg, int32_t range) {
+Mat Harris::meanFilter(Mat& intImg, int range) {
     Mat medianFilteredMat(intImg.rows-range*2, intImg.cols-range*2, CV_32F);
 
-    for (int32_t r = range; r < intImg.rows-range; r++) {
-        for (int32_t c = range; c < intImg.cols-range; c++) {
+    for (int r = range; r < intImg.rows-range; r++) {
+        for (int c = range; c < intImg.cols-range; c++) {
             medianFilteredMat.at<float>(r-range, c-range) = 
                 intImg.at<float>(r+range, c+range)
                 + intImg.at<float>(r-range, c-range)
@@ -314,14 +297,14 @@ Mat Harris::meanFilter(Mat& intImg, int32_t range) {
     return medianFilteredMat;
 }
 
-Mat Harris::gaussFilter(Mat& img, int32_t range) {
+Mat Harris::gaussFilter(Mat& img, int range) {
     // Helper Mats for better time complexity
     Mat gaussHelperV(img.rows-range*2, img.cols-range*2, CV_32F);
-    for(int32_t r=range; r<img.rows-range; r++) {
-        for(int32_t c=range; c<img.cols-range; c++) {
+    for(int r=range; r<img.rows-range; r++) {
+        for(int c=range; c<img.cols-range; c++) {
             float res = 0;
 
-            for(int32_t x = -range; x<=range; x++) {
+            for(int x = -range; x<=range; x++) {
                 float m = 1/sqrt(2*M_PI)*exp(-0.5*x*x);
 
                 res += m * img.at<float>(r-range,c-range);
@@ -332,11 +315,11 @@ Mat Harris::gaussFilter(Mat& img, int32_t range) {
     }
 
     Mat gauss(img.rows-range*2, img.cols-range*2, CV_32F);
-    for(int32_t r=range; r<img.rows-range; r++) {
-        for(int32_t c=range; c<img.cols-range; c++) {
+    for(int r=range; r<img.rows-range; r++) {
+        for(int c=range; c<img.cols-range; c++) {
             float res = 0;
 
-            for(int32_t x = -range; x<=range; x++) {
+            for(int x = -range; x<=range; x++) {
                 float m = 1/sqrt(2*M_PI)*exp(-0.5*x*x);
 
                 res += m * gaussHelperV.at<float>(r-range,c-range);
