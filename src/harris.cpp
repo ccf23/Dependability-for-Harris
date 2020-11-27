@@ -97,6 +97,10 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
     t_start = high_resolution_clock::now();
     Mat harrisResponses = computeHarrisResponses(k, mDerivatives);
     m_harrisResponses = harrisResponses;
+    #if ABFT_ON
+        // check created here, verified when get Maxima Points is called
+        abft_addChecksums(m_harrisResponses,hrRc,hrCc);
+    #endif
     t_stop = high_resolution_clock::now();
     duration = duration_cast<microseconds>(t_stop - t_start);
 
@@ -115,6 +119,15 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
     // Create a vector of all Points
     std::vector<pointData> points;
     for (int r = 0; r < m_harrisResponses.rows; r++) {
+        #if ABFT_ON
+            // perform continual verification during this critical part
+            
+            if (!abft_check(m_harrisResponses,hrRc,hrCc))
+            {
+                // corrupted, go back to begining
+            }//*/
+
+        #endif
         for (int c = 0; c < m_harrisResponses.cols; c++) {
             Point p(r,c); 
 

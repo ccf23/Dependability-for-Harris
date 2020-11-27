@@ -31,4 +31,5 @@ private:
 
 private:
 	Mat m_harrisResponses;
+  Mat hrCc, hrRc; // harris response column and row checks
 };
