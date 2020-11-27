@@ -12,6 +12,9 @@ class processing
 
     // reads a pointData vector from a binary file
     static bool readVector(std::vector<pointData> &out, std::string filename);
+
+    // process features using benchmark features and test features
+    static void process(std::vector<pointData> bench, std::vector<pointData> test, featureStats &stats);
 };
 
 

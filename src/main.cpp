@@ -61,12 +61,31 @@ void doHarris(std::string filename) {
 
     if (BENCHMARK_RUN)
     {
+        // save benchmark data to file
         processing::saveVector(resPts, filename);
     }
     else
     {
-        std::vector<pointData> gold;
-        processing::readVector(gold, filename);
+
+        std::vector<pointData> bench;
+        processing::readVector(bench, filename);
+
+        // simple tests (uncomment one or multiple)
+        resPts.erase(resPts.begin(),resPts.begin() + 10);
+        bench.erase(bench.begin() + 25, bench.begin() + 35);
+        resPts.at(45).point.x = 444;
+
+        // process results
+        featureStats stats;
+        processing::process(bench, resPts, stats);
+
+        // uncomment to print
+        cout<<"benchmark features: "<<stats.bench_features<<endl;
+        cout<<"benchmark features: "<<stats.bench_features<<endl;
+        cout<<"test features: "<<stats.test_features<<endl;
+        cout<<"missing features: "<<stats.missing_features<<endl;
+        cout<<"false features: "<<stats.false_features<<endl;
+        cout<<"matching features: "<<stats.match_features<<endl;
     }
 
 
