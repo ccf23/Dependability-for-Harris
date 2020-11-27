@@ -19,7 +19,7 @@ using namespace std;
 Mat m_img;
 string filename;
 
-void doHarris() {
+void doHarris(std::string filename) {
     int boxFilterSize = 3;
     int maximaSuppressionDimension = 15;
     bool gauss = true;
@@ -59,19 +59,17 @@ void doHarris() {
         cout << "Features Detected: "<<resPts.size()<<endl;
     #endif
 
-    processing::saveVector(resPts, std::string("test"));
-
-    std::vector<pointData> readPts;
-    processing::readVector(readPts, std::string("test"));
-    //std::cout<<resPts.size()<<endl;
-    if (resPts == readPts)
+    if (BENCHMARK_RUN)
     {
-        cout<<"values match"<<endl;
+        processing::saveVector(resPts, filename);
     }
     else
     {
-        cout<<"values DO NOT match"<<endl;
+        std::vector<pointData> gold;
+        processing::readVector(gold, filename);
     }
+
+
 
     #ifdef LOCAL
     t_before = high_resolution_clock::now();
@@ -104,7 +102,7 @@ int main(int argc, char** argv) {
     img.copyTo(m_img);
 
     auto t_before = high_resolution_clock::now();
-    doHarris();
+    doHarris(std::string(argv[1]));
     auto t_after = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(t_after - t_before);
 
