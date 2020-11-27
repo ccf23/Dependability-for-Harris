@@ -23,7 +23,7 @@ using namespace cv;
 
   typedef struct state { // Each var saved is a checkpoint
 
-    Mat greyA; // B
+    float greyA; // B
 
     Mat derivxA;// C
 

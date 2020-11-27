@@ -39,41 +39,18 @@ using namespace std::chrono;
 
 Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
 
-    #if ASSERTIONS_ON
-      Mat greyscaleImg;
 
-      int count_fault =0;// gets int since it is the first time it is called
-
-      greyscaleImg = convertRgbToGrayscale(img);
-      ck.greyA = greyscaleImg.clone();
-
-////////////////////////////////////////////////////////////////
-      // int count_fault =0;// gets int since it is the first time it is called
-      // do { // runs through loop once and checks if there is a fault
-      //   greyscaleImg = convertRgbToGrayscale(img);
-      //   ck.greyA = greyscaleImg.clone();
-      //
-      //   // will only loop at most three times so that conitinuous (permanent?) fault doesnt make the program stuck
-      //   // if break is needed, the rest of program will most likely use a break as well, which will cause latency in overall program
-      //   count_fault += 1;
-      //   if (count_fault > 3){
-      //     break;
-      //   }
-      // } while (iterate(ck.greyA,0,256) == 1);
-////////////////////////////////////////////
-
+    // (1) Convert to greyscale image
+    auto t_start = high_resolution_clock::now();
+    Mat greyscaleImg = convertRgbToGrayscale(img);
+    auto t_stop = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>(t_stop - t_start);
+    #if DATA_COLLECTION_MODE
+        cout << duration.count()/1000 << ",";
     #else
-      // (1) Convert to greyscale image
-      auto t_start = high_resolution_clock::now();
-      Mat greyscaleImg = convertRgbToGrayscale(img);
-      auto t_stop = high_resolution_clock::now();
-      auto duration = duration_cast<microseconds>(t_stop - t_start);
-      #if DATA_COLLECTION_MODE
-          cout << duration.count()/1000 << ",";
-      #else
-          cout << "Time to convert to greyscale image: " << duration.count()/1000 << " ms" << endl;
-      #endif
+        cout << "Time to convert to greyscale image: " << duration.count()/1000 << " ms" << endl;
     #endif
+
 
     #if ASSERTIONS_ON
 
@@ -81,7 +58,7 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
       //Derivatives derivatives = computeDerivatives(greyscaleImg);
       Derivatives derivatives;
 
-      count_fault =0;
+      int count_fault =0;
       do { // runs through loop once and checks if there is a fault
         derivatives = computeDerivatives(greyscaleImg);// watch out for multiple matrices saved
         ck.derivxA = derivatives.Ix.clone();
@@ -286,15 +263,42 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
 Mat Harris::convertRgbToGrayscale(Mat& img) {
     Mat greyscaleImg(img.rows, img.cols, CV_32F);
 
-    for (int c = 0; c < img.cols; c++) {
-        for (int r = 0; r < img.rows; r++) {
-            greyscaleImg.at<float>(r,c) =
-            	0.2126 * img.at<cv::Vec3b>(r,c)[0] +
-            	0.7152 * img.at<cv::Vec3b>(r,c)[1] +
-            	0.0722 * img.at<cv::Vec3b>(r,c)[2];
+    #if ASSERTIONS_ON
+      int count_f = 0;
+      for (int c = 0; c < img.cols; c++) {
+          for (int r = 0; r < img.rows; r++) {
 
-        }
-    }
+                do { // runs through loop once and checks if there is a fault
+                  greyscaleImg.at<float>(r,c) =
+                    0.2126 * img.at<cv::Vec3b>(r,c)[0] +
+                    0.7152 * img.at<cv::Vec3b>(r,c)[1] +
+                    0.0722 * img.at<cv::Vec3b>(r,c)[2];
+                    greyscaleImg.at<float>(r,c) /= 255;
+                                    
+                  ck.greyA = greyscaleImg.at<float>(r,c);
+
+                  count_f += 1;
+                  if (count_f > 3){
+                    break;
+                  }
+                } while (iterateFlo(ck.greyA,0,1) == 1 );
+
+          }
+      }
+
+    #else
+      for (int c = 0; c < img.cols; c++) {
+          for (int r = 0; r < img.rows; r++) {
+              greyscaleImg.at<float>(r,c) =
+              	0.2126 * img.at<cv::Vec3b>(r,c)[0] +
+              	0.7152 * img.at<cv::Vec3b>(r,c)[1] +
+              	0.0722 * img.at<cv::Vec3b>(r,c)[2];
+
+
+          }
+      }
+    #endif
+
     return greyscaleImg;
 }
 
