@@ -30,7 +30,7 @@ Harris::Harris(Mat img, float k, int filterRange)
     greyscaleImg = cv::Mat(greyscaleImg,cv::Range(0,greyscaleImg.rows - 2), cv::Range(0,greyscaleImg.cols - 2));
     
 #else
-    img.convertTo(img, CV_32F);   
+    img.convertTo(img, CV_32FC3);   
     greyscaleImg = convertRgbToGrayscale(img); 
 #endif
 #if THREADS_ON
