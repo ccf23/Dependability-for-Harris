@@ -17,26 +17,26 @@ using namespace std;
 using namespace cv;
 
 #define ASSERTIONS_ON 			false
-#define ABFT_ON 				false
+#define ABFT_ON 				true
 #define THREADS_ON 				false
 #define HAMMING_ON         		false
 
-#define INJECT_FAULTS			true
+#define INJECT_FAULTS			false
 
-#define DATA_COLLECTION_MODE 	true	// enable this for logging
+#define DATA_COLLECTION_MODE 	false	// enable this for logging
 
-#define POSITION_RANGE			 5		// range for points in processing::process()	
+#define POSITION_RANGE			 5		// range for points in processing::process()
 
 #define LOCAL 					false	// set to true to allow for visual test on local machine
 
 #if ASSERTIONS_ON
 
-  typedef struct state { // Each var saved is a checkpoint
-
-    float a11A;//E
-    float a12A;//E
-    float a21A;//E
-    float a22A;//E
+  typedef struct state { // vars saved for do while checkpoint
+    //saved vars for trace calculation
+    float a11A;
+    float a12A;
+    float a21A;
+    float a22A;
 
 
   } state_t;
@@ -70,7 +70,7 @@ private:
 #endif
 
 	Mat gaussFilter(Mat& img, int range);
-  
+
 
 private:
 	Mat m_harrisResponses;

@@ -477,150 +477,110 @@ Mat Harris::computeHarrisResponses(float k, Derivatives &d)
     return M;
 }
 
-#if ASSERTIONS_ON
 Mat Harris::gaussFilter(Mat& img, int range) {
+    Mat m(1,2*range+1, CV_32F); // gaussian Kernel
+    for (int i = -range; i<= range; ++i)
+    {
+        float val = 1/sqrt(2*M_PI)*exp(-0.5*i*i);
+        m.at<float>(0,i+range) = val;
+    }
+    #if ABFT_ON
+        Mat mRcheck, mCcheck;
+        abft_addChecksums(m,mRcheck,mCcheck);
+    #endif
+
 
     // Helper Mats for better time complexity
     Mat gaussHelperV(img.rows-range*2, img.cols-range*2, CV_32F);
-
-    int reset;
-    reset = 0;
-
-    for(int r=range; r<img.rows-range; r++) {
-        for(int c=range; c<img.cols-range; c++) {
-            float res = 0;
-
-            for(int x = -range; x<=range; x++) {
-                float m = 1/sqrt(2*M_PI)*exp(-0.5*x*x);
-
-                res += m * img.at<float>(r-range,c-range);
-            }
-
-            gaussHelperV.at<float>(r-range,c-range) = res;
-
-          //ck 4
-            if (iterateFlo(gaussHelperV.at<float>(r-range,c-range),-4,4) == 1 && reset < 3)
+    #if ASSERTIONS_ON
+      int reset;
+      reset = 0;
+    #endif
+    bool valid;
+    do
+    {
+        valid = true;
+        for(int r=range; r<img.rows-range; r++)
+        {
+            #if ABFT_ON
+                bool kernel_good = abft_check(m,mRcheck,mCcheck, false);
+                if (!kernel_good)
+                {
+                    valid = false;
+                    break;
+                }
+            #endif
+            for(int c=range; c<img.cols-range; c++)
             {
-              //error, so reset loop
-              r =range;
-              c =range;
-              reset+=1;
-            }
+                float res = 0;
 
+                for(int x = -range; x<=range; x++)
+                 {
+                    res += m.at<float>(0,x+3) * img.at<float>(r-range,c-range);
+                }
+
+                gaussHelperV.at<float>(r-range,c-range) = res;
+                #if ASSERTIONS_ON
+                //ck 4
+                  if (iterateFlo(gaussHelperV.at<float>(r-range,c-range),-4,4) == 1 && reset < 3)
+                  {
+                    //error, so reset loop
+                    r =range;
+                    c =range;
+                    reset+=1;
+                  }
+                #endif
+
+                // TODO: inject faults into m here
+            }
         }
-    }
+    } while(!valid);
 
     Mat gauss(img.rows-range*2, img.cols-range*2, CV_32F);
     #if ASSERTIONS_ON
       reset = 0;
     #endif
-    for(int r=range; r<img.rows-range; r++) {
-        for(int c=range; c<img.cols-range; c++) {
-            float res = 0;
+    do
+    {
 
-            for(int x = -range; x<=range; x++) {
-                float m = 1/sqrt(2*M_PI)*exp(-0.5*x*x);
+        valid = true;
+        for(int r=range; r<img.rows-range; r++)
+        {
+            #if ABFT_ON
+                    bool kernel_good = abft_check(m,mRcheck,mCcheck, false);
+                    if (!kernel_good)
+                    {
+                        valid = false;
+                        break;
+                    }
+                #endif
+            for(int c=range; c<img.cols-range; c++)
+             {
+                float res = 0;
+                for(int x = -range; x<=range; x++)
+                {
+                    res += m.at<float>(0,x+3) * gaussHelperV.at<float>(r-range,c-range);
+                }
 
-                res += m * gaussHelperV.at<float>(r-range,c-range);
+                gauss.at<float>(r-range,c-range) = res;
+                #if ASSERTIONS_ON
+                //ck 5
+                  if (iterateFlo(gauss.at<float>(r-range,c-range),-4,4) == 1 && reset < 3)
+                  {
+                    //error, so reset loop
+                    r = range;
+                    c = range;
+                    reset+=1;
+                  }
+                #endif
+
+                // TODO: inject kernel faults here
             }
-
-            gauss.at<float>(r-range,c-range) = res;
-            #if ASSERTIONS_ON
-            //ck 5
-              if (iterateFlo(gauss.at<float>(r-range,c-range),-4,4) == 1 && reset < 3)
-              {
-                //error, so reset loop
-                r = range;
-                c = range;
-                reset+=1;
-              }
-            #endif
         }
-
-    }
-
-
+    } while (!valid);
     return gauss;
 }
-#else
 
-  Mat Harris::gaussFilter(Mat& img, int range) {
-      Mat m(1,2*range+1, CV_32F); // gaussian Kernel
-      for (int i = -range; i<= range; ++i)
-      {
-          float val = 1/sqrt(2*M_PI)*exp(-0.5*i*i);
-          m.at<float>(0,i+range) = val;
-      }
-      #if ABFT_ON
-          Mat mRcheck, mCcheck;
-          abft_addChecksums(m,mRcheck,mCcheck);
-      #endif
-
-
-      // Helper Mats for better time complexity
-      Mat gaussHelperV(img.rows-range*2, img.cols-range*2, CV_32F);
-      bool valid;
-      do
-      {
-          valid = true;
-          for(int r=range; r<img.rows-range; r++)
-          {
-              #if ABFT_ON
-                  bool kernel_good = abft_check(m,mRcheck,mCcheck, false);
-                  if (!kernel_good)
-                  {
-                      valid = false;
-                      break;
-                  }
-              #endif
-              for(int c=range; c<img.cols-range; c++)
-              {
-                  float res = 0;
-
-                  for(int x = -range; x<=range; x++)
-                   {
-                      res += m.at<float>(0,x+3) * img.at<float>(r-range,c-range);
-                  }
-
-                  gaussHelperV.at<float>(r-range,c-range) = res;
-
-                  // TODO: inject faults into m here
-              }
-          }
-      } while(!valid);
-
-      Mat gauss(img.rows-range*2, img.cols-range*2, CV_32F);
-      do
-      {
-
-          valid = true;
-          for(int r=range; r<img.rows-range; r++)
-          {
-              #if ABFT_ON
-                      bool kernel_good = abft_check(m,mRcheck,mCcheck, false);
-                      if (!kernel_good)
-                      {
-                          valid = false;
-                          break;
-                      }
-                  #endif
-              for(int c=range; c<img.cols-range; c++)
-               {
-                  float res = 0;
-                  for(int x = -range; x<=range; x++)
-                  {
-                      res += m.at<float>(0,x+3) * gaussHelperV.at<float>(r-range,c-range);
-                  }
-
-                  gauss.at<float>(r-range,c-range) = res;
-
-                  // TODO: inject kernel faults here
-              }
-          }
-      } while (!valid);
-      return gauss;
-  }
-#endif// ASSERTIONS if else for gaussFilter
 #if THREADS_ON
 Mat Harris::runParallel_convertRgbToGrayscale(Mat& img)
 {
