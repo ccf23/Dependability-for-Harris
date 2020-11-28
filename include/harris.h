@@ -11,13 +11,13 @@
 using namespace std;
 using namespace cv;
 
-#define ASSERTIONS_ON 		true
+#define ASSERTIONS_ON 		false
 #define ABFT_ON 			false
 #define THREADS_ON 			false
 
 #define INJECT_FAULTS		false
 
-#define DATA_COLLECTION_MODE false
+#define DATA_COLLECTION_MODE true
 
 #if ASSERTIONS_ON
 

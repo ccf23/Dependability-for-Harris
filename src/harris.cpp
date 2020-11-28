@@ -36,20 +36,19 @@ Harris::Harris(Mat img, float k, int filterRange)
     bool correct = false;
     do
     {
+        cout <<"helllo"<<endl;
         greyscaleImg = convertRgbToGrayscale(img);
         correct = grayscaleABFTCheck(greyscaleImg, true);
     } while (!correct);
 
     // remove checksums from image
-    greyscaleImg = cv::Mat(greyscaleImg,cv::Range(0,greyscaleImg.rows - 2), cv::Range(0,greyscaleImg.cols - 2));
+    greyscaleImg = cv::Mat(greyscaleImg,cv::Range(0,greyscaleImg.rows - 1), cv::Range(0,greyscaleImg.cols - 1));
 
-#else
+#elif THREADS_ON
     img.convertTo(img, CV_32FC3);
-    greyscaleImg = convertRgbToGrayscale(img);
-#endif
-#if THREADS_ON
     greyscaleImg = runParallel_convertRgbToGrayscale(img);
 #else
+    img.convertTo(img, CV_32FC3);
     greyscaleImg = convertRgbToGrayscale(img);
 #endif
 
@@ -61,6 +60,8 @@ Harris::Harris(Mat img, float k, int filterRange)
     cout << "Time to convert to greyscale image: " << duration.count() / 1000 << " ms" << endl;
 #endif
 
+    // (2) Compute Derivatives
+    t_start = high_resolution_clock::now();
 #if ABFT_ON
     Mat a, b;
     abft_addChecksums(greyscaleImg,a,b);
@@ -70,11 +71,8 @@ Harris::Harris(Mat img, float k, int filterRange)
         // TODO: inject faults here
         valid = abft_check(greyscaleImg,a,b,true);
     } while (!valid);
-#endif
-
-    // (2) Compute Derivatives-- sobel filter
-    t_start = high_resolution_clock::now();
-#if THREADS_ON
+    Derivatives derivatives = computeDerivatives(greyscaleImg);
+#elif THREADS_ON
     Derivatives derivatives = runParallel_computeDerivatives(greyscaleImg);
 #else
     Derivatives derivatives = computeDerivatives(greyscaleImg);
@@ -120,17 +118,20 @@ Harris::Harris(Mat img, float k, int filterRange)
 
     // (4) Compute Harris Response
     t_start = high_resolution_clock::now();
+
 #if THREADS_ON
     Mat harrisResponses = runParallel_computeHarrisResponses(k, mDerivatives);
     m_harrisResponses = harrisResponses;
+#elif ABFT_ON
+    Mat harrisResponses = computeHarrisResponses(k, mDerivatives);
+    m_harrisResponses = harrisResponses;
+    // check created here, verified when get Maxima Points is called
+    abft_addChecksums(m_harrisResponses,hrRc,hrCc);
 #else
     Mat harrisResponses = computeHarrisResponses(k, mDerivatives);
     m_harrisResponses = harrisResponses;
 #endif
-#if ABFT_ON
-    // check created here, verified when get Maxima Points is called
-    abft_addChecksums(m_harrisResponses,hrRc,hrCc);
-#endif
+
     t_stop = high_resolution_clock::now();
     duration = duration_cast<microseconds>(t_stop - t_start);
 
@@ -241,9 +242,9 @@ Mat Harris::convertRgbToGrayscale(Mat &img)
     for (int c = 0; c < img.cols; c++) {
         for (int r = 0; r < img.rows; r++) {
             greyscaleImg.at<float>(r,c) =
-            	0.2126 * img.at<cv::Vec3b>(r,c)[0] +
-            	0.7152 * img.at<cv::Vec3b>(r,c)[1] +
-            	0.0722 * img.at<cv::Vec3b>(r,c)[2];
+            	0.2126 * img.at<cv::Vec3f>(r,c)[0] +
+            	0.7152 * img.at<cv::Vec3f>(r,c)[1] +
+            	0.0722 * img.at<cv::Vec3f>(r,c)[2];
             greyscaleImg.at<float>(r,c) /= 255;
             #if ASSERTIONS_ON
             //ck 1
@@ -627,31 +628,28 @@ Mat Harris::runParallel_convertRgbToGrayscale(Mat& img)
     // flag for error detection
     bool match = false;
     Mat greyscaleImg, greyscaleImg2;
-    Mat img2, img1;
 
     while (!match)
     {
-        img1 = img.clone();
-        img2 = img.clone();
 #pragma omp parallel num_threads(2)
         {
             int i = omp_get_thread_num();
             if (i == 0)
             {
-                greyscaleImg = convertRgbToGrayscale(img1);
+                greyscaleImg = convertRgbToGrayscale(img);
             }
             if (i == 1 || omp_get_num_threads() != 2)
             {
-                greyscaleImg2 = convertRgbToGrayscale(img2);
+                greyscaleImg2 = convertRgbToGrayscale(img);
             }
         }
 
         // verify that they match
         match = (sum(greyscaleImg2 != greyscaleImg) == Scalar(0));
 
-        // cout << "Grayscale match: " << boolalpha << match << endl;
+        cout << "Grayscale match: " << boolalpha << match << endl;
     }
-    img = img1;
+
     return greyscaleImg;
 }
 
