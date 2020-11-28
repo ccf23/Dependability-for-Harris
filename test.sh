@@ -61,6 +61,7 @@ let MINUTES=(DURATION/60)%60
 let SECONDS=DURATION%60
 
 echo ""
-printf "tests completed in %d hours %02d minutes and %02d seconds\n\n" $HOURS $MINUTES $SECONDS
+printf "tests completed in %d hours %02d minutes and %02d seconds\n" $HOURS $MINUTES $SECONDS
+printf "%d seg faults occured\n\n" $FAILS
 
 exit
