@@ -19,10 +19,20 @@ for img in ./images/*.jpeg;
 do
 	echo "--- running benchmark for $img ---"
 	./Harris_bench $img benchmark
-	sleep 1
+	
+	# check for error
+	let err=$(($? >> 7))
+	if [ $err -eq 1 ]
+	then 
+		echo "Error returned during benchmark, exitng now"
+		exit
+	fi
 done
 
 echo " "
+
+# var to track the number of seg faults/other errors
+let FAILS=0 
 
 # run test case for each image NUM_TESTS times
 for img in ./images/*.jpeg;
@@ -31,7 +41,14 @@ do
 	do
 		echo "--- running test $counter for $img ---"
 		./Harris_test $img
-		sleep 1
+
+		# check for seg fault or other error
+		let err=$(($? >> 7))
+		if [ $err -eq 1 ]
+		then 
+			let FAILS++
+			echo "Run Failed, there have been $FAILS seg faults so far..."
+		fi
 	done 
 	echo "--------------------------------------------------------------------------"
 done
