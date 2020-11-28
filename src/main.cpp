@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <opencv2/opencv.hpp>
 #include <chrono>
+#include <fstream>
 using namespace std::chrono;
 
 #include "../include/harris.h"
@@ -14,7 +15,7 @@ using namespace cv;
 using namespace std;
 
 // uncomment to allow for visual test on local machine
-#define LOCAL
+// #define LOCAL
 
 Mat m_img;
 string filename;
@@ -66,21 +67,21 @@ void doHarris(std::string filename, bool benchmark) {
     }
     else
     {
-
+        ifstream f(filename + ".dat");
+        assert(f.good());
         std::vector<pointData> bench;
         processing::readVector(bench, filename);
 
         // simple tests (uncomment one or multiple)
-        resPts.erase(resPts.begin(),resPts.begin() + 10);
-        bench.erase(bench.begin() + 25, bench.begin() + 35);
-        resPts.at(45).point.x = 444;
+        // resPts.erase(resPts.begin(),resPts.begin() + 10);
+        // bench.erase(bench.begin() + 25, bench.begin() + 35);
+        // resPts.at(45).point.x = 444;
 
         // process results
         featureStats stats;
         processing::process(bench, resPts, stats);
 
         // uncomment to print
-        cout<<"benchmark features: "<<stats.bench_features<<endl;
         cout<<"benchmark features: "<<stats.bench_features<<endl;
         cout<<"test features: "<<stats.test_features<<endl;
         cout<<"missing features: "<<stats.missing_features<<endl;
