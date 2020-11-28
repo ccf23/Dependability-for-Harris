@@ -82,3 +82,8 @@ Mat Util::MarkInImage(Mat& img, vector<pointData> points, int radius) {
 
 	return retImg;
 }
+
+bool pointData::operator==(const pointData &a) const
+{
+	return ((point.x == a.point.x)&&(point.y == a.point.y) && (cornerResponse == a.cornerResponse));
+}

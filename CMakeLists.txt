@@ -42,6 +42,7 @@ add_executable( Harris
 	./src/abft.cpp
 	./src/main.cpp
 	./src/injector.cpp
+	./src/processing.cpp
 )
 
 target_include_directories( Harris
