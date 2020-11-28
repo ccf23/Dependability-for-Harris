@@ -38,7 +38,8 @@ void doHarris(std::string filename, bool benchmark) {
     runStats stats = harris.getStats();
 
     #if DATA_COLLECTION_MODE
-        cout << duration.count()/1000  << ",";
+        //cout << duration.count()/1000  << ",";
+        stats.timing.harris = duration.count();
     #else
         cout << "Total time to compute Harris: " << duration.count()/1000 << " ms" << endl;
     #endif
@@ -50,8 +51,9 @@ void doHarris(std::string filename, bool benchmark) {
     t_after = high_resolution_clock::now();
     duration = duration_cast<microseconds>(t_after - t_before);
     #if DATA_COLLECTION_MODE
-        cout << duration.count()/1000 << ",";
-        cout << resPts.size() << ",";
+        //cout << duration.count()/1000 << ",";
+        //cout << resPts.size() << ",";
+        stats.timing.features = duration.count();
     #else
         cout << "Total time to get vector of points: " << duration.count()/1000 << " ms" << endl;
         cout << "Features Detected: "<<resPts.size()<<endl;
@@ -61,6 +63,13 @@ void doHarris(std::string filename, bool benchmark) {
     {
         // save benchmark data to file
         processing::saveVector(resPts, filename);
+
+        // zero out feature stats
+        stats.features.bench_features = resPts.size();
+        stats.features.false_features = 0;
+        stats.features.match_features = 0;
+        stats.features.missing_features = 0;
+        stats.features.test_features = 0;
     }
     else
     {
@@ -69,24 +78,14 @@ void doHarris(std::string filename, bool benchmark) {
         std::vector<pointData> bench;
         processing::readVector(bench, filename);
 
-        // simple tests (uncomment one or multiple)
-        // resPts.erase(resPts.begin(),resPts.begin() + 10);
-        // bench.erase(bench.begin() + 25, bench.begin() + 35);
-        // resPts.at(45).point.x = 444;
+        resPts.erase(resPts.begin(),resPts.begin() + 5);
 
         // process results
-        featureStats stats;
-        processing::process(bench, resPts, stats);
+        featureStats feat_stats;
+        processing::process(bench, resPts, feat_stats);
 
-        // uncomment to print
-        cout<<"benchmark features: "<<stats.bench_features<<endl;
-        cout<<"test features: "<<stats.test_features<<endl;
-        cout<<"missing features: "<<stats.missing_features<<endl;
-        cout<<"false features: "<<stats.false_features<<endl;
-        cout<<"matching features: "<<stats.match_features<<endl;
+        stats.features = feat_stats;
     }
-
-
 
     #ifdef LOCAL
     t_before = high_resolution_clock::now();
@@ -101,15 +100,18 @@ void doHarris(std::string filename, bool benchmark) {
     imshow("HarrisCornerDetector", _img);
     #endif
 
-
     t_after = high_resolution_clock::now();
     duration = duration_cast<microseconds>(t_after - harris_before);
 
     #if DATA_COLLECTION_MODE
-        cout << duration.count()/1000  << "\n" << endl;
+        //cout << duration.count()/1000  << "\n" << endl;
+        stats.timing.total = duration.count();
     #else
         cout << "Total execution time: " << duration.count()/1000 << " ms" << endl;
     #endif
+
+    // log run statistics
+    processing::log(stats, filename);
 }
 
 //-----------------------------------------------------------------------------------------------
