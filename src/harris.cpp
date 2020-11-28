@@ -165,7 +165,7 @@ Mat Harris::convertRgbToGrayscale(Mat& img) {
               greyscaleImg.at<float>(r,c) /= 255;
               #if ASSERTIONS_ON
               //ck 1
-                if (iterateFlo(greyscaleImg.at<float>(r,c),0,1) == 1)
+                if (iterateFlo(greyscaleImg.at<float>(r,c),0,1) == 1&& reset < 3)
                 {
                   //error, so reset loop
                   r =0;
@@ -249,7 +249,7 @@ Derivatives Harris::computeDerivatives(Mat& greyscaleImg) {
               ////////////////////////////////////////
 
 
-              if (iterateFlo(sobelHelperV.at<float>(r-1,c),0,4) == 1)
+              if (iterateFlo(sobelHelperV.at<float>(r-1,c),0,4) == 1 && reset < 3)
               {
                 //error, so reset loop
                 r =1;
@@ -276,7 +276,7 @@ Derivatives Harris::computeDerivatives(Mat& greyscaleImg) {
             sobelHelperH.at<float>(r,c-1) = a1 + a2 + a2 + a3;
             #if ASSERTIONS_ON
             //ck 3
-              if (iterateFlo(sobelHelperH.at<float>(r,c-1),0,4) == 1)
+              if (iterateFlo(sobelHelperH.at<float>(r,c-1),0,4) == 1 && reset < 3 )
               {
                 //error, so reset loop
                 r =0;
@@ -480,7 +480,7 @@ Mat Harris::gaussFilter(Mat& img, int range) {
             gaussHelperV.at<float>(r-range,c-range) = res;
             #if ASSERTIONS_ON
             //ck 4
-              if (iterateFlo(gaussHelperV.at<float>(r-range,c-range),-4,4) == 1)
+              if (iterateFlo(gaussHelperV.at<float>(r-range,c-range),-4,4) == 1 && reset < 3)
               {
                 //error, so reset loop
                 r =range;
@@ -508,7 +508,7 @@ Mat Harris::gaussFilter(Mat& img, int range) {
             gauss.at<float>(r-range,c-range) = res;
             #if ASSERTIONS_ON
             //ck 5
-              if (iterateFlo(gauss.at<float>(r-range,c-range),-4,4) == 1)
+              if (iterateFlo(gauss.at<float>(r-range,c-range),-4,4) == 1 && reset < 3)
               {
                 //error, so reset loop
                 r = range;
