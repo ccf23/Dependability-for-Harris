@@ -1,6 +1,7 @@
 
 #include <fstream>
 #include "../include/processing.h"
+#include "../include/harris.h"
 
 void processing::saveVector(std::vector<pointData> vect, std::string filename)
 {
@@ -119,5 +120,6 @@ void processing::log(runStats stats, std::string filename)
          << stats.features.test_features << ","    \
          << stats.features.match_features << ","   \
          << stats.features.missing_features << "," \
-         << stats.features.false_features <<endl;
+         << stats.features.false_features << ","   \
+         << 
 }
