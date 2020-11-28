@@ -247,15 +247,15 @@ Derivatives Harris::computeDerivatives(Mat& greyscaleImg) {
               #if ASSERTIONS_ON
 
                 /////////////inject fault////////////
-                if (r==3 && c == 4 && reset == 0){
-                  cout << sobelHelperV.at<float>(r-1,c) << endl;
-                  sobelHelperV.at<float>(r-1,c) = 10;
-                  cout << sobelHelperV.at<float>(r-1,c) << reset << endl;
-                }else if(r==3 && c == 4 && reset == 1){
-                  cout << sobelHelperV.at<float>(r-1,c) << endl;
-                  sobelHelperV.at<float>(r-1,c) = 10;
-                  cout << sobelHelperV.at<float>(r-1,c) << reset << endl;
-                }
+                // if (r==3 && c == 4 && reset == 0){
+                //   cout << sobelHelperV.at<float>(r-1,c) << endl;
+                //   sobelHelperV.at<float>(r-1,c) = 10;
+                //   cout << sobelHelperV.at<float>(r-1,c) << reset << endl;
+                // }else if(r==3 && c == 4 && reset == 1){
+                //   cout << sobelHelperV.at<float>(r-1,c) << endl;
+                //   sobelHelperV.at<float>(r-1,c) = 10;
+                //   cout << sobelHelperV.at<float>(r-1,c) << reset << endl;
+                // }
 
                 ////////////////////////////////////////
 
@@ -288,8 +288,8 @@ Derivatives Harris::computeDerivatives(Mat& greyscaleImg) {
                 if (iterateFlo(sobelHelperH.at<float>(r,c-1),0,4) == 1)
                 {
                   //error, so reset loop
-                  r =1;
-                  c =0;
+                  r =0;
+                  c =1;
                   reset+=1;
                 }
               #endif
@@ -306,11 +306,8 @@ Derivatives Harris::computeDerivatives(Mat& greyscaleImg) {
     for(int r=0; r<greyscaleImg.rows-2; r++) {
         for(int c=0; c<greyscaleImg.cols-2; c++) {
             Ix.at<float>(r,c) = sobelHelperH.at<float>(r,c) - sobelHelperH.at<float>(r+2,c);
-
-
-
             Iy.at<float>(r,c) = - sobelHelperV.at<float>(r,c) + sobelHelperV.at<float>(r,c+2);
-            Ixy.at<float>(r,c) = Ix.at<float>(r,c) * Iy.at<float>(r,c);
+            Ixy.at<float>(r,c) = Ix.at<float>(r,c) * Iy.at<float>(r,c);// could delete
         }
     }
 
@@ -319,7 +316,6 @@ Derivatives Harris::computeDerivatives(Mat& greyscaleImg) {
     d.Iy = Iy;
     d.Ixy = Iy;
 
-    cout << sobelHelperV.at<float>(2,4) << endl;
     return d;
 }
 
