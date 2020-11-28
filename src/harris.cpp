@@ -8,22 +8,6 @@ using namespace std::chrono;
 
 #if ASSERTIONS_ON
   // function to check range of each saved matrix element
-  int iterateMat(Mat matrix, float lB, float uB){
-
-    //check each element of matrix
-    for (int i = 0; i <matrix.rows; i++)
-    {
-      for (int j = 0; j <matrix.cols; j++)
-      {
-        //cout << matrix.at<float>(i,j) << "              " << endl;
-        if (matrix.at<float>(i,j) < lB || matrix.at<float>(i,j) > uB)
-        {
-          return 1; //there is a fault, so stop checking rest of matrix
-        }
-      }
-    }
-    return 0; //there is no fault
-  }
 
     int iterateFlo(float Flo, float lB, float uB){
 
@@ -37,10 +21,6 @@ using namespace std::chrono;
 #endif
 
 Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
-  #if ASSERTIONS_ON
-    int count_fault;
-  #endif
-
 
     // (1) Convert to greyscale image
     auto t_start = high_resolution_clock::now();
@@ -292,9 +272,7 @@ Derivatives Harris::computeDerivatives(Mat& greyscaleImg) {
                 ck.sobelH = sobelHelperH.at<float>(r,c-1);
             }
         }
-        // double min, max;
-        // minMaxLoc(sobelHelperH, &min, &max);
-        // cout << min << "  csobelHHHHH  "<< max <<endl;
+
 
         count_f += 1;
         if (count_f > 3){
@@ -321,16 +299,10 @@ Derivatives Harris::computeDerivatives(Mat& greyscaleImg) {
               float a1 = greyscaleImg.at<float>(r,c-1);
               float a2 = greyscaleImg.at<float>(r,c);
               float a3 = greyscaleImg.at<float>(r,c+1);
-              // cout << a1 << "    " << a2 << "    " << a3 << "    " <<  endl;
-              // cout << a1 + a2 + a2 + a3 <<endl;
 
               sobelHelperH.at<float>(r,c-1) = a1 + a2 + a2 + a3;
           }
       }
-      // double min, max;
-      // minMaxLoc(sobelHelperH, &min, &max);
-      // cout << min << "  csobelHHHHH  "<< max <<endl;
-      //cout << sobelHelperH <<endl;
 
       // Apply Sobel filter to compute 1st derivatives
     #endif
@@ -348,10 +320,6 @@ Derivatives Harris::computeDerivatives(Mat& greyscaleImg) {
             Ixy.at<float>(r,c) = Ix.at<float>(r,c) * Iy.at<float>(r,c);
         }
     }
-
-    // double min, max;
-    // minMaxLoc(Iy, &min, &max);
-    // cout << min << "  Iy "<< max <<endl;
 
     Derivatives d;
     d.Ix = Ix;
@@ -424,9 +392,6 @@ Mat Harris::computeHarrisResponses(float k, Derivatives& d) {
 
             do { // runs through loop once and checks if there is a fault
 
-              // det = a11*a22 - a12*a21; //always 0 unless fault
-              // cout << det << "the det issssss" <<endl;
-              // trace = a11 + a22; // cant be larger than 2.1 million
 
               ck.traceA = trace;
 

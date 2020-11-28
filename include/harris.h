@@ -43,7 +43,7 @@ using namespace cv;
   } state_t;
 
   //iterate through values in matrix
-  int iterateMat(Mat matrix, float lB, float uB);
+
   int iterateFlo(float Flo, float lB, float uB);
 
 #endif
