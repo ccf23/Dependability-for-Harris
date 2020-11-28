@@ -231,22 +231,20 @@ Derivatives Harris::computeDerivatives(Mat& greyscaleImg) {
     Mat sobelHelperH(greyscaleImg.rows, greyscaleImg.cols-2, CV_32F);
 
 
-    #if ASSERTIONS_ON
       // Vertical
-      int count_f, reset;
-      reset = 0;
-      //
-      // count_f =0;
-      // do { // runs through loop once and checks if there is a fault
-        for(int r=1; r<greyscaleImg.rows-1; r++) {
-            for(int c=0; c<greyscaleImg.cols; c++) {
+    int reset;
+    reset = 0;
 
-                float a1 = greyscaleImg.at<float>(r-1,c);
-                float a2 = greyscaleImg.at<float>(r,c);
-                float a3 = greyscaleImg.at<float>(r+1,c);
+    // do { // runs through loop once and checks if there is a fault
+      for(int r=1; r<greyscaleImg.rows-1; r++) {
+          for(int c=0; c<greyscaleImg.cols; c++) {
 
-                sobelHelperV.at<float>(r-1,c) = a1 + a2 + a2 + a3;
+              float a1 = greyscaleImg.at<float>(r-1,c);
+              float a2 = greyscaleImg.at<float>(r,c);
+              float a3 = greyscaleImg.at<float>(r+1,c);
 
+              sobelHelperV.at<float>(r-1,c) = a1 + a2 + a2 + a3;
+              #if ASSERTIONS_ON
 
                 /////////////inject fault////////////
                 if (r==3 && c == 4 && reset == 0){
@@ -259,11 +257,8 @@ Derivatives Harris::computeDerivatives(Mat& greyscaleImg) {
                   cout << sobelHelperV.at<float>(r-1,c) << reset << endl;
                 }
 
-
-
                 ////////////////////////////////////////
 
-                ck.sobelV = sobelHelperV.at<float>(r-1,c);
 
                 if (iterateFlo(sobelHelperV.at<float>(r-1,c),0,4) == 1)
                 {
@@ -272,52 +267,12 @@ Derivatives Harris::computeDerivatives(Mat& greyscaleImg) {
                   c =0;
                   reset+=1;
                 }
-            }
-        }
-      //
-      //   count_f += 1;
-      //   if (count_f > 3){
-      //     break;
-      //   }
-      // } while (iterateFlo(ck.sobelV,0,4) == 1 );
-
-      // Horizontal
-      count_f =0;
-      do { // runs through loop once and checks if there is a fault
-
-        for(int r=0; r<greyscaleImg.rows; r++) {
-            for(int c=1; c<greyscaleImg.cols-1; c++) {
-
-                float a1 = greyscaleImg.at<float>(r,c-1);
-                float a2 = greyscaleImg.at<float>(r,c);
-                float a3 = greyscaleImg.at<float>(r,c+1);
-                // cout << a1 << "    " << a2 << "    " << a3 << "    " <<  endl;
-                // cout << a1 + a2 + a2 + a3 <<endl;
-
-                sobelHelperH.at<float>(r,c-1) = a1 + a2 + a2 + a3;
-                ck.sobelH = sobelHelperH.at<float>(r,c-1);
-            }
-        }
-
-
-        count_f += 1;
-        if (count_f > 3){
-          break;
-        }
-      } while (iterateFlo(ck.sobelH,0,4) == 1 );
-
-
-    #else
-      for(int r=1; r<greyscaleImg.rows-1; r++) {
-          for(int c=0; c<greyscaleImg.cols; c++) {
-
-              float a1 = greyscaleImg.at<float>(r-1,c);
-              float a2 = greyscaleImg.at<float>(r,c);
-              float a3 = greyscaleImg.at<float>(r+1,c);
-
-              sobelHelperV.at<float>(r-1,c) = a1 + a2 + a2 + a3;
+              #endif
           }
       }
+
+    // Horizontal
+    reset =0;
 
       for(int r=0; r<greyscaleImg.rows; r++) {
           for(int c=1; c<greyscaleImg.cols-1; c++) {
@@ -325,13 +280,25 @@ Derivatives Harris::computeDerivatives(Mat& greyscaleImg) {
               float a1 = greyscaleImg.at<float>(r,c-1);
               float a2 = greyscaleImg.at<float>(r,c);
               float a3 = greyscaleImg.at<float>(r,c+1);
+              // cout << a1 << "    " << a2 << "    " << a3 << "    " <<  endl;
+              // cout << a1 + a2 + a2 + a3 <<endl;
 
               sobelHelperH.at<float>(r,c-1) = a1 + a2 + a2 + a3;
+              #if ASSERTIONS_ON
+                if (iterateFlo(sobelHelperH.at<float>(r,c-1),0,4) == 1)
+                {
+                  //error, so reset loop
+                  r =1;
+                  c =0;
+                  reset+=1;
+                }
+              #endif
+
           }
       }
 
       // Apply Sobel filter to compute 1st derivatives
-    #endif
+
     Mat Ix(greyscaleImg.rows-2, greyscaleImg.cols-2, CV_32F);
     Mat Iy(greyscaleImg.rows-2, greyscaleImg.cols-2, CV_32F);
     Mat Ixy(greyscaleImg.rows-2, greyscaleImg.cols-2, CV_32F);
