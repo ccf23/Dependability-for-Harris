@@ -233,10 +233,11 @@ Derivatives Harris::computeDerivatives(Mat& greyscaleImg) {
 
     #if ASSERTIONS_ON
       // Vertical
-      int count_f;
-
-      count_f =0;
-      do { // runs through loop once and checks if there is a fault
+      int count_f, reset;
+      reset = 0;
+      //
+      // count_f =0;
+      // do { // runs through loop once and checks if there is a fault
         for(int r=1; r<greyscaleImg.rows-1; r++) {
             for(int c=0; c<greyscaleImg.cols; c++) {
 
@@ -245,15 +246,40 @@ Derivatives Harris::computeDerivatives(Mat& greyscaleImg) {
                 float a3 = greyscaleImg.at<float>(r+1,c);
 
                 sobelHelperV.at<float>(r-1,c) = a1 + a2 + a2 + a3;
+
+
+                /////////////inject fault////////////
+                if (r==3 && c == 4 && reset == 0){
+                  cout << sobelHelperV.at<float>(r-1,c) << endl;
+                  sobelHelperV.at<float>(r-1,c) = 10;
+                  cout << sobelHelperV.at<float>(r-1,c) << reset << endl;
+                }else if(r==3 && c == 4 && reset == 1){
+                  cout << sobelHelperV.at<float>(r-1,c) << endl;
+                  sobelHelperV.at<float>(r-1,c) = 10;
+                  cout << sobelHelperV.at<float>(r-1,c) << reset << endl;
+                }
+
+
+
+                ////////////////////////////////////////
+
                 ck.sobelV = sobelHelperV.at<float>(r-1,c);
+
+                if (iterateFlo(sobelHelperV.at<float>(r-1,c),0,4) == 1)
+                {
+                  //error, so reset loop
+                  r =1;
+                  c =0;
+                  reset+=1;
+                }
             }
         }
-
-        count_f += 1;
-        if (count_f > 3){
-          break;
-        }
-      } while (iterateFlo(ck.sobelV,0,4) == 1 );
+      //
+      //   count_f += 1;
+      //   if (count_f > 3){
+      //     break;
+      //   }
+      // } while (iterateFlo(ck.sobelV,0,4) == 1 );
 
       // Horizontal
       count_f =0;
@@ -326,7 +352,7 @@ Derivatives Harris::computeDerivatives(Mat& greyscaleImg) {
     d.Iy = Iy;
     d.Ixy = Iy;
 
-
+    cout << sobelHelperV.at<float>(2,4) << endl;
     return d;
 }
 
