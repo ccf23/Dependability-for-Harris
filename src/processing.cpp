@@ -101,7 +101,7 @@ void processing::process(std::vector<pointData> bench, std::vector<pointData> te
 
 }
 
-void processing::log(runStats stats, std::string filename)
+void processing::log(runStats stats, std::string filename, bool benchmark)
 {
     std::string fn = filename + "_log.csv";
 
@@ -121,5 +121,10 @@ void processing::log(runStats stats, std::string filename)
          << stats.features.match_features << ","   \
          << stats.features.missing_features << "," \
          << stats.features.false_features << ","   \
-         << 
+         << boolalpha << benchmark <<"," \
+         << boolalpha << ABFT_ON << "," \
+         << boolalpha << ASSERTIONS_ON << "," \
+         << boolalpha << THREADS_ON << "," \
+         << boolalpha << HAMMING_ON << "," \
+         << boolalpha << INJECT_FAULTS << endl;
 }

@@ -41,7 +41,7 @@ class processing
     static void process(std::vector<pointData> bench, std::vector<pointData> test, featureStats &stats);
 
     // logs statistics to output log file
-    static void log(runStats stats, std::string filename);
+    static void log(runStats stats, std::string filename, bool benchmark);
 };
 
 

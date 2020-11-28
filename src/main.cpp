@@ -75,8 +75,6 @@ void doHarris(std::string filename, bool benchmark) {
         std::vector<pointData> bench;
         processing::readVector(bench, filename);
 
-        resPts.erase(resPts.begin(),resPts.begin() + 5);
-
         // process results
         featureStats feat_stats;
         processing::process(bench, resPts, feat_stats);
@@ -108,7 +106,7 @@ void doHarris(std::string filename, bool benchmark) {
 
     #if DATA_COLLECTION_MODE
         // log run statistics
-        processing::log(stats, filename);
+        processing::log(stats, filename, benchmark);
     #endif
 }
 
