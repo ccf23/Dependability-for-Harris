@@ -42,7 +42,8 @@ Harris::Harris(Mat img, float k, int filterRange)
     auto t_stop = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(t_stop - t_start);
 #if DATA_COLLECTION_MODE
-    cout << duration.count() / 1000 << ",";
+    //cout << duration.count() / 1000 << ",";
+    stats.timing.greyscale = duration.count();
 #else
     cout << "Time to convert to greyscale image: " << duration.count() / 1000 << " ms" << endl;
 #endif
@@ -82,7 +83,8 @@ Harris::Harris(Mat img, float k, int filterRange)
     t_stop = high_resolution_clock::now();
     duration = duration_cast<microseconds>(t_stop - t_start);
 #if DATA_COLLECTION_MODE
-    cout << duration.count() / 1000 << ",";
+    //cout << duration.count() / 1000 << ",";
+    stats.timing.derivatives = duration.count();
 #else
     cout << "Time to compute derivatives: " << duration.count() / 1000 << " ms" << endl;
 #endif
@@ -98,7 +100,8 @@ Harris::Harris(Mat img, float k, int filterRange)
     t_stop = high_resolution_clock::now();
     duration = duration_cast<microseconds>(t_stop - t_start);
 #if DATA_COLLECTION_MODE
-    cout << duration.count() / 1000 << ",";
+    //cout << duration.count() / 1000 << ",";
+    stats.timing.filtering = duration.count();
 #else
     cout << "Time to perform median filtering: " << duration.count() / 1000 << " ms" << endl;
 #endif
@@ -120,7 +123,8 @@ Harris::Harris(Mat img, float k, int filterRange)
     duration = duration_cast<microseconds>(t_stop - t_start);
 
 #if DATA_COLLECTION_MODE
-    cout << duration.count() / 1000 << ",";
+    //cout << duration.count() / 1000 << ",";
+    stats.timing.response = duration.count();
 #else
     cout << "Time to compute Harris responses: " << duration.count() / 1000 << " ms" << endl;
 #endif

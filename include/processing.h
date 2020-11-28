@@ -13,12 +13,12 @@ typedef struct featureStats {
 
 typedef struct timingStats
 {
-    unsigned long int greyscale;   // greyscale conversion time
-    unsigned long int derivatives; // derivative calculation time
-    unsigned long int filtering;   // gaussian smoothing time
-    unsigned long int response;    // harris response calculation time
-    unsigned long int harris;      // total harris calculation time
-    unsigned long int features;    // total time to extract features
+    uint64_t greyscale;   // greyscale conversion time
+    uint64_t derivatives; // derivative calculation time
+    uint64_t filtering;   // gaussian smoothing time
+    uint64_t response;    // harris response calculation time
+    uint64_t harris;      // total harris calculation time
+    uint64_t features;    // total time to extract features
 } timingStats;
 
 typedef struct runStats {

@@ -19,12 +19,13 @@ using namespace cv;
 
 #define INJECT_FAULTS		false
 
-#define DATA_COLLECTION_MODE false
+#define DATA_COLLECTION_MODE true
 
 class Harris {
 public:
     Harris(Mat img, float k, int filterRange);
 	vector<pointData> getMaximaPoints(float percentage, int filterRange, int suppressionRadius);
+  runStats& getStats() {return stats;}
 
 private:
 	Mat convertRgbToGrayscale(Mat& img);
@@ -40,10 +41,12 @@ private:
 #endif
 
 	Mat gaussFilter(Mat& img, int range);
+  
 
 private:
 	Mat m_harrisResponses;
-  	Mat hrCc, hrRc; // harris response column and row checks
+  Mat hrCc, hrRc; // harris response column and row checks
+  runStats stats;
 
 #if INJECT_FAULTS
 	injector fi;

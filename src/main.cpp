@@ -21,6 +21,7 @@ Mat m_img;
 string filename;
 
 void doHarris(std::string filename, bool benchmark) {
+    auto harris_before = high_resolution_clock::now();
     int boxFilterSize = 3;
     int maximaSuppressionDimension = 15;
     float percentage = 50e-5;
@@ -32,6 +33,10 @@ void doHarris(std::string filename, bool benchmark) {
     Harris harris(m_img, k, boxFilterSize);
     auto t_after = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(t_after - t_before);
+
+    // get stats struct from harris
+    runStats stats = harris.getStats();
+
     #if DATA_COLLECTION_MODE
         cout << duration.count()/1000  << ",";
     #else
@@ -95,6 +100,16 @@ void doHarris(std::string filename, bool benchmark) {
     #endif
     imshow("HarrisCornerDetector", _img);
     #endif
+
+
+    t_after = high_resolution_clock::now();
+    duration = duration_cast<microseconds>(t_after - harris_before);
+
+    #if DATA_COLLECTION_MODE
+        cout << duration.count()/1000  << "\n" << endl;
+    #else
+        cout << "Total execution time: " << duration.count()/1000 << " ms" << endl;
+    #endif
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -126,16 +141,9 @@ int main(int argc, char** argv) {
 
     img.copyTo(m_img);
 
-    auto t_before = high_resolution_clock::now();
+    
     doHarris(std::string(argv[1]),benchmark);
-    auto t_after = high_resolution_clock::now();
-    auto duration = duration_cast<microseconds>(t_after - t_before);
-
-    #if DATA_COLLECTION_MODE
-        cout << duration.count()/1000  << "\n" << endl;
-    #else
-        cout << "Total execution time: " << duration.count()/1000 << " ms" << endl;
-    #endif
+    
     
     #ifdef LOCAL
         waitKey(0);
