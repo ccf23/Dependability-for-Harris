@@ -19,6 +19,7 @@ typedef struct timingStats
     uint64_t response;    // harris response calculation time
     uint64_t harris;      // total harris calculation time
     uint64_t features;    // total time to extract features
+    uint64_t total;       // total execution time
 } timingStats;
 
 typedef struct runStats {
@@ -38,6 +39,9 @@ class processing
 
     // process features using benchmark features and test features
     static void process(std::vector<pointData> bench, std::vector<pointData> test, featureStats &stats);
+
+    // logs statistics to output log file
+    static void log(runStats stats, std::string filename);
 };
 
 

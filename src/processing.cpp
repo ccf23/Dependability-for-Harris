@@ -99,3 +99,25 @@ void processing::process(std::vector<pointData> bench, std::vector<pointData> te
     stats.false_features = test.size();
 
 }
+
+void processing::log(runStats stats, std::string filename)
+{
+    std::string fn = filename + "_log.csv";
+
+    // open log file to append
+    std::ofstream fout(fn.c_str(), ios::out | ios::app);
+
+    // write out stats to file stream in csv format
+    fout << stats.timing.greyscale << ","   \
+         << stats.timing.derivatives << "," \
+         << stats.timing.filtering << ","   \
+         << stats.timing.response << ","    \
+         << stats.timing.harris << ","      \
+         << stats.timing.features << ","    \
+         << stats.timing.total << ","       \
+         << stats.features.bench_features << ","   \
+         << stats.features.test_features << ","    \
+         << stats.features.match_features << ","   \
+         << stats.features.missing_features << "," \
+         << stats.features.false_features <<endl;
+}
