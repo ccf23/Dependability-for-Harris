@@ -389,19 +389,82 @@ Mat Harris::computeHarrisResponses(float k, Derivatives& d) {
       }
 
     #else
+    #if ASSERTIONS_ON
+      int reset,reset11, reset22, reset21, reset12;
+      reset = 0;
+      reset11 = 0;
+      reset22 = 0;
+      reset21 = 0;
+      reset12 = 0;
+      float det, trace;
+    #endif
 
       for(int r=0; r<d.Iy.rows; r++) {
           for(int c=0; c<d.Iy.cols; c++) {
               float   a11, a12,
                       a21, a22;
 
-              a11 = d.Ix.at<float>(r,c) * d.Ix.at<float>(r,c);
-              a22 = d.Iy.at<float>(r,c) * d.Iy.at<float>(r,c);
-              a21 = d.Ix.at<float>(r,c) * d.Iy.at<float>(r,c);
-              a12 = d.Ix.at<float>(r,c) * d.Iy.at<float>(r,c);
 
-              float det = a11*a22 - a12*a21; //always 0 unless fault
-              float trace = a11 + a22; // cant be larger than 2.1 million
+              a11 = d.Ix.at<float>(r,c) * d.Ix.at<float>(r,c);
+              #if ASSERTIONS_ON
+              //ck 6
+                if (iterateFlo(a11,0,16) == 1&& reset11 < 3)
+                {
+                  //error, so reset loop
+                  r =0;
+                  c =0;
+                  reset11+=1;
+                }
+                ck.a11A = a11;
+              #endif
+              a22 = d.Iy.at<float>(r,c) * d.Iy.at<float>(r,c);
+              #if ASSERTIONS_ON
+              //ck 6
+                if (iterateFlo(a11,0,16) == 1&& reset22 < 3)
+                {
+                  //error, so reset loop
+                  r =0;
+                  c =0;
+                  reset22+=1;
+                }
+                ck.a22A = a22;
+              #endif
+              a21 = d.Ix.at<float>(r,c) * d.Iy.at<float>(r,c);
+              #if ASSERTIONS_ON
+              //ck 6
+                if (iterateFlo(a11,-16,16) == 1&& reset21 < 3)
+                {
+                  //error, so reset loop
+                  r =0;
+                  c =0;
+                  reset21+=1;
+                }
+                ck.a21A = a21;
+              #endif
+              a12 = d.Ix.at<float>(r,c) * d.Iy.at<float>(r,c);
+              #if ASSERTIONS_ON
+              //ck 6
+                if (iterateFlo(a11,-16,16) == 1&& reset12 < 3)
+                {
+                  //error, so reset loop
+                  r =0;
+                  c =0;
+                  reset12+=1;
+                }
+                ck.a12A = a12;
+              #endif
+
+              det = ck.a11A*ck.a22A - ck.a12A*ck.a21A; //always 0 unless fault
+
+              trace = a11 + a22; // cant be larger than 2.1 million
+              #if ASSERTIONS_ON
+              //ck 7
+                if (iterateFlo(trace,0,1024) == 1&& reset21 < 3)
+                {
+                  //error, so redo addition
+                  det = ck.a11A*ck.a22A - ck.a12A*ck.a21A; //always 0 unless fault
+                }
+              #endif
 
               M.at<float>(r,c) = abs(det - k * trace*trace);// coud be over 4 Tera
           }
