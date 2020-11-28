@@ -389,10 +389,12 @@ Mat Harris::computeHarrisResponses(float k, Derivatives& d) {
               }
             } while (iterateFlo(ck.a12A,-16,16) == 1);
 
-
+            float det, trace;
             do { // runs through loop once and checks if there is a fault
 
+              det = a11*a22 - a12*a21; //always 0 unless fault
 
+              trace = a11 + a22; // cant be larger than 2.1 million
               ck.traceA = trace;
 
 
@@ -419,7 +421,6 @@ Mat Harris::computeHarrisResponses(float k, Derivatives& d) {
               a12 = d.Ix.at<float>(r,c) * d.Iy.at<float>(r,c);
 
               float det = a11*a22 - a12*a21; //always 0 unless fault
-              cout << det << "the det issssss" <<endl;
               float trace = a11 + a22; // cant be larger than 2.1 million
 
               M.at<float>(r,c) = abs(det - k * trace*trace);// coud be over 4 Tera
