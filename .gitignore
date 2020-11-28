@@ -1,5 +1,4 @@
 /build
 /build_local
 .vscode/
-*.sh
 /images
