@@ -3,13 +3,28 @@
 
 #include "util.h"
 
-struct featureStats {
+typedef struct featureStats {
 	uint missing_features; // number of features in benchmark not found in test
 	uint false_features;   // number of features found in test that don't have match in benchmark
 	uint bench_features;   // number of features in benchmark
 	uint test_features;    // number of features found in test
 	uint match_features;   // number of features that match between benchmark and test
-};
+} featureStats;
+
+typedef struct timingStats
+{
+    unsigned long int greyscale;   // greyscale conversion time
+    unsigned long int derivatives; // derivative calculation time
+    unsigned long int filtering;   // gaussian smoothing time
+    unsigned long int response;    // harris response calculation time
+    unsigned long int harris;      // total harris calculation time
+    unsigned long int features;    // total time to extract features
+} timingStats;
+
+typedef struct runStats {
+    featureStats features;
+    timingStats timing;
+} runStats;
 
 class processing
 {

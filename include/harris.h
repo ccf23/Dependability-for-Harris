@@ -6,6 +6,7 @@
 
 #include "util.h"
 #include "../include/injector.h"
+#include "../include/processing.h"
 
 
 using namespace std;
