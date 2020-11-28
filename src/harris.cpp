@@ -164,7 +164,7 @@ Mat Harris::convertRgbToGrayscale(Mat& img) {
             	0.0722 * img.at<cv::Vec3b>(r,c)[2];
               #if ASSERTIONS_ON
               //ck 1
-                if (iterateFlo(grayscaleImg.at<float>(r,c),0,1) == 1)
+                if (iterateFlo(greyscaleImg.at<float>(r,c),0,1) == 1)
                 {
                   //error, so reset loop
                   r =0;
@@ -460,69 +460,12 @@ Mat Harris::meanFilter(Mat& intImg, int range) {
 
 Mat Harris::gaussFilter(Mat& img, int range) {
 
-
-  #if ASSERTIONS_ON
-    Mat gaussHelperV(img.rows-range*2, img.cols-range*2, CV_32F);
-    Mat gauss(img.rows-range*2, img.cols-range*2, CV_32F);
-
-    int count_f;
-
-    count_f =0;
-    do { // runs through loop once and checks if there is a fault
-
-
-      for(int r=range; r<img.rows-range; r++) {
-          for(int c=range; c<img.cols-range; c++) {
-              float res = 0;
-
-              for(int x = -range; x<=range; x++) {
-                  float m = 1/sqrt(2*M_PI)*exp(-0.5*x*x);
-
-                  res += m * img.at<float>(r-range,c-range);
-              }
-
-              gaussHelperV.at<float>(r-range,c-range) = res;
-              ck.gaussV = res;
-          }
-      }
-
-      count_f += 1;
-      if (count_f > 3){
-        break;
-      }
-    } while (iterateFlo(ck.gaussV,-4,4) == 1);
-
-    count_f = 0;
-    do { // runs through loop once and checks if there is a fault
-
-
-
-      for(int r=range; r<img.rows-range; r++) {
-          for(int c=range; c<img.cols-range; c++) {
-              float res = 0;
-
-              for(int x = -range; x<=range; x++) {
-                  float m = 1/sqrt(2*M_PI)*exp(-0.5*x*x);
-
-                  res += m * gaussHelperV.at<float>(r-range,c-range);
-                  //cout << res << endl;
-              }
-
-              gauss.at<float>(r-range,c-range) = res;
-              ck.gauss = res;
-          }
-      }
-
-      count_f += 1;
-      if (count_f> 3){
-        break;
-      }
-    } while (iterateFlo(ck.gauss,-4,4) == 1);
-
-
-  #else
     // Helper Mats for better time complexity
     Mat gaussHelperV(img.rows-range*2, img.cols-range*2, CV_32F);
+    #if ASSERTIONS_ON
+      int reset;
+      reset = 0;
+    #endif
     for(int r=range; r<img.rows-range; r++) {
         for(int c=range; c<img.cols-range; c++) {
             float res = 0;
@@ -534,10 +477,23 @@ Mat Harris::gaussFilter(Mat& img, int range) {
             }
 
             gaussHelperV.at<float>(r-range,c-range) = res;
+            #if ASSERTIONS_ON
+            //ck 4
+              if (iterateFlo(gaussHelperV.at<float>(r-range,c-range),-4,4) == 1)
+              {
+                //error, so reset loop
+                r =range;
+                c =range;
+                reset+=1;
+              }
+            #endif
         }
     }
 
     Mat gauss(img.rows-range*2, img.cols-range*2, CV_32F);
+    #if ASSERTIONS_ON
+      reset = 0;
+    #endif
     for(int r=range; r<img.rows-range; r++) {
         for(int c=range; c<img.cols-range; c++) {
             float res = 0;
@@ -546,13 +502,23 @@ Mat Harris::gaussFilter(Mat& img, int range) {
                 float m = 1/sqrt(2*M_PI)*exp(-0.5*x*x);
 
                 res += m * gaussHelperV.at<float>(r-range,c-range);
-                //cout << res << endl;
             }
 
             gauss.at<float>(r-range,c-range) = res;
+            #if ASSERTIONS_ON
+            //ck 5
+              if (iterateFlo(gauss.at<float>(r-range,c-range),-4,4) == 1)
+              {
+                //error, so reset loop
+                r = range;
+                c = range;
+                reset+=1;
+              }
+            #endif
         }
+
     }
-    #endif
+
 
     return gauss;
 }
