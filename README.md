@@ -63,9 +63,9 @@ cout<<fi.stats()<<endl;
 ### Testing
 There is a simple testing script `test.sh` that can be used to run tests on the pynq board. The script expects the following:
 
-*`Harris_bench`- The benchmark executable for harris. This is always run first to ensure the baseline is accurate.
-*`Harris_test`- The test file with the desired FT configurations.
-*`/images` - the subdirectory holding the ***.jpeg*** images (this is where the results will go)
+-`Harris_bench`- The benchmark executable for harris. This is always run first to ensure the baseline is accurate.
+-`Harris_test`- The test file with the desired FT configurations.
+-`/images` - the subdirectory holding the ***.jpeg*** images (this is where the results will go)
 
 Run the script with the following usage:
 
