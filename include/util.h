@@ -14,11 +14,11 @@ struct pointData {
 
     Point point;
 	bool operator==(const pointData &) const;
-	
+
 };
 
-struct by_cornerResponse { 
-    bool operator()(pointData const &left, pointData const &right) { 
+struct by_cornerResponse {
+    bool operator()(pointData const &left, pointData const &right) {
         return left.cornerResponse > right.cornerResponse;
     }
 };
