@@ -418,12 +418,12 @@ Mat Harris::computeHarrisResponses(float k, Derivatives& d) {
               M.at<float>(r,c) = abs(det - k * trace*trace);// coud be over 4 Tera
           }
       }
-    cout <<trace << endl;
     return M;
 }
 
 //-----------------------------------------------------------------------------------------------
-Mat Harris::computeIntegralImg(Mat& img) {
+Mat Harris::computeIntegralImg(Mat& img) {                  // }
+
     Mat integralMat(img.rows, img.cols, CV_32F);
 
     integralMat.at<float>(0,0) = img.at<float>(0,0);
