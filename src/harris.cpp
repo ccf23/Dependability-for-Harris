@@ -153,41 +153,27 @@ Mat Harris::convertRgbToGrayscale(Mat& img) {
     Mat greyscaleImg(img.rows, img.cols, CV_32F);
 
     #if ASSERTIONS_ON
-      int count_f;
-
-      count_f = 0;
-      for (int c = 0; c < img.cols; c++) {
-          for (int r = 0; r < img.rows; r++) {
-
-                do { // runs through loop once and checks if there is a fault
-                  greyscaleImg.at<float>(r,c) =
-                    0.2126 * img.at<cv::Vec3b>(r,c)[0] +
-                    0.7152 * img.at<cv::Vec3b>(r,c)[1] +
-                    0.0722 * img.at<cv::Vec3b>(r,c)[2];
-                    greyscaleImg.at<float>(r,c) /= 255;
-
-                  ck.greyA = greyscaleImg.at<float>(r,c);
-
-                  count_f += 1;
-                  if (count_f > 3){
-                    break;
-                  }
-                } while (iterateFlo(ck.greyA,0,1) == 1 );
-          }
-      }
-
-    #else
-      for (int c = 0; c < img.cols; c++) {
-          for (int r = 0; r < img.rows; r++) {
-              greyscaleImg.at<float>(r,c) =
-              	0.2126 * img.at<cv::Vec3b>(r,c)[0] +
-              	0.7152 * img.at<cv::Vec3b>(r,c)[1] +
-              	0.0722 * img.at<cv::Vec3b>(r,c)[2];
-
-
-          }
-      }
+      int reset;
+      reset = 0;
     #endif
+    for (int c = 0; c < img.cols; c++) {
+        for (int r = 0; r < img.rows; r++) {
+            greyscaleImg.at<float>(r,c) =
+            	0.2126 * img.at<cv::Vec3b>(r,c)[0] +
+            	0.7152 * img.at<cv::Vec3b>(r,c)[1] +
+            	0.0722 * img.at<cv::Vec3b>(r,c)[2];
+              #if ASSERTIONS_ON
+              //ck 1
+                if (iterateFlo(grayscaleImg.at<float>(r,c),0,1) == 1)
+                {
+                  //error, so reset loop
+                  r =0;
+                  c =0;
+                  reset+=1;
+                }
+              #endif
+        }
+    }
 
     return greyscaleImg;
 }
@@ -231,71 +217,75 @@ Derivatives Harris::computeDerivatives(Mat& greyscaleImg) {
     Mat sobelHelperH(greyscaleImg.rows, greyscaleImg.cols-2, CV_32F);
 
 
-      // Vertical
-    int reset;
-    reset = 0;
+    // Vertical
+    #if ASSERTIONS_ON
+      int reset;
+      reset = 0;
+    #endif
+  // do { // runs through loop once and checks if there is a fault
+    for(int r=1; r<greyscaleImg.rows-1; r++) {
+        for(int c=0; c<greyscaleImg.cols; c++) {
 
-    // do { // runs through loop once and checks if there is a fault
-      for(int r=1; r<greyscaleImg.rows-1; r++) {
-          for(int c=0; c<greyscaleImg.cols; c++) {
+            float a1 = greyscaleImg.at<float>(r-1,c);
+            float a2 = greyscaleImg.at<float>(r,c);
+            float a3 = greyscaleImg.at<float>(r+1,c);
 
-              float a1 = greyscaleImg.at<float>(r-1,c);
-              float a2 = greyscaleImg.at<float>(r,c);
-              float a3 = greyscaleImg.at<float>(r+1,c);
+            sobelHelperV.at<float>(r-1,c) = a1 + a2 + a2 + a3;
+            #if ASSERTIONS_ON
+            //ck 2
 
-              sobelHelperV.at<float>(r-1,c) = a1 + a2 + a2 + a3;
-              #if ASSERTIONS_ON
+              /////////////inject fault////////////
+              // if (r==3 && c == 4 && reset == 0){
+              //   cout << sobelHelperV.at<float>(r-1,c) << endl;
+              //   sobelHelperV.at<float>(r-1,c) = 10;
+              //   cout << sobelHelperV.at<float>(r-1,c) << reset << endl;
+              // }else if(r==3 && c == 4 && reset == 1){
+              //   cout << sobelHelperV.at<float>(r-1,c) << endl;
+              //   sobelHelperV.at<float>(r-1,c) = 10;
+              //   cout << sobelHelperV.at<float>(r-1,c) << reset << endl;
+              // }
 
-                /////////////inject fault////////////
-                // if (r==3 && c == 4 && reset == 0){
-                //   cout << sobelHelperV.at<float>(r-1,c) << endl;
-                //   sobelHelperV.at<float>(r-1,c) = 10;
-                //   cout << sobelHelperV.at<float>(r-1,c) << reset << endl;
-                // }else if(r==3 && c == 4 && reset == 1){
-                //   cout << sobelHelperV.at<float>(r-1,c) << endl;
-                //   sobelHelperV.at<float>(r-1,c) = 10;
-                //   cout << sobelHelperV.at<float>(r-1,c) << reset << endl;
-                // }
-
-                ////////////////////////////////////////
+              ////////////////////////////////////////
 
 
-                if (iterateFlo(sobelHelperV.at<float>(r-1,c),0,4) == 1)
-                {
-                  //error, so reset loop
-                  r =1;
-                  c =0;
-                  reset+=1;
-                }
-              #endif
-          }
-      }
+              if (iterateFlo(sobelHelperV.at<float>(r-1,c),0,4) == 1)
+              {
+                //error, so reset loop
+                r =1;
+                c =0;
+                reset+=1;
+              }
+            #endif
+        }
+    }
 
     // Horizontal
-    reset =0;
+    #if ASSERTIONS_ON
+      reset = 0;
+    #endif
+    for(int r=0; r<greyscaleImg.rows; r++) {
+        for(int c=1; c<greyscaleImg.cols-1; c++) {
 
-      for(int r=0; r<greyscaleImg.rows; r++) {
-          for(int c=1; c<greyscaleImg.cols-1; c++) {
+            float a1 = greyscaleImg.at<float>(r,c-1);
+            float a2 = greyscaleImg.at<float>(r,c);
+            float a3 = greyscaleImg.at<float>(r,c+1);
+            // cout << a1 << "    " << a2 << "    " << a3 << "    " <<  endl;
+            // cout << a1 + a2 + a2 + a3 <<endl;
 
-              float a1 = greyscaleImg.at<float>(r,c-1);
-              float a2 = greyscaleImg.at<float>(r,c);
-              float a3 = greyscaleImg.at<float>(r,c+1);
-              // cout << a1 << "    " << a2 << "    " << a3 << "    " <<  endl;
-              // cout << a1 + a2 + a2 + a3 <<endl;
+            sobelHelperH.at<float>(r,c-1) = a1 + a2 + a2 + a3;
+            #if ASSERTIONS_ON
+            //ck 3
+              if (iterateFlo(sobelHelperH.at<float>(r,c-1),0,4) == 1)
+              {
+                //error, so reset loop
+                r =0;
+                c =1;
+                reset+=1;
+              }
+            #endif
 
-              sobelHelperH.at<float>(r,c-1) = a1 + a2 + a2 + a3;
-              #if ASSERTIONS_ON
-                if (iterateFlo(sobelHelperH.at<float>(r,c-1),0,4) == 1)
-                {
-                  //error, so reset loop
-                  r =0;
-                  c =1;
-                  reset+=1;
-                }
-              #endif
-
-          }
-      }
+        }
+    }
 
       // Apply Sobel filter to compute 1st derivatives
 
