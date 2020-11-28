@@ -315,81 +315,6 @@ Mat Harris::computeHarrisResponses(float k, Derivatives& d) {
     Mat M(d.Iy.rows, d.Ix.cols, CV_32F);
 
     #if ASSERTIONS_ON
-
-      float det, trace;
-      int count_f =0;
-      int count_f11 =0;
-      int count_f12 =0;
-      int count_f21 =0;
-      int count_f22 =0;
-
-
-      for(int r=0; r<d.Iy.rows; r++) {
-          for(int c=0; c<d.Iy.cols; c++) {
-              float   a11, a12,
-                      a21, a22;
-
-            do { // runs through loop once and checks if there is a fault
-
-              a11 = d.Ix.at<float>(r,c) * d.Ix.at<float>(r,c);
-              ck.a11A = a11;
-              count_f11 += 1;
-              if (count_f11 > 3){
-                break;
-              }
-            } while (iterateFlo(ck.a11A,0,16) == 1);
-
-            do { // runs through loop once and checks if there is a fault
-
-              a22 = d.Iy.at<float>(r,c) * d.Iy.at<float>(r,c);
-              ck.a22A = a22;
-              count_f22 += 1;
-              if (count_f22 > 3){
-                break;
-              }
-            } while (iterateFlo(ck.a22A,0,16) == 1);
-
-            do { // runs through loop once and checks if there is a fault
-
-              a21 = d.Ix.at<float>(r,c) * d.Iy.at<float>(r,c);
-              ck.a21A = a21;
-              count_f21 += 1;
-              if (count_f21 > 3){
-                break;
-              }
-            } while (iterateFlo(ck.a21A,-16,16) == 1);
-
-            do { // runs through loop once and checks if there is a fault
-
-              a12 = d.Ix.at<float>(r,c) * d.Iy.at<float>(r,c);
-              ck.a12A = a12;
-              count_f12 += 1;
-              if (count_f12 > 3){
-                break;
-              }
-            } while (iterateFlo(ck.a12A,-16,16) == 1);
-
-            float det, trace;
-            do { // runs through loop once and checks if there is a fault
-
-              det = a11*a22 - a12*a21; //always 0 unless fault
-
-              trace = a11 + a22; // cant be larger than 2.1 million
-              ck.traceA = trace;
-
-
-              count_f += 1;
-              if (count_f > 3){
-                break;
-              }
-            } while (iterateFlo(ck.traceA,0,1024) == 1);
-
-            M.at<float>(r,c) = abs(det - k * trace*trace);// coud be over 4 Tera
-          }
-      }
-
-    #else
-    #if ASSERTIONS_ON
       int reset,reset11, reset22, reset21, reset12;
       reset = 0;
       reset11 = 0;
@@ -470,7 +395,6 @@ Mat Harris::computeHarrisResponses(float k, Derivatives& d) {
           }
       }
 
-    #endif
     return M;
 }
 
