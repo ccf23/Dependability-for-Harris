@@ -234,21 +234,6 @@ Derivatives Harris::computeDerivatives(Mat& greyscaleImg) {
             sobelHelperV.at<float>(r-1,c) = a1 + a2 + a2 + a3;
             #if ASSERTIONS_ON
             //ck 2
-
-              /////////////inject fault////////////
-              // if (r==3 && c == 4 && reset == 0){
-              //   cout << sobelHelperV.at<float>(r-1,c) << endl;
-              //   sobelHelperV.at<float>(r-1,c) = 10;
-              //   cout << sobelHelperV.at<float>(r-1,c) << reset << endl;
-              // }else if(r==3 && c == 4 && reset == 1){
-              //   cout << sobelHelperV.at<float>(r-1,c) << endl;
-              //   sobelHelperV.at<float>(r-1,c) = 10;
-              //   cout << sobelHelperV.at<float>(r-1,c) << reset << endl;
-              // }
-
-              ////////////////////////////////////////
-
-
               if (iterateFlo(sobelHelperV.at<float>(r-1,c),0,4) == 1 && reset < 3)
               {
                 //error, so reset loop
@@ -387,22 +372,6 @@ Mat Harris::computeHarrisResponses(float k, Derivatives& d) {
 
                   det = ck.a11A*ck.a22A - ck.a12A*ck.a21A; //always 0 unless fault
                   trace = a11 + a22; // cant be larger than 1024
-
-
-                  /////////////inject fault////////////
-                  // if (count_f == 0){
-                  //   cout << trace << endl;
-                  //   trace = 1050;
-                  //   cout << trace << count_f<< endl;
-                  // }else if(count_f == 1){
-                  //   cout << trace << endl;
-                  //   trace = 1060;
-                  //   cout << trace << count_f << endl;
-                  // }
-
-                  ////////////////////////////////////////
-
-
                   count_f += 1;
                   if (count_f > 3){
                     break;
