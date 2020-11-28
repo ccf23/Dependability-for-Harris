@@ -162,6 +162,7 @@ Mat Harris::convertRgbToGrayscale(Mat& img) {
             	0.2126 * img.at<cv::Vec3b>(r,c)[0] +
             	0.7152 * img.at<cv::Vec3b>(r,c)[1] +
             	0.0722 * img.at<cv::Vec3b>(r,c)[2];
+              greyscaleImg.at<float>(r,c) /= 255;
               #if ASSERTIONS_ON
               //ck 1
                 if (iterateFlo(greyscaleImg.at<float>(r,c),0,1) == 1)
