@@ -1,7 +1,11 @@
 #ifndef PROCESSING_H
 #define PROCESSING_H
 
+#include <fstream>
+#include <vector>
+#include <opencv2/opencv.hpp>
 #include "util.h"
+
 
 typedef struct featureStats {
 	uint missing_features; // number of features in benchmark not found in test

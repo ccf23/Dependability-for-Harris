@@ -14,9 +14,6 @@ using namespace std::chrono;
 using namespace cv;
 using namespace std;
 
-// uncomment to allow for visual test on local machine
-// #define LOCAL
-
 Mat m_img;
 string filename;
 
@@ -82,7 +79,7 @@ void doHarris(std::string filename, bool benchmark) {
         stats.features = feat_stats;
     }
 
-    #ifdef LOCAL
+    #if LOCAL
     t_before = high_resolution_clock::now();
     Mat _img = Util::MarkInImage(m_img, resPts, markDimension);
     t_after = high_resolution_clock::now();
@@ -139,15 +136,12 @@ int main(int argc, char** argv) {
 
     img.copyTo(m_img);
 
-    
     doHarris(std::string(argv[1]),benchmark);
     
-    
-    #ifdef LOCAL
+    #if LOCAL
         waitKey(0);
     #endif
 
     return 0;
-
 }
 

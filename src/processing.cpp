@@ -1,5 +1,4 @@
 
-#include <fstream>
 #include "../include/processing.h"
 #include "../include/harris.h"
 
@@ -52,13 +51,9 @@ bool processing::readVector(std::vector<pointData> &out, std::string filename)
 
 void processing::process(std::vector<pointData> bench, std::vector<pointData> test, featureStats &stats)
 {
- 
     // extract number of features detected from both vectors
     stats.bench_features = bench.size();
     stats.test_features  = test.size();
-
-    // set window range
-    uint range = 5;
 
     // initialize other stats values
     stats.false_features = 0;
@@ -79,8 +74,8 @@ void processing::process(std::vector<pointData> bench, std::vector<pointData> te
             // extract test point
             Point tpt = test.at(j).point;
 
-            // check if test point is within range of bench point
-            if (std::abs(tpt.x - bpt.x) <= range && std::abs(tpt.y - bpt.y) <= range)
+            // check if test point is within POSITION_RANGE of bench point
+            if (std::abs(tpt.x - bpt.x) <= POSITION_RANGE && std::abs(tpt.y - bpt.y) <= POSITION_RANGE)
             {
                 test.erase(test.begin() + j); // erase point in test
                 stats.match_features++;       // increment number of matches
@@ -98,7 +93,6 @@ void processing::process(std::vector<pointData> bench, std::vector<pointData> te
 
     // get number of false features as remaining points in test vector
     stats.false_features = test.size();
-
 }
 
 void processing::log(runStats stats, std::string filename, bool benchmark)
@@ -107,6 +101,12 @@ void processing::log(runStats stats, std::string filename, bool benchmark)
 
     // open log file to append
     std::ofstream fout(fn.c_str(), ios::out | ios::app);
+
+    if (!fout.is_open())
+    {
+        cout << "processing::log() - error opening file " << fn << ", exiting\n";
+        exit(0);
+    }
 
     // write out stats to file stream in csv format
     fout << stats.timing.greyscale << ","   \
@@ -126,5 +126,9 @@ void processing::log(runStats stats, std::string filename, bool benchmark)
          << boolalpha << ASSERTIONS_ON << "," \
          << boolalpha << THREADS_ON << "," \
          << boolalpha << HAMMING_ON << "," \
-         << boolalpha << INJECT_FAULTS << endl;
+         << boolalpha << INJECT_FAULTS << "," \
+         << boolalpha << DATA_COLLECTION_MODE << "," \
+         << boolalpha << LOCAL << endl;
+    
+    fout.close();   
 }
