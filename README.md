@@ -59,6 +59,7 @@ fi.inject(aDoubleVar, SINGLE_DATA); // uses SINGLE_DATA mode for this injection 
 fi.disable()
 cout<<fi.stats()<<endl;
 ```
+<<<<<<< HEAD
 
 ### Testing
 There is a simple testing script `test.sh` that can be used to run tests on the pynq board. The script expects the following:
@@ -72,3 +73,5 @@ Run the script with the following usage:
 ```
 ./test [number of tests per image]
 ```
+=======
+>>>>>>> c8ea4512fa02456b39c213d412a0814556c559a8

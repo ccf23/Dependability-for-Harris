@@ -109,6 +109,17 @@ void doHarris(std::string filename, bool benchmark) {
 
 //-----------------------------------------------------------------------------------------------
 int main(int argc, char** argv) {
+
+    #if !DATA_COLLECTION_MODE
+        cout << "\nCONFIGURATION:\n";
+        cout << "\tHAMMING_ON:\t\t"     << boolalpha << HAMMING_ON      << "\n";
+        cout << "\tASSERTIONS_ON:\t\t"  << boolalpha << ASSERTIONS_ON   <<"\n";
+        cout << "\tABFT_ON:\t\t"        << boolalpha << ABFT_ON         << "\n";
+        cout << "\tTHREADS_ON:\t\t"     << boolalpha << THREADS_ON      << "\n";
+
+        cout << "\n\tINJECT_FAULTS:\t\t"  << boolalpha << INJECT_FAULTS << "\n\n";
+    #endif
+
     // read image from file + error handling
     Mat img;
     bool benchmark = false;

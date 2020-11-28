@@ -12,7 +12,7 @@ if(arm)
 	set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 	set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 	set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
-
+	
 	# This is so I won't have to recompile openCV, it won't affect normal functionality
 	if(daniel)
 		find_package( OpenCV 4.5.0 REQUIRED)
@@ -21,8 +21,11 @@ if(arm)
 	endif()
 	
 
+
+
 	set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
 	set(BUILD_SHARED_LIBS OFF)
+	set(CMAKE_CXX_FLAGS "-std=c++1z")
 	set(CMAKE_EXE_LINKER_FLAGS "-static")
 
 else()
@@ -49,6 +52,7 @@ target_include_directories( Harris
 	PRIVATE 	.
 			${OpenCV_INCLUDE_DIRS}
 )
+
 
 target_link_libraries( Harris 
 	${OpenCV_LIBS} 
