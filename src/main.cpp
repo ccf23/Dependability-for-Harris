@@ -38,7 +38,6 @@ void doHarris(std::string filename, bool benchmark) {
     runStats stats = harris.getStats();
 
     #if DATA_COLLECTION_MODE
-        //cout << duration.count()/1000  << ",";
         stats.timing.harris = duration.count();
     #else
         cout << "Total time to compute Harris: " << duration.count()/1000 << " ms" << endl;
@@ -51,8 +50,6 @@ void doHarris(std::string filename, bool benchmark) {
     t_after = high_resolution_clock::now();
     duration = duration_cast<microseconds>(t_after - t_before);
     #if DATA_COLLECTION_MODE
-        //cout << duration.count()/1000 << ",";
-        //cout << resPts.size() << ",";
         stats.timing.features = duration.count();
     #else
         cout << "Total time to get vector of points: " << duration.count()/1000 << " ms" << endl;
@@ -104,14 +101,15 @@ void doHarris(std::string filename, bool benchmark) {
     duration = duration_cast<microseconds>(t_after - harris_before);
 
     #if DATA_COLLECTION_MODE
-        //cout << duration.count()/1000  << "\n" << endl;
         stats.timing.total = duration.count();
     #else
         cout << "Total execution time: " << duration.count()/1000 << " ms" << endl;
     #endif
 
-    // log run statistics
-    processing::log(stats, filename);
+    #if DATA_COLLECTION_MODE
+        // log run statistics
+        processing::log(stats, filename);
+    #endif
 }
 
 //-----------------------------------------------------------------------------------------------
