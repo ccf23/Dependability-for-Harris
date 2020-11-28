@@ -17,16 +17,16 @@ struct featureStats {
 	uint match_features;   // number of features that match between benchmark and test
 };
 
-struct pointData { 
+struct pointData {
     float cornerResponse;
 
     Point point;
 	bool operator==(const pointData &) const;
-	
+
 };
 
-struct by_cornerResponse { 
-    bool operator()(pointData const &left, pointData const &right) { 
+struct by_cornerResponse {
+    bool operator()(pointData const &left, pointData const &right) {
         return left.cornerResponse > right.cornerResponse;
     }
 };

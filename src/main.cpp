@@ -26,7 +26,7 @@ void doHarris(std::string filename, bool benchmark) {
     float percentage = 50e-5;
     int markDimension = 5;
     float k = 0.05;
-    
+
     // compute harris
     auto t_before = high_resolution_clock::now();
     Harris harris(m_img, k, boxFilterSize);
@@ -117,8 +117,8 @@ int main(int argc, char** argv) {
         {
             benchmark = true;
         }
-    } 
-    else 
+    }
+    else
     {
         filename = argv[1];
         img = imread(argv[1]);
@@ -136,7 +136,7 @@ int main(int argc, char** argv) {
     #else
         cout << "Total execution time: " << duration.count()/1000 << " ms" << endl;
     #endif
-    
+
     #ifdef LOCAL
         waitKey(0);
     #endif
@@ -144,4 +144,3 @@ int main(int argc, char** argv) {
     return 0;
 
 }
-

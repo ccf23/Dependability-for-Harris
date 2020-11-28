@@ -1,7 +1,7 @@
 /*
  *      Author: alexanderb
  */
- 
+
 #include "../include/util.h"
 
 void Util::DisplayImage(Mat& img) {
