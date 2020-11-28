@@ -379,22 +379,46 @@ Mat Harris::computeHarrisResponses(float k, Derivatives& d) {
                 ck.a12A = a12;
               #endif
 
-              det = ck.a11A*ck.a22A - ck.a12A*ck.a21A; //always 0 unless fault
 
-              trace = a11 + a22; // cant be larger than 2.1 million
               #if ASSERTIONS_ON
               //ck 7
-                if (iterateFlo(trace,0,1024) == 1&& reset21 < 3)
-                {
-                  //error, so redo addition
+              int count_f = 0;
+                do { // runs through loop once and checks if there is a fault
+
                   det = ck.a11A*ck.a22A - ck.a12A*ck.a21A; //always 0 unless fault
-                }
+                  trace = a11 + a22; // cant be larger than 1024
+
+
+                  /////////////inject fault////////////
+                  // if (count_f == 0){
+                  //   cout << trace << endl;
+                  //   trace = 1050;
+                  //   cout << trace << count_f<< endl;
+                  // }else if(count_f == 1){
+                  //   cout << trace << endl;
+                  //   trace = 1060;
+                  //   cout << trace << count_f << endl;
+                  // }
+
+                  ////////////////////////////////////////
+
+
+                  count_f += 1;
+                  if (count_f > 3){
+                    break;
+                  }
+                } while (iterateFlo(trace,0,1024) == 1);
+
+              #else
+                det = a11*a22 - a12*a21;
+                trace = a11 + a22;
               #endif
+
 
               M.at<float>(r,c) = abs(det - k * trace*trace);// coud be over 4 Tera
           }
       }
-
+    cout <<trace << endl;
     return M;
 }
 

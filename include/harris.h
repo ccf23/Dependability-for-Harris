@@ -22,22 +22,10 @@ using namespace cv;
 
   typedef struct state { // Each var saved is a checkpoint
 
-    float greyA; // B
-
-    float sobelV; //C
-
-    float sobelH; //C
-
-    float gaussV; //D
-
-    float gauss; //D
-
     float a11A;//E
     float a12A;//E
     float a21A;//E
     float a22A;//E
-
-    float traceA;//E
 
 
   } state_t;
