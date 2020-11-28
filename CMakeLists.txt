@@ -42,8 +42,10 @@ message( STATUS "------------------" ${OpenCV_INCLUDE_DIRS} )
 add_executable( Harris 
 	./src/util.cpp
 	./src/harris.cpp
+	./src/abft.cpp
 	./src/main.cpp
 	./src/injector.cpp
+	./src/processing.cpp
 )
 
 target_include_directories( Harris
@@ -53,10 +55,6 @@ target_include_directories( Harris
 
 
 target_link_libraries( Harris 
-	${OpenCV_LIBS}
-	${OpenMP_CXX_FLAGS}	
-)
-
-target_link_libraries( Harris
-
+	${OpenCV_LIBS} 
+	${OpenMP_CXX_FLAGS}
 )

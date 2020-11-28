@@ -10,6 +10,15 @@ make
 ./Harris ../images/landslides_in_cerbers_fossae.jpeg
 ```
 
+### benchmark generation
+To generate a benchmark use the following command format
+```
+./Harris ../images/<image>.jpeg benchmark
+```
+
+### logging
+logging will automatically be enabled if `DATA_COLLECTION_ON` is defined as `true`. The run statistics will be appended to the log file. The log filename has the format `<path to image>_log.csv`.
+
 ## Compile For Local
 The cmake file is configured for local or arm compiling. The default will compile for the local machine's architecture. Follow the instructions in the quick start section to compile for the local machine. 
 

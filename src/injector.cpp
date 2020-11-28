@@ -15,30 +15,26 @@
 
 injector::injector(INJECTOR_MODE_TYPE mode = NONE, double bhp = 0)
 {
+    tic();
     bit_hit_prob = bhp;
     default_mode = mode;
     injections = 0;
+    total_time = 0;
 
-    std::srand(time(NULL)); // seed rng
-}
-
-void injector::enable(void)
-{
-    enabled = true;
-}
-
-void injector::disable(void)
-{
-    enabled = false;
+    std::srand(time(NULL)); // seed 
+    toc();
 }
 
 void injector::setBHP(double bhp)
 {
+    tic();
     bit_hit_prob = bhp;
+    toc();
 }
 
 template <typename T> void injector::inject(T &data, INJECTOR_MODE_TYPE mode)
 {
+    tic();
     int size = sizeof(T);
     uint8_t *bytes = reinterpret_cast<uint8_t*>(&data);
     
@@ -47,7 +43,7 @@ template <typename T> void injector::inject(T &data, INJECTOR_MODE_TYPE mode)
         int bytePos = std::rand() % size; // randomly generate byte pos
         int bitPos = std::rand() % 8;     // randomly generate bit pos
 
-        uint8_t mask = std::pow(2,bitPos); // generate bit mask
+        uint8_t mask = 1 << bitPos; // generate bit mask
 
         bytes[bytePos] ^= mask; // flip bit in vale
         injections++;
@@ -63,8 +59,8 @@ template <typename T> void injector::inject(T &data, INJECTOR_MODE_TYPE mode)
             bitPos2 = std::rand() % 8;
         } while (bitPos1 == bitPos2 && bytePos1 == bytePos2);
 
-        uint8_t mask1 = std::pow(2,bitPos1); // generate bit mask
-        uint8_t mask2 = std::pow(2,bitPos2);
+        uint8_t mask1 = static_cast<uint8_t>(1 << bitPos1); // generate bit mask
+        uint8_t mask2 = static_cast<uint8_t>(1 << bitPos2);
 
         bytes[bytePos1] ^= mask1;
         bytes[bytePos2] ^= mask2;
@@ -82,13 +78,14 @@ template <typename T> void injector::inject(T &data, INJECTOR_MODE_TYPE mode)
                 unsigned long int safe = std::rand() % oneOutOf;
                 if (!safe)
                 {
-                    bytes[by] ^= static_cast<uint8_t>(std::pow(2,bi));
+                    bytes[by] ^= static_cast<uint8_t>(1 << bi);
                     injections++;
                 }
             }
         }
 
     }
+    toc();
 }
 
 template <typename T> void injector::inject(T &data)
@@ -99,6 +96,7 @@ template <typename T> void injector::inject(T &data)
 
 void injector::inject(cv::Mat &data, INJECTOR_MODE_TYPE mode)
 {
+    tic();
     int rows = data.rows;
     int cols = data.cols;
     int type = data.type();
@@ -112,6 +110,7 @@ void injector::inject(cv::Mat &data, INJECTOR_MODE_TYPE mode)
             int rowPos = std::rand() % rows;
             int colPos = std::rand() % cols;
 
+            toc();
             inject(data.at<float>(rowPos, colPos), SINGLE_DATA);
         }
         else if (mode == DOUBLE_DATA)
@@ -125,11 +124,13 @@ void injector::inject(cv::Mat &data, INJECTOR_MODE_TYPE mode)
                 colPos2 = std::rand() % cols;
             } while (colPos1 == colPos2 && rowPos1 == rowPos2);
 
+            toc(); //timing handled in inject
             inject(data.at<float>(rowPos1, colPos1), SINGLE_DATA);
             inject(data.at<float>(rowPos2, colPos2), SINGLE_DATA);
         }
         else if (mode == PROB_DATA)
         {
+            toc(); // assume looping is negligable wrt injection
             for (int r = 0; r < rows; ++r)
             {
                 for (int c = 0; c < cols; ++c)
@@ -170,7 +171,25 @@ std::string injector::stats(void)
     }
     
     return ("Default Mode: " + mode_str + "\nTotal Injections: " + \
-             std::to_string(injections) + "\n");
+             std::to_string(injections) + "\nTotal Time (us): " + \
+             std::to_string(total_time) + "\n");
+}
+
+void injector::tic(void)
+{
+    last_start = std::chrono::high_resolution_clock::now();
+}
+
+void injector::toc(void)
+{
+    injector_time_t stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - last_start);
+    total_time += duration.count();
+}
+
+unsigned long int injector::getTime(void)
+{
+    return total_time;
 }
 
 // explicitly defines valid template types
