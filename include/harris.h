@@ -7,7 +7,6 @@
 #define HARRIS_H
 
 #include <opencv2/opencv.hpp>
-#include <opencv2/core.hpp> //minMaxLoc
 #include "util.h"
 
 using namespace std;
@@ -29,25 +28,17 @@ using namespace cv;
 
     float sobelH; //C
 
-    // Mat derivxA;// C
-    //
-    // Mat derivyA;  //C
-    //
-    // Mat derivxyA; //C
-
     float gaussV; //D
 
     float gauss; //D
 
-    Mat mderivxA;// D
+    float a11A;//E
+    float a12A;//E
+    float a21A;//E
+    float a22A;//E
 
-    Mat mderivyA;  //D
+    float traceA;//E
 
-    Mat mderivxyA; //D
-
-    float traceA;
-
-    Mat cornersA; //E
 
   } state_t;
 

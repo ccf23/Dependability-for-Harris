@@ -4,7 +4,6 @@
 
 #include "../include/harris.h"
 #include <chrono>
-#include <opencv2/core.hpp> //minMaxLoc
 using namespace std::chrono;
 
 #if ASSERTIONS_ON
@@ -85,38 +84,19 @@ Harris::Harris(Mat img, float k, int filterRange, bool gauss) {
     #endif
 
 
-    #if ASSERTIONS_ON
-      Mat harrisResponses;
+    // (4) Compute Harris Response
+    t_start = high_resolution_clock::now();
+    Mat harrisResponses = computeHarrisResponses(k, mDerivatives);
+    m_harrisResponses = harrisResponses;
+    t_stop = high_resolution_clock::now();
+    duration = duration_cast<microseconds>(t_stop - t_start);
 
-      float maxHarrisResponse;
-
-      count_fault =0;
-      do { // runs through loop once and checks if there is a fault
-        harrisResponses = computeHarrisResponses(k, mDerivatives);
-        ck.cornersA = harrisResponses.clone();
-
-        count_fault += 1;
-        if (count_fault > 3){
-          break;
-        }
-      } while (iterateMat(ck.cornersA,0,4.398*pow(10,12)) == 1); ///overflow, so remove this checkpoint
-
-      m_harrisResponses = harrisResponses;
+    #if DATA_COLLECTION_MODE
+        cout << duration.count()/1000  << ",";
     #else
-      // (4) Compute Harris Response
-      t_start = high_resolution_clock::now();
-      Mat harrisResponses = computeHarrisResponses(k, mDerivatives);
-      m_harrisResponses = harrisResponses;
-      t_stop = high_resolution_clock::now();
-      duration = duration_cast<microseconds>(t_stop - t_start);
-
-      #if DATA_COLLECTION_MODE
-          cout << duration.count()/1000  << ",";
-      #else
-          cout << "Time to compute Harris responses: " << duration.count()/1000 << " ms" << endl;
-      #endif
-
+        cout << "Time to compute Harris responses: " << duration.count()/1000 << " ms" << endl;
     #endif
+
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -184,28 +164,6 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
 
         i++;
     }
-
-    //cout << ck.greyA <<endl;
-    ////////////debugging for assertions/////////////////////////////
-    double min, max;
-    minMaxLoc(ck.greyA, &min, &max);
-    cout << min << "   grey  "<< max <<endl;
-
-    // minMaxLoc(ck.gauss, &min, &max);
-    // cout << min << "  mDerivx  "<< max <<endl;
-    // minMaxLoc(ck.mderivyA, &min, &max);
-    // cout << min << "  mDerivy  "<< max <<endl;
-    minMaxLoc(ck.cornersA, &min, &max);
-    cout << min << "  corners   "<< max <<endl;
-    ////////////debugging for assertions///////////////////////////
-
-
-    //cout << ck.derivyA <<endl;
-    //cout << ck.mderivxA<<endl;
-    //cout << ck.mderivyA <<endl;
-
-    // cout << ck.greyA <<endl;
-    // cout << ck.greyA <<endl;
 
     return topPoints;
 }
@@ -334,9 +292,9 @@ Derivatives Harris::computeDerivatives(Mat& greyscaleImg) {
                 ck.sobelH = sobelHelperH.at<float>(r,c-1);
             }
         }
-        double min, max;
-        minMaxLoc(sobelHelperH, &min, &max);
-        cout << min << "  csobelHHHHH  "<< max <<endl;
+        // double min, max;
+        // minMaxLoc(sobelHelperH, &min, &max);
+        // cout << min << "  csobelHHHHH  "<< max <<endl;
 
         count_f += 1;
         if (count_f > 3){
@@ -409,54 +367,79 @@ Mat Harris::computeHarrisResponses(float k, Derivatives& d) {
     Mat M(d.Iy.rows, d.Ix.cols, CV_32F);
 
     #if ASSERTIONS_ON
-    for(int r=0; r<d.Iy.rows; r++) {
-        for(int c=0; c<d.Iy.cols; c++) {
-            float   a11, a12,
-                    a21, a22;
 
-            a11 = d.Ix.at<float>(r,c) * d.Ix.at<float>(r,c);
-            a22 = d.Iy.at<float>(r,c) * d.Iy.at<float>(r,c);
-            a21 = d.Ix.at<float>(r,c) * d.Iy.at<float>(r,c);
-            a12 = d.Ix.at<float>(r,c) * d.Iy.at<float>(r,c);
+      float det, trace;
+      int count_f =0;
+      int count_f11 =0;
+      int count_f12 =0;
+      int count_f21 =0;
+      int count_f22 =0;
 
-            float det = a11*a22 - a12*a21; //always 0 unless fault
-            //cout << det << "the det issssss" <<endl;
-            float trace = a11 + a22; // cant be larger than 2.1 million
+
+      for(int r=0; r<d.Iy.rows; r++) {
+          for(int c=0; c<d.Iy.cols; c++) {
+              float   a11, a12,
+                      a21, a22;
+
+            do { // runs through loop once and checks if there is a fault
+
+              a11 = d.Ix.at<float>(r,c) * d.Ix.at<float>(r,c);
+              ck.a11A = a11;
+              count_f11 += 1;
+              if (count_f11 > 3){
+                break;
+              }
+            } while (iterateFlo(ck.a11A,0,16) == 1);
+
+            do { // runs through loop once and checks if there is a fault
+
+              a22 = d.Iy.at<float>(r,c) * d.Iy.at<float>(r,c);
+              ck.a22A = a22;
+              count_f22 += 1;
+              if (count_f22 > 3){
+                break;
+              }
+            } while (iterateFlo(ck.a22A,0,16) == 1);
+
+            do { // runs through loop once and checks if there is a fault
+
+              a21 = d.Ix.at<float>(r,c) * d.Iy.at<float>(r,c);
+              ck.a21A = a21;
+              count_f21 += 1;
+              if (count_f21 > 3){
+                break;
+              }
+            } while (iterateFlo(ck.a21A,-16,16) == 1);
+
+            do { // runs through loop once and checks if there is a fault
+
+              a12 = d.Ix.at<float>(r,c) * d.Iy.at<float>(r,c);
+              ck.a12A = a12;
+              count_f12 += 1;
+              if (count_f12 > 3){
+                break;
+              }
+            } while (iterateFlo(ck.a12A,-16,16) == 1);
+
+
+            do { // runs through loop once and checks if there is a fault
+
+              // det = a11*a22 - a12*a21; //always 0 unless fault
+              // cout << det << "the det issssss" <<endl;
+              // trace = a11 + a22; // cant be larger than 2.1 million
+
+              ck.traceA = trace;
+
+
+              count_f += 1;
+              if (count_f > 3){
+                break;
+              }
+            } while (iterateFlo(ck.traceA,0,1024) == 1);
 
             M.at<float>(r,c) = abs(det - k * trace*trace);// coud be over 4 Tera
-        }
-    }
-      // float det, trace;
-      // int count_fault =0;
-      // for(int r=0; r<d.Iy.rows; r++) {
-      //     for(int c=0; c<d.Iy.cols; c++) {
-      //         float   a11, a12,
-      //                 a21, a22;
-      //
-      //         a11 = d.Ix.at<float>(r,c) * d.Ix.at<float>(r,c);
-      //         a22 = d.Iy.at<float>(r,c) * d.Iy.at<float>(r,c);
-      //         a21 = d.Ix.at<float>(r,c) * d.Iy.at<float>(r,c);
-      //         a12 = d.Ix.at<float>(r,c) * d.Iy.at<float>(r,c);
-      //
-      //
-      //         do { // runs through loop once and checks if there is a fault
-      //
-      //           det = a11*a22 - a12*a21; //always 0 unless fault
-      //           cout << det << "the det issssss" <<endl;
-      //           trace = a11 + a22; // cant be larger than 2.1 million
-      //
-      //           ck.traceA = trace.clone();
-      //
-      //
-      //           count_fault += 1;
-      //           if (count_fault > 3){
-      //             break;
-      //           }
-      //         } while (iterateFlo(ck.traceA,0,2.1*pow(10,6)) == 1);
-      //
-      //         M.at<float>(r,c) = abs(det - k * trace*trace);// coud be over 4 Tera
-      //     }
-      // }
+          }
+      }
 
     #else
 
