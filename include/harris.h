@@ -18,11 +18,11 @@ using namespace std;
 using namespace cv;
 
 #define ASSERTIONS_ON 			  false
-#define ABFT_ON 				      false
+#define ABFT_ON 				      true
 #define THREADS_ON 				    false
 #define HAMMING_ON         	  false
 
-#define INJECT_FAULTS			    false
+#define INJECT_FAULTS			    true
 
 #define DATA_COLLECTION_MODE 	false	// enable this for logging and to disable printing to std::out
 
@@ -31,16 +31,6 @@ using namespace cv;
 #define LOCAL 					      false	// set to true to allow for visual test on local machine
 
 #if ASSERTIONS_ON
-
-  typedef struct state { // vars saved for do while checkpoint
-    //saved vars for trace calculation
-    float a11A;
-    float a12A;
-    float a21A;
-    float a22A;
-
-
-  } state_t;
 
   //iterate through values in matrix
 
@@ -54,9 +44,6 @@ public:
 	vector<pointData> getMaximaPoints(float percentage, int filterRange, int suppressionRadius);
   	runStats& getStats() {return stats;}
 
-  #if ASSERTIONS_ON
-    state ck;
-  #endif
 private:
 	Mat convertRgbToGrayscale(Mat& img);
 	Derivatives computeDerivatives(Mat& greyscaleImg);
