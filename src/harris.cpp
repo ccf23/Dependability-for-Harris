@@ -28,6 +28,7 @@ Harris::Harris(Mat img, float k, int filterRange)
  fi(PROB_DATA, 2e-5)
 #endif
 {
+
     // (1) Convert to greyscale image
     auto t_start = high_resolution_clock::now();
     Mat greyscaleImg;
@@ -97,22 +98,18 @@ Harris::Harris(Mat img, float k, int filterRange)
         IxyR = IxyR_gold;
         derivatives = d_gold;
         #if INJECT_FAULTS
-            //cout<<"injecting faults into derivatives after calculation [before filtering]"<<endl;
-            //TODO: update BHP values based on time since generations
-            fi.setBHP(1e-8);
-            fi.inject(IyC);
-            fi.inject(IxC);
-            fi.inject(IxyC);
-            fi.inject(IxR);
-            fi.inject(IyR);
-            fi.inject(IxyR);
-
-            fi.setBHP(1e-6);
+            fi.setBHP(1.2e-5);
             fi.inject(derivatives.Ix);
-            fi.setBHP(1e-7);
+            fi.inject(IxR);
+            fi.inject(IxC);
+            fi.setBHP(6e-6);
             fi.inject(derivatives.Iy);
-            fi.setBHP(1e-8);
+            fi.inject(IyR);
+            fi.inject(IyC);
+            fi.setBHP(3e-6);
             fi.inject(derivatives.Ixy);
+            fi.inject(IxyR);
+            fi.inject(IxyC);
         #endif
 
     }while (!abft_check(derivatives.Ix, IxR, IxC, true) || \
@@ -120,11 +117,11 @@ Harris::Harris(Mat img, float k, int filterRange)
             !abft_check(derivatives.Ixy, IxyR, IxyC, true));
 #else
     #if INJECT_FAULTS
-        fi.setBHP(1e-6);
+        fi.setBHP(1.2e-5);
         fi.inject(derivatives.Ix);
-        fi.setBHP(1e-7);
+        fi.setBHP(6e-6);
         fi.inject(derivatives.Iy);
-        fi.setBHP(1e-8);
+        fi.setBHP(3e-6);
         fi.inject(derivatives.Ixy);
     #endif
 #endif
@@ -224,7 +221,7 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
                 //cout<<"injecting faults into feature selection"<<endl;
                 if (r%100 == 0) // too slow to do every time
                 {
-                    fi.setBHP(1e-7);
+                    fi.setBHP(3e-6);
                     fi.inject(m_harrisResponses);
                 }
             #endif
@@ -293,8 +290,7 @@ Mat Harris::convertRgbToGrayscale(Mat &img)
             greyscaleImg.at<float>(r,c) /= 255;
             
             #if INJECT_FAULTS
-                //cout<<"injecting faults into greyscale calculation"<<endl;
-                fi.setBHP(1e-5); // TODO: update this
+                fi.setBHP(1.65e-5);
                 fi.inject(greyscaleImg.at<float>(r,c));
             #endif
 
@@ -355,22 +351,18 @@ Derivatives Harris::applyGaussToDerivatives(Derivatives &dMats, int filterRange)
         IxyRc = IxyRc_gold;
 
         #if INJECT_FAULTS
-            //cout<<"injecting faults into derivatives after calculation"<<endl;
-            //TODO: update BHP values based on time since generations
-            fi.setBHP(1e-8);
-            fi.inject(IyCc);
-            fi.inject(IxCc);
-            fi.inject(IxyCc);
-            fi.inject(IxRc);
-            fi.inject(IyRc);
-            fi.inject(IxyRc);
-
-            fi.setBHP(1e-7);
+            fi.setBHP(1.2e-5);
             fi.inject(mdMats.Ix);
-            fi.setBHP(1e-7);
+            fi.inject(IxCc);
+            fi.inject(IxRc);
+            fi.setBHP(6e-6);
             fi.inject(mdMats.Iy);
-            fi.setBHP(1e-7);
+            fi.inject(IyCc);
+            fi.inject(IyRc);
+            fi.setBHP(3e-6);
             fi.inject(mdMats.Ixy);
+            fi.inject(IxyCc);
+            fi.inject(IxyRc);
         
         #endif
     } while (!abft_check(mdMats.Ix,IxRc,IxCc, true) || \
@@ -379,11 +371,11 @@ Derivatives Harris::applyGaussToDerivatives(Derivatives &dMats, int filterRange)
 #else
     mdMats = mdMats_gold;
     #if INJECT_FAULTS
-        fi.setBHP(1e-7);
+        fi.setBHP(1.2e-5);
         fi.inject(mdMats.Ix);
-        fi.setBHP(1e-7);
+        fi.setBHP(6e-6);
         fi.inject(mdMats.Iy);
-        fi.setBHP(1e-7);
+        fi.setBHP(3e-6);
         fi.inject(mdMats.Ixy);
     #endif
 #endif
@@ -566,8 +558,7 @@ Mat Harris::computeHarrisResponses(float k, Derivatives &d)
               M.at<float>(r,c) = abs(det - k * trace*trace);
 
               #if INJECT_FAULTS
-               // cout<<"injecting faults into M in computeHarrisResponse"<<endl;
-                fi.setBHP(1e-4); // TODO: update bhp
+                fi.setBHP(2e-5);
                 fi.inject(M.at<float>(r,c));
               #endif
           }
@@ -585,6 +576,7 @@ Mat Harris::gaussFilter(Mat& img, int range) {
     }
     #if ABFT_ON
         Mat mRcheck, mCcheck, mRcheck_gold, mCcheck_gold;
+        //float mRcheck, mCcheck, mRcheck_gold, mCcheck_gold;
         abft_addChecksums(m_gold,mRcheck_gold,mCcheck_gold);
     #endif
 
@@ -601,6 +593,8 @@ Mat Harris::gaussFilter(Mat& img, int range) {
         #if ABFT_ON
             mCcheck = mCcheck_gold.clone();
             mRcheck = mRcheck_gold.clone();
+            //mCcheck = mCcheck_gold;
+            //mRcheck = mRcheck_gold;
         #endif 
         m = m_gold.clone();
         valid = true;
@@ -609,9 +603,10 @@ Mat Harris::gaussFilter(Mat& img, int range) {
             #if ABFT_ON
                 
                 bool kernel_good = abft_check(m,mRcheck,mCcheck, false);
+                //bool kernel_good = abft_check(m,mRcheck,mCcheck);
                 if (!kernel_good)
                 {
-                    cout<<"ABFT: GAUSS LOOP1 RESET"<<endl;
+                    //cout<<"ABFT: GAUSS LOOP1 RESET"<<endl;
                     valid = false;
                     break;
                 }
@@ -640,7 +635,7 @@ Mat Harris::gaussFilter(Mat& img, int range) {
             }
             #if INJECT_FAULTS
                          
-                fi.setBHP(5e-6); // TODO: update bhp
+                fi.setBHP(2e-5); // TODO: update bhp
                 fi.inject(m);
                 #if ABFT_ON
                     fi.inject(mRcheck);
@@ -659,17 +654,20 @@ Mat Harris::gaussFilter(Mat& img, int range) {
     {   
         m = m_gold.clone();
         #if ABFT_ON
-            mRcheck = mRcheck_gold.clone();
             mCcheck = mCcheck_gold.clone();
+            mRcheck = mRcheck_gold.clone();
+            //mCcheck = mCcheck_gold;
+            //mRcheck = mRcheck_gold;
         #endif
         valid = true;
         for(int r=range; r<img.rows-range; r++)
         {
             #if ABFT_ON
                     bool kernel_good = abft_check(m,mRcheck,mCcheck, false);
+                    //bool kernel_good = abft_check(m,mRcheck,mCcheck);
                     if (!kernel_good)
                     {
-                        cout<<"ABFT: GAUSS LOOP2 RESET"<<endl;
+                        //cout<<"ABFT: GAUSS LOOP2 RESET"<<endl;
                         valid = false;
                         break;
                     }
@@ -698,7 +696,7 @@ Mat Harris::gaussFilter(Mat& img, int range) {
             }
             #if INJECT_FAULTS
                // cout<<"injecting faults into m in gauss filter (2)"<<endl;
-                fi.setBHP(5e-6); // TODO: update bhp
+                fi.setBHP(2e-5); // TODO: update bhp
                 #if ABFT_ON
                     fi.inject(mRcheck);
                     fi.inject(mCcheck);

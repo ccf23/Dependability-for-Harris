@@ -18,17 +18,17 @@ using namespace std;
 using namespace cv;
 
 #define ASSERTIONS_ON 			  false
-#define ABFT_ON 				      true
+#define ABFT_ON 				      false
 #define THREADS_ON 				    false
 #define HAMMING_ON         	  false
 
-#define INJECT_FAULTS			    true
+#define INJECT_FAULTS			    false
 
-#define DATA_COLLECTION_MODE 	true	// enable this for logging and to disable printing to std::out
+#define DATA_COLLECTION_MODE 	false	// enable this for logging and to disable printing to std::out
 
 #define POSITION_RANGE			  5		// range for points in processing::process()
 
-#define LOCAL 					      true	// set to true to allow for visual test on local machine
+#define LOCAL 					      false	// set to true to allow for visual test on local machine
 
 #if ASSERTIONS_ON
 

@@ -83,7 +83,7 @@ bool grayscaleABFTCheck(Mat& img, bool useThresh)
         }
     }
     int maxErrors = cErrs*rErrs;
-
+    //cout<<"max errors: "<<maxErrors<<endl;
     if (maxErrors == 0)
     {
         return true;
@@ -98,11 +98,11 @@ bool abft_addChecksums(Mat img, Mat &rCheck, Mat &cCheck)
 {
     reduce(img, cCheck, 0, REDUCE_SUM);
     reduce(img, rCheck, 1, REDUCE_SUM);
-
 }
 
 bool abft_check(Mat &img, Mat &rCheck, Mat &cCheck, bool useThresh)
 {
+
     Mat newCcheck, newRcheck, cDiff, rDiff, cErr, rErr;
 
     reduce(img, newCcheck, 0, REDUCE_SUM);
@@ -145,7 +145,7 @@ bool abft_check(Mat &img, Mat &rCheck, Mat &cCheck, bool useThresh)
         // maximum number of possible errors
         int maxErrors = rErrPts.size()*cErrPts.size();
 
-        cout<<"max errors found: "<<maxErrors<<endl;
+        //cout<<"max errors found: "<<maxErrors<<endl;
 
         if (maxErrors < maxErrorLimit)
         {
@@ -154,6 +154,7 @@ bool abft_check(Mat &img, Mat &rCheck, Mat &cCheck, bool useThresh)
         }
         else
         {
+            cout<<"ABFT: THRESHOLD EXCEDED"<<endl;
             return false;
         }
     }
@@ -162,4 +163,87 @@ bool abft_check(Mat &img, Mat &rCheck, Mat &cCheck, bool useThresh)
         return false;
     }
 
+}
+
+// Weighted checksum code below not currently in use
+
+// weighted checksum encoding
+bool abft_addChecksums(Mat m, float &s1, float &s2)
+{
+    //we know the kernel size so predefine the weights
+    float weights[] = {1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096};
+
+    s1 = cv::sum(m)[0];
+    
+    s2 = 0;
+
+    for (int i = 0; i < m.cols; ++i)
+    {
+        s2 += (weights[i]*m.at<float>(0,i));
+        
+    }
+
+}
+
+// weighted checksum check
+bool abft_check(Mat &m, float &s1, float &s2)
+{
+    
+    //we know the kernel size so predefine the weights
+    float weights[] = {1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096};
+
+    float s1c= cv::sum(m)[0];
+    float s2c = 0;
+
+    for (int i = 0; i < m.cols; ++i)
+    {
+        s2c += weights[i]*m.at<float>(0,i);
+    }
+    //cout<<"s1c: "<<s1c<<"  s2c: "<<s2c<<"  s1: "<<s1<< "   s2: "<<s2<<endl;
+    float d2 = s2c - s2;
+    float d1 = s1c - s1;
+
+    if (d2 == 0 && d1 != 0)
+    {
+        cout<<"WABFT corrected"<<endl;
+        // normal checksum is incorrect
+        s1 = s1c;
+        return true;
+    }
+    else if (d2 != 0 && d1 == 0)
+    {
+        cout<<"WABFT corrected"<<endl;
+        // weighted checksum is wrong
+        s2 = s2c;
+        return true;
+    }
+    else if (d2 == 0 && d1 == 0)
+    {
+        //cout<<"EVERYTHING CORRECT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<endl;
+        return true; // everything correct
+    }
+    else 
+    {
+         cout<<"WABFT corrected"<<endl;
+        float kf = log2(d2/d1);
+        int k = std::round(kf);
+        // pos k is in error
+        if (k >= 0 && k < m.cols)
+        {
+            float newVal = s1 - (s1c - m.at<float>(0,k));
+            m.at<float>(0,k) = newVal;
+            return true;
+        }
+        else
+        {
+            cout<<"------------------------------------------------------------ can't correct"<<endl;
+            cout<<"d2: "<<d2<<"  d1: "<<d1<<"  m: "<<m<<endl;
+            return false;
+        }
+
+
+
+    }
+    
+   return true;
 }
