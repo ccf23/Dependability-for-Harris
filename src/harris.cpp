@@ -190,15 +190,27 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
         }
     }
 
+    Mat m_harrisResponses_gold = m_harrisResponses.clone();
+    #if ABFT_ON
+        Mat hrRc_gold = hrRc;
+        Mat hrCc_gold = hrCc;
+    #endif
+    
     std::vector<pointData> points; // Create a vector of all Points
     bool valid; // used by abft to flag restart
     do
     {
+        #if ABFT_ON
+            hrRc = hrRc_gold;
+            hrCc = hrCc_gold;
+        #endif
+        m_harrisResponses = m_harrisResponses_gold.clone();
+        points.clear();
         valid = true;
         for (int r = 0; r < m_harrisResponses.rows; r++) {
             #if ABFT_ON
                 // perform continual verification during this critical part
-                if (!abft_check(m_harrisResponses,hrRc,hrCc,true))
+                if (!abft_check(m_harrisResponses,hrRc,hrCc,true,2000))
                 {
                     // corrupted, go back to begining
                     valid = false;
@@ -218,10 +230,9 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
                 }
             }
             #if INJECT_FAULTS
-                //cout<<"injecting faults into feature selection"<<endl;
                 if (r%100 == 0) // too slow to do every time
                 {
-                    fi.setBHP(3e-6);
+                    fi.setBHP(2e-6);
                     fi.inject(m_harrisResponses);
                 }
             #endif
