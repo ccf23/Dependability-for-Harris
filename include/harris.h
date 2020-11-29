@@ -32,16 +32,6 @@ using namespace cv;
 
 #if ASSERTIONS_ON
 
-  typedef struct state { // vars saved for do while checkpoint
-    //saved vars for trace calculation
-    float a11A;
-    float a12A;
-    float a21A;
-    float a22A;
-
-
-  } state_t;
-
   //iterate through values in matrix
 
   int iterateFlo(float Flo, float lB, float uB);

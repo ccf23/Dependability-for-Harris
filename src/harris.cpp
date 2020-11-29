@@ -85,7 +85,7 @@ Harris::Harris(Mat img, float k, int filterRange)
     abft_addChecksums(derivatives.Iy, IyR_gold, IyC_gold);
     abft_addChecksums(derivatives.Ixy, IxyR_gold, IxyC_gold);
     Derivatives d_gold = derivatives;
-    
+
     do
     {
         // TODO: update so this isn't in timing results
@@ -97,7 +97,7 @@ Harris::Harris(Mat img, float k, int filterRange)
         IxyR = IxyR_gold;
         derivatives = d_gold;
         #if INJECT_FAULTS
-            
+
             //TODO: update BHP values based on time since generations
             fi.setBHP(1e-8);
             fi.inject(IyC);
@@ -290,7 +290,7 @@ Mat Harris::convertRgbToGrayscale(Mat &img)
             	0.7152 * img.at<cv::Vec3f>(r,c)[1] +
             	0.0722 * img.at<cv::Vec3f>(r,c)[2];
             greyscaleImg.at<float>(r,c) /= 255;
-            
+
             #if INJECT_FAULTS
                 fi.setBHP(1e-5); // TODO: update this
                 fi.inject(greyscaleImg.at<float>(r,c));
@@ -369,7 +369,7 @@ Derivatives Harris::applyGaussToDerivatives(Derivatives &dMats, int filterRange)
             fi.inject(mdMats.Iy);
             fi.setBHP(1e-7);
             fi.inject(mdMats.Ixy);
-        
+
         #endif
     } while (!abft_check(mdMats.Ix,IxRc,IxCc, true) || \
                 !abft_check(mdMats.Iy,IyRc,IyCc, true) || \
@@ -492,53 +492,9 @@ Mat Harris::computeHarrisResponses(float k, Derivatives &d)
 
 
               a11 = d.Ix.at<float>(r,c) * d.Ix.at<float>(r,c);
-              #if ASSERTIONS_ON
-              //ck 6
-                if (iterateFlo(a11,0,16) == 1&& reset11 < 3)
-                {
-                  //error, so reset loop
-                  r =0;
-                  c =0;
-                  reset11+=1;
-                }
-                ck.a11A = a11;
-              #endif
               a22 = d.Iy.at<float>(r,c) * d.Iy.at<float>(r,c);
-              #if ASSERTIONS_ON
-              //ck 6
-                if (iterateFlo(a11,0,16) == 1&& reset22 < 3)
-                {
-                  //error, so reset loop
-                  r =0;
-                  c =0;
-                  reset22+=1;
-                }
-                ck.a22A = a22;
-              #endif
               a21 = d.Ix.at<float>(r,c) * d.Iy.at<float>(r,c);
-              #if ASSERTIONS_ON
-              //ck 6
-                if (iterateFlo(a11,-16,16) == 1&& reset21 < 3)
-                {
-                  //error, so reset loop
-                  r =0;
-                  c =0;
-                  reset21+=1;
-                }
-                ck.a21A = a21;
-              #endif
               a12 = d.Ix.at<float>(r,c) * d.Iy.at<float>(r,c);
-              #if ASSERTIONS_ON
-              //ck 6
-                if (iterateFlo(a11,-16,16) == 1&& reset12 < 3)
-                {
-                  //error, so reset loop
-                  r =0;
-                  c =0;
-                  reset12+=1;
-                }
-                ck.a12A = a12;
-              #endif
 
 
               #if ASSERTIONS_ON
@@ -546,7 +502,7 @@ Mat Harris::computeHarrisResponses(float k, Derivatives &d)
                 int count_f = 0;
                 do { // runs through loop once and checks if there is a fault
 
-                  det = ck.a11A*ck.a22A - ck.a12A*ck.a21A; //always 0 unless fault
+                  det = a11*a22 - a12A*a21; //always 0 unless fault
                   trace = a11 + a22; // cant be larger than 1024
                   count_f += 1;
                   if (count_f > 3){
@@ -629,10 +585,10 @@ Mat Harris::gaussFilter(Mat& img, int range) {
 
             }
             #if INJECT_FAULTS
-                               
+
                 fi.setBHP(1e-9); // TODO: update bhp
                 fi.inject(m);
-                
+
             #endif
         }
     } while(!valid);
@@ -674,7 +630,7 @@ Mat Harris::gaussFilter(Mat& img, int range) {
                   }
                 #endif
 
-                
+
             }
             #if INJECT_FAULTS
                 fi.setBHP(1e-9); // TODO: update bhp
