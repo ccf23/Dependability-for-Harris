@@ -17,8 +17,8 @@
 using namespace std;
 using namespace cv;
 
-#define ASSERTIONS_ON 			  false
-#define ABFT_ON 				      true
+#define ASSERTIONS_ON 			  true
+#define ABFT_ON 				      false
 #define THREADS_ON 				    false
 #define HAMMING_ON         	  false
 
@@ -44,9 +44,6 @@ public:
 	vector<pointData> getMaximaPoints(float percentage, int filterRange, int suppressionRadius);
   	runStats& getStats() {return stats;}
 
-  #if ASSERTIONS_ON
-    state ck;
-  #endif
 private:
 	Mat convertRgbToGrayscale(Mat& img);
 	Derivatives computeDerivatives(Mat& greyscaleImg);

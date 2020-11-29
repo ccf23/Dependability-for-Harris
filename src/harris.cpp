@@ -502,7 +502,7 @@ Mat Harris::computeHarrisResponses(float k, Derivatives &d)
                 int count_f = 0;
                 do { // runs through loop once and checks if there is a fault
 
-                  det = a11*a22 - a12A*a21; //always 0 unless fault
+                  det = a11*a22 - a12*a21; //always 0 unless fault
                   trace = a11 + a22; // cant be larger than 1024
                   count_f += 1;
                   if (count_f > 3){
