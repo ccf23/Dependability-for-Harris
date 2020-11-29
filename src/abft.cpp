@@ -145,6 +145,8 @@ bool abft_check(Mat &img, Mat &rCheck, Mat &cCheck, bool useThresh)
         // maximum number of possible errors
         int maxErrors = rErrPts.size()*cErrPts.size();
 
+        cout<<"max errors found: "<<maxErrors<<endl;
+
         if (maxErrors < maxErrorLimit)
         {
             // error quantity in image does not justify repeat
