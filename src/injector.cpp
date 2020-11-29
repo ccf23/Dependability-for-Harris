@@ -12,11 +12,12 @@
 #include "../include/injector.h"
 #include <inttypes.h>
 #include <time.h>
+#include <random>
 
 injector::injector(INJECTOR_MODE_TYPE mode = NONE, double bhp = 0)
 {
     tic();
-    bit_hit_prob = bhp;
+    setBHP(bhp);
     default_mode = mode;
     injections = 0;
     total_time = 0;
@@ -28,7 +29,11 @@ injector::injector(INJECTOR_MODE_TYPE mode = NONE, double bhp = 0)
 void injector::setBHP(double bhp)
 {
     tic();
-    bit_hit_prob = bhp;
+    std::default_random_engine generator;
+    generator.seed(std::rand());
+    std::normal_distribution<double> distribution(bhp, 2e-6);
+
+    bit_hit_prob = distribution(generator);
     toc();
 }
 
