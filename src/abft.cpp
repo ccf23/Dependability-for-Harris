@@ -102,6 +102,11 @@ bool abft_addChecksums(Mat img, Mat &rCheck, Mat &cCheck)
 
 bool abft_check(Mat &img, Mat &rCheck, Mat &cCheck, bool useThresh)
 {
+    abft_check(img, rCheck, cCheck, useThresh, maxErrorLimit);
+}
+
+bool abft_check(Mat &img, Mat &rCheck, Mat &cCheck, bool useThresh,int errThresh)
+{
 
     Mat newCcheck, newRcheck, cDiff, rDiff, cErr, rErr;
 
@@ -147,7 +152,7 @@ bool abft_check(Mat &img, Mat &rCheck, Mat &cCheck, bool useThresh)
 
         //cout<<"max errors found: "<<maxErrors<<endl;
 
-        if (maxErrors < maxErrorLimit)
+        if (maxErrors < errThresh)
         {
             // error quantity in image does not justify repeat
             return true;
