@@ -219,7 +219,14 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
                     points.push_back(d);
                 }
             }
-            //TODO: inject faults here
+            #if INJECT_FAULTS
+                //TODO: update probability
+                if (r%50 == 0)
+                {
+                    fi.setBHP(1e-7);
+                    fi.inject(m_harrisResponses);
+                }
+            #endif
         }
     }while (!valid);
 
@@ -310,33 +317,51 @@ Derivatives Harris::applyGaussToDerivatives(Derivatives &dMats, int filterRange)
     if (filterRange == 0)
         return dMats;
 
-    Derivatives mdMats, mdMats_gold;
+    Derivatives mdMats;
+    #if ABFT_ON
+        Derivatives mdMats_gold;
+    #endif
 
     mdMats.Ix = gaussFilter(dMats.Ix, filterRange);
 #if ABFT_ON // protect after generation
-    Mat IxRc, IxCc;
-    abft_addChecksums(mdMats.Ix, IxRc, IxCc);
+    Mat IxRc_gold, IxCc_gold, IxRc, IxCc;
+    abft_addChecksums(mdMats_gold.Ix, IxRc_gold, IxCc_gold);
 #endif
 
     mdMats.Iy = gaussFilter(dMats.Iy, filterRange);
 #if ABFT_ON // protect after generation
-    Mat IyRc, IyCc;
-    abft_addChecksums(mdMats.Iy, IyRc, IyCc);
+    Mat IyRc_gold, IyCc_gold, IyRc, IyCc;
+    abft_addChecksums(mdMats_gold.Iy, IyRc_gold, IyCc_gold);
 #endif
 
     mdMats.Ixy = gaussFilter(dMats.Ixy, filterRange);
 #if ABFT_ON // protect after generation
-    Mat IxyRc, IxyCc;
-    abft_addChecksums(mdMats.Ixy, IxyRc, IxyCc);
+    Mat IxyRc_gold, IxyCc_gold, IxyRc, IxyCc;
+    abft_addChecksums(mdMats_gold.Ixy, IxyRc_gold, IxyCc_gold);
 #endif
 
 #if ABFT_ON
     // validate ABFT before returning
     do
     {
+        mdMats = mdMats_gold;
+        // TODO: update so this isn't in timing results
+        IxCc = IxCc_gold;
+        IyCc = IyCc_gold;
+        IxyCc = IxyCc_gold;
+        IxRc = IxRc_gold;
+        IyRc = IyRc_gold;
+        IxyRc = IxyRc_gold;
+
         #if INJECT_FAULTS
-            mdMats = mdMats_gold;
-            // TODO: Add row/col checksum gold mats and fault injection for checksums
+            //TODO: update BHP values based on time since generations
+            fi.setBHP(1e-8);
+            fi.inject(IyCc);
+            fi.inject(IxCc);
+            fi.inject(IxyCc);
+            fi.inject(IxRc);
+            fi.inject(IyRc);
+            fi.inject(IxyRc);
 
             fi.setBHP(1e-7);
             fi.inject(mdMats.Ix);
@@ -351,7 +376,6 @@ Derivatives Harris::applyGaussToDerivatives(Derivatives &dMats, int filterRange)
                 !abft_check(mdMats.Ixy,IxyRc,IxyCc, true));
 #else
     #if INJECT_FAULTS
-
         fi.setBHP(1e-7);
         fi.inject(mdMats.Ix);
         fi.setBHP(1e-7);
@@ -537,6 +561,11 @@ Mat Harris::computeHarrisResponses(float k, Derivatives &d)
 
 
               M.at<float>(r,c) = abs(det - k * trace*trace);
+
+              #if INJECT_FAULTS
+                fi.setBHP(1e-4); // TODO: update bhp
+                fi.inject(M.at<float>(r,c));
+              #endif
           }
       }
     return M;
@@ -598,11 +627,13 @@ Mat Harris::gaussFilter(Mat& img, int range) {
                   }
                 #endif
 
-                #if INJECT_FAULTS
-                    fi.setBHP(1e-9); // TODO: update bhp
-                    fi.inject(m);
-                #endif
             }
+            #if INJECT_FAULTS
+                               
+                fi.setBHP(1e-9); // TODO: update bhp
+                fi.inject(m);
+                
+            #endif
         }
     } while(!valid);
 
@@ -612,7 +643,6 @@ Mat Harris::gaussFilter(Mat& img, int range) {
     #endif
     do
     {
-
         valid = true;
         for(int r=range; r<img.rows-range; r++)
         {
@@ -644,8 +674,12 @@ Mat Harris::gaussFilter(Mat& img, int range) {
                   }
                 #endif
 
-                // TODO: inject kernel faults here
+                
             }
+            #if INJECT_FAULTS
+                fi.setBHP(1e-9); // TODO: update bhp
+                fi.inject(m);
+            #endif
         }
     } while (!valid);
     return gauss;
