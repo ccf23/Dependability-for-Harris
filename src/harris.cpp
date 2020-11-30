@@ -210,11 +210,14 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
         for (int r = 0; r < m_harrisResponses.rows; r++) {
             #if ABFT_ON
                 // perform continual verification during this critical part
-                if (!abft_check(m_harrisResponses,hrRc,hrCc,true,2000))
+                if (r % 50 == 0)
                 {
-                    // corrupted, go back to begining
-                    valid = false;
-                    break;
+                    if (!abft_check(m_harrisResponses,hrRc,hrCc,true,2000))
+                    {
+                        // corrupted, go back to begining
+                        valid = false;
+                        break;
+                    }
                 }
             #endif
             for (int c = 0; c < m_harrisResponses.cols; c++) {
