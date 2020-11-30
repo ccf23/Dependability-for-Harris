@@ -587,7 +587,7 @@ Mat Harris::gaussFilter(Mat& img, int range) {
 
             }
             #if INJECT_FAULTS
-                         
+                // TODO : reset kernel every 20-25 cycles to simulate transient faults
                 fi.setBHP(2e-5); // TODO: update bhp
                 fi.inject(m);
                 #if ABFT_ON
@@ -662,6 +662,19 @@ Mat Harris::gaussFilter(Mat& img, int range) {
 }
 
 #if THREADS_ON
+
+bool Harris::withinPixelDiffTolerance(Mat mat1, Mat mat2)
+{
+    Mat diff;
+
+    compare(mat1, mat2, diff, CMP_NE);
+
+    int num_diff = countNonZero(diff);
+    // cout << "num diff pixels: " << num_diff << "\n";
+
+    return (countNonZero(diff) <= THREADS_NUM_FAULTS_TOLERATED);
+}
+
 Mat Harris::runParallel_convertRgbToGrayscale(Mat& img)
 {
     // flag for error detection
@@ -683,9 +696,8 @@ Mat Harris::runParallel_convertRgbToGrayscale(Mat& img)
             }
         }
 
-        // verify that they match
-        match = (sum(greyscaleImg2 != greyscaleImg) == Scalar(0));
-
+        // verify that they match within THREADS_NUM_FAULTS_TOLERATED pixels
+        match = withinPixelDiffTolerance(greyscaleImg2, greyscaleImg);
         // cout << "Grayscale match: " << boolalpha << match << endl;
     }
 
@@ -710,20 +722,19 @@ Derivatives Harris::runParallel_computeDerivatives(Mat& greyscaleImg)
             if (i == 0)
             {
                 derivatives = computeDerivatives(greyscaleImg1);
-
             }
 
             if (i == 1 || omp_get_num_threads() != 2)
             {
                 derivatives2 = computeDerivatives(greyscaleImg2);
             }
-
         }
 
-        //verify match
-        bool matchX = (sum(derivatives2.Ix != derivatives.Ix) == Scalar(0));
-        bool matchY = (sum(derivatives2.Iy != derivatives.Iy) == Scalar(0));
-        bool matchXY = (sum(derivatives2.Ixy != derivatives.Ixy) == Scalar(0));
+        //verify match within THREADS_NUM_FAULTS_TOLERATED pixels
+        bool matchX = withinPixelDiffTolerance(derivatives2.Ix, derivatives.Ix);
+        bool matchY = withinPixelDiffTolerance(derivatives2.Iy, derivatives.Iy);
+        bool matchXY = withinPixelDiffTolerance(derivatives2.Ixy, derivatives.Ixy);
+
         match = matchX & matchY & matchXY;
 
         // cout << "Derivatives match: " << boolalpha << match << endl;
@@ -754,9 +765,10 @@ Derivatives Harris::runParallel_applyToDerivatives(Derivatives& derivatives, int
         }
 
         //verify match
-        bool mMatchX = (sum(mDerivatives2.Ix != mDerivatives.Ix) == Scalar(0));
-        bool mMatchY = (sum(mDerivatives2.Iy != mDerivatives.Iy) == Scalar(0));
-        bool mMatchXY = (sum(mDerivatives2.Ixy != mDerivatives.Ixy) == Scalar(0));
+        bool mMatchX = withinPixelDiffTolerance(mDerivatives2.Ix, mDerivatives.Ix);
+        bool mMatchY = withinPixelDiffTolerance(mDerivatives2.Iy, mDerivatives.Iy);
+        bool mMatchXY = withinPixelDiffTolerance(mDerivatives2.Ixy, mDerivatives.Ixy);
+
         match = mMatchX & mMatchY & mMatchXY;
 
         // cout << "M Derivatives match: " << boolalpha << match << endl;
@@ -782,8 +794,8 @@ Mat Harris::runParallel_computeHarrisResponses(float k, Derivatives& mDerivative
                 harrisResponses2 = computeHarrisResponses(k,mDerivatives);
             }
         }
-        match = (sum(harrisResponses2 != harrisResponses) == Scalar(0));
-
+        match = withinPixelDiffTolerance(harrisResponses2, harrisResponses);
+    
         // cout << "Harris Responses match: " << boolalpha << match << endl;
 
         m_harrisResponses = harrisResponses;

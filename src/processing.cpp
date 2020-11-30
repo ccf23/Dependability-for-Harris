@@ -128,6 +128,8 @@ void processing::log(runStats stats, std::string filename, bool benchmark)
          << boolalpha << HAMMING_ON << "," \
          << boolalpha << INJECT_FAULTS << "," \
          << boolalpha << DATA_COLLECTION_MODE << "," \
+         << POSITION_RANGE << "," \
+         << THREADS_NUM_FAULTS_TOLERATED << "," \
          << boolalpha << LOCAL << endl;
     
     fout.close();   
