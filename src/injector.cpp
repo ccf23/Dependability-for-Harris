@@ -37,7 +37,6 @@ void injector::setBHP(long double bhp)
 
     bit_hit_prob = distribution(generator);
     
-    //bit_hit_prob = bhp;
     toc();
 }
 
