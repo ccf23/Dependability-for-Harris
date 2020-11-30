@@ -3,6 +3,7 @@
 
 #include <opencv2/opencv.hpp>
 #include <vector>
+#include "../include/processing.h"
 using namespace std;
 using namespace cv;
 
@@ -19,8 +20,8 @@ bool grayscaleABFTCheck(Mat&, bool);
 bool abft_addChecksums(Mat, Mat&, Mat&);
 
 // performs verification and correction using matrix and row/column checks
-bool abft_check(Mat & , Mat&, Mat&, bool, int);
-bool abft_check(Mat & , Mat&, Mat&, bool);
+bool abft_check(Mat & , Mat&, Mat&, bool, int, runStats &);
+bool abft_check(Mat & , Mat&, Mat&, bool, runStats &);
 
 // weighted checksum encoding
 bool abft_addChecksums(Mat, float &, float &);

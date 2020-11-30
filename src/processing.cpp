@@ -130,7 +130,13 @@ void processing::log(runStats stats, std::string filename, bool benchmark)
          << boolalpha << DATA_COLLECTION_MODE << "," \
          << POSITION_RANGE << "," \
          << THREADS_NUM_FAULTS_TOLERATED << "," \
-         << boolalpha << LOCAL << endl;
+         << boolalpha << LOCAL << "," \
+         << stats.abft.grayscaleRuns << "," \
+         << stats.abft.derivativeRuns << "," \
+         << stats.abft.gaussLoopResets << ","\
+         << stats.abft.responseLoopResets << ","\
+         << stats.abft.gDerivativeRuns << ","\
+         << stats.abft.correctedErrors << "," <<endl;
     
     fout.close();   
 }

@@ -1,6 +1,7 @@
 
 #include "../include/abft.h"
 
+
 Mat doGrayscaleABFT(Mat im)
 {
    
@@ -100,12 +101,12 @@ bool abft_addChecksums(Mat img, Mat &rCheck, Mat &cCheck)
     reduce(img, rCheck, 1, REDUCE_SUM);
 }
 
-bool abft_check(Mat &img, Mat &rCheck, Mat &cCheck, bool useThresh)
+bool abft_check(Mat &img, Mat &rCheck, Mat &cCheck, bool useThresh, runStats &stats)
 {
-    abft_check(img, rCheck, cCheck, useThresh, maxErrorLimit);
+    abft_check(img, rCheck, cCheck, useThresh, maxErrorLimit, stats);
 }
 
-bool abft_check(Mat &img, Mat &rCheck, Mat &cCheck, bool useThresh,int errThresh)
+bool abft_check(Mat &img, Mat &rCheck, Mat &cCheck, bool useThresh,int errThresh, runStats &stats)
 {
 
     Mat newCcheck, newRcheck, cDiff, rDiff, cErr, rErr;
@@ -136,7 +137,7 @@ bool abft_check(Mat &img, Mat &rCheck, Mat &cCheck, bool useThresh,int errThresh
     else if (rErrPts.size() == 1 && cErrPts.size() == 1)
     {
         //cout<<"ABFT: CORRECTABLE ERROR DETECTED"<<endl;
-
+        stats.abft.correctedErrors++;
         // correct value
         int v = cErrPts[0].x;
         int u = rErrPts[0].y;
@@ -159,7 +160,7 @@ bool abft_check(Mat &img, Mat &rCheck, Mat &cCheck, bool useThresh,int errThresh
         }
         else
         {
-            cout<<"ABFT: THRESHOLD EXCEDED"<<endl;
+            //cout<<"ABFT: THRESHOLD EXCEDED"<<endl;
             return false;
         }
     }

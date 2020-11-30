@@ -37,6 +37,7 @@ Harris::Harris(Mat img, float k, int filterRange)
     bool correct = false;
     do
     {
+        stats.abft.grayscaleRuns++;
         greyscaleImg = convertRgbToGrayscale(img);
         correct = grayscaleABFTCheck(greyscaleImg, true);
     } while (!correct);
@@ -89,6 +90,8 @@ Harris::Harris(Mat img, float k, int filterRange)
 
     do
     {
+        stats.abft.derivativeRuns++;
+
         // TODO: update so this isn't in timing results
         IxC = IxC_gold;
         IyC = IyC_gold;
@@ -112,9 +115,9 @@ Harris::Harris(Mat img, float k, int filterRange)
             fi.inject(IxyC);
         #endif
 
-    }while (!abft_check(derivatives.Ix, IxR, IxC, true) || \
-            !abft_check(derivatives.Iy, IyR, IyC, true) || \
-            !abft_check(derivatives.Ixy, IxyR, IxyC, true));
+    }while (!abft_check(derivatives.Ix, IxR, IxC, true, stats) || \
+            !abft_check(derivatives.Iy, IyR, IyC, true, stats) || \
+            !abft_check(derivatives.Ixy, IxyR, IxyC, true, stats));
 #else
     #if INJECT_FAULTS
         fi.setBHP(1.2e-5);
@@ -212,10 +215,11 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
                 // perform continual verification during this critical part
                 if (r % 50 == 0)
                 {
-                    if (!abft_check(m_harrisResponses,hrRc,hrCc,true,2000))
+                    if (!abft_check(m_harrisResponses,hrRc,hrCc,true,2000, stats))
                     {
                         // corrupted, go back to begining
                         valid = false;
+                        stats.abft.responseLoopResets++;
                         break;
                     }
                 }
@@ -355,6 +359,8 @@ Derivatives Harris::applyGaussToDerivatives(Derivatives &dMats, int filterRange)
     // validate ABFT before returning
     do
     {
+        stats.abft.gDerivativeRuns++;
+
         mdMats = mdMats_gold;
         // TODO: update so this isn't in timing results
         IxCc = IxCc_gold;
@@ -376,9 +382,9 @@ Derivatives Harris::applyGaussToDerivatives(Derivatives &dMats, int filterRange)
             fi.setBHP(3e-6);
             fi.inject(mdMats.Ixy);
         #endif
-    } while (!abft_check(mdMats.Ix,IxRc,IxCc, true) || \
-                !abft_check(mdMats.Iy,IyRc,IyCc, true) || \
-                !abft_check(mdMats.Ixy,IxyRc,IxyCc, true));
+    } while (!abft_check(mdMats.Ix,IxRc,IxCc, true, stats) || \
+                !abft_check(mdMats.Iy,IyRc,IyCc, true, stats) || \
+                !abft_check(mdMats.Ixy,IxyRc,IxyCc, true, stats));
 #else
     mdMats = mdMats_gold;
     #if INJECT_FAULTS
@@ -569,11 +575,12 @@ Mat Harris::gaussFilter(Mat& img, int range) {
         {
             #if ABFT_ON
                 
-                bool kernel_good = abft_check(m,mRcheck,mCcheck, false);
+                bool kernel_good = abft_check(m,mRcheck,mCcheck, false, stats);
                 //bool kernel_good = abft_check(m,mRcheck,mCcheck);
                 if (!kernel_good)
                 {
                     //cout<<"ABFT: GAUSS LOOP1 RESET"<<endl;
+                    stats.abft.gaussLoopResets++;
                     valid = false;
                     break;
                 }
@@ -641,11 +648,12 @@ Mat Harris::gaussFilter(Mat& img, int range) {
                 }
             #endif
             #if ABFT_ON
-                    bool kernel_good = abft_check(m,mRcheck,mCcheck, false);
+                    bool kernel_good = abft_check(m,mRcheck,mCcheck, false, stats);
                     //bool kernel_good = abft_check(m,mRcheck,mCcheck);
                     if (!kernel_good)
                     {
                         //cout<<"ABFT: GAUSS LOOP2 RESET"<<endl;
+                        stats.abft.gaussLoopResets++;
                         valid = false;
                         break;
                     }
