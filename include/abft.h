@@ -19,6 +19,7 @@ bool grayscaleABFTCheck(Mat&, bool);
 bool abft_addChecksums(Mat, Mat&, Mat&);
 
 // performs verification and correction using matrix and row/column checks
+bool abft_check(Mat & , Mat&, Mat&, bool, int);
 bool abft_check(Mat & , Mat&, Mat&, bool);
 
 // weighted checksum encoding
