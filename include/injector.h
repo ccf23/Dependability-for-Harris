@@ -28,7 +28,7 @@ class injector
 {
 private:
     INJECTOR_MODE_TYPE default_mode; // default mode for injections
-    double bit_hit_prob;             // probability of a single memory bit being hit
+    long double bit_hit_prob;             // probability of a single memory bit being hit
     bool enabled;                    // true when fault injection is enabled
     unsigned long int injections;    // total number of injections performed
     unsigned long int total_time;    // total time (us) used by injector
@@ -36,10 +36,10 @@ private:
 
 public:
     // create an injector initialized with the specific default mode
-    injector(INJECTOR_MODE_TYPE mode, double bhp);
+    injector(INJECTOR_MODE_TYPE mode, long double bhp);
 
     // change bit hit probability
-    void setBHP(double bhp);
+    void setBHP(long double bhp);
 
     // returns current number of total bit injections performed
     unsigned long int getInjections();

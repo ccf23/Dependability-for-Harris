@@ -288,9 +288,10 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
 
     }
 
-
-    // injections are finished here, store number of total injections
-    stats.injections = fi.getInjections();
+    #if INJECT_FAULTS
+        // injections are finished here, store number of total injections
+        stats.injections = fi.getInjections();
+    #endif
 
     return topPoints;
 }
@@ -578,6 +579,17 @@ Mat Harris::gaussFilter(Mat& img, int range) {
         valid = true;
         for(int r=range; r<img.rows-range; r++)
         {
+            #if INJECT_FAULTS
+                if (r%250 == 0)
+                {
+                    // reset m to simulate transient faults
+                    m = m_gold.clone();
+                    #if ABFT_ON
+                        mCcheck = mCcheck_gold.clone();
+                        mRcheck = mRcheck_gold.clone();
+                    #endif
+                }
+            #endif
             #if ABFT_ON
                 
                 bool kernel_good = abft_check(m,mRcheck,mCcheck, false, stats);
@@ -613,7 +625,6 @@ Mat Harris::gaussFilter(Mat& img, int range) {
 
             }
             #if INJECT_FAULTS
-                // TODO : reset kernel every 20-25 cycles to simulate transient faults
                 fi.setBHP(2e-5); // TODO: update bhp
                 fi.inject(m);
                 #if ABFT_ON
@@ -642,7 +653,7 @@ Mat Harris::gaussFilter(Mat& img, int range) {
         for(int r=range; r<img.rows-range; r++)
         {
             #if INJECT_FAULTS
-                if (r%115 == 0)
+                if (r%250 == 0)
                 {
                     // reset m to simulate transient faults
                     m = m_gold.clone();

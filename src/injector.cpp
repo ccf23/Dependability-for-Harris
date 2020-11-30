@@ -14,26 +14,30 @@
 #include <time.h>
 #include <random>
 
-injector::injector(INJECTOR_MODE_TYPE mode = NONE, double bhp = 0)
+injector::injector(INJECTOR_MODE_TYPE mode = NONE, long double bhp = 0.0)
 {
+    
     tic();
-    setBHP(bhp);
     default_mode = mode;
     injections = 0;
     total_time = 0;
 
     std::srand(time(NULL)); // seed 
     toc();
+    setBHP(bhp);
 }
 
-void injector::setBHP(double bhp)
+void injector::setBHP(long double bhp)
 {
     tic();
+
     std::default_random_engine generator;
     generator.seed(std::rand());
-    std::normal_distribution<double> distribution(bhp, 2e-6);
+    std::normal_distribution<long double> distribution(bhp, 2e-6);
 
     bit_hit_prob = distribution(generator);
+    
+    //bit_hit_prob = bhp;
     toc();
 }
 
