@@ -41,6 +41,9 @@ public:
     // change bit hit probability
     void setBHP(double bhp);
 
+    // returns current number of total bit injections performed
+    unsigned long int getInjections();
+
     // injects faults into arbitrary c++ data type with mode specified
     template <typename T> void inject(T &data, INJECTOR_MODE_TYPE mode);
 

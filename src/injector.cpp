@@ -37,6 +37,11 @@ void injector::setBHP(double bhp)
     toc();
 }
 
+unsigned long int injector::getInjections()
+{
+    return injections;
+}
+
 template <typename T> void injector::inject(T &data, INJECTOR_MODE_TYPE mode)
 {
     tic();

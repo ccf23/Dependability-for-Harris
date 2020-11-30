@@ -287,6 +287,11 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
         }
 
     }
+
+
+    // injections are finished here, store number of total injections
+    stats.injections = fi.getInjections();
+
     return topPoints;
 }
 

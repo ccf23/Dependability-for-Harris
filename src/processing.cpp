@@ -136,7 +136,8 @@ void processing::log(runStats stats, std::string filename, bool benchmark)
          << stats.abft.gaussLoopResets << ","\
          << stats.abft.responseLoopResets << ","\
          << stats.abft.gDerivativeRuns << ","\
-         << stats.abft.correctedErrors << "," <<endl;
+         << stats.abft.correctedErrors << "," \
+         << stats.injections <<endl;
     
     fout.close();   
 }

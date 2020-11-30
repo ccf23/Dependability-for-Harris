@@ -48,6 +48,9 @@ typedef struct runStats {
     featureStats features;
     timingStats timing;
     abftStats abft;
+    uint64_t injections;
+
+    runStats():injections(0){}
 } runStats;
 
 class processing

@@ -31,11 +31,10 @@ void doHarris(std::string filename, bool benchmark) {
     auto t_after = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(t_after - t_before);
 
-    // get stats struct from harris
-    runStats stats = harris.getStats();
-
+    uint harris_time, feat_select_time;
+    harris_time = feat_select_time = 0;
     #if DATA_COLLECTION_MODE
-        stats.timing.harris = duration.count();
+        harris_time = duration.count();
     #else
         cout << "Total time to compute Harris: " << duration.count()/1000 << " ms" << endl;
     #endif
@@ -47,11 +46,16 @@ void doHarris(std::string filename, bool benchmark) {
     t_after = high_resolution_clock::now();
     duration = duration_cast<microseconds>(t_after - t_before);
     #if DATA_COLLECTION_MODE
-        stats.timing.features = duration.count();
+        feat_select_time = duration.count();
     #else
         cout << "Total time to get vector of points: " << duration.count()/1000 << " ms" << endl;
         cout << "Features Detected: "<<resPts.size()<<endl;
     #endif
+
+    // get stats struct from harris
+    runStats stats = harris.getStats();
+    stats.timing.features = feat_select_time;
+    stats.timing.harris = harris_time;
 
     if (benchmark)
     {
