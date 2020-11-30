@@ -138,6 +138,7 @@ Harris::Harris(Mat img, float k, int filterRange)
 
     // (3) Gaussian Filtering
     t_start = high_resolution_clock::now();
+
 #if THREADS_ON
     Derivatives mDerivatives = runParallel_applyToDerivatives(derivatives, filterRange);
 #else
@@ -254,8 +255,9 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
     int supRows = m_harrisResponses.rows - 1;
     int supCols = m_harrisResponses.cols - 1;
     #if ASSERTIONS_ON
-      int rPrev = -suppressionRadius-1;
-      int cPrev = -suppressionRadius-1;
+      int rPrev = -suppressionRadius-1; //seed for loop
+      int cPrev = -suppressionRadius-1; //seed for loop
+      int suppLimit = suppressionRadius;// ends for loop
     #endif
 
     for (int i = 0; i < numberTopPoints; ++i)
@@ -266,13 +268,19 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
             for (int r = -suppressionRadius; r <= suppressionRadius; r++)
             {
               #if ASSERTIONS_ON
-                r = rPrev +1;
+                if (r< suppLimit)
+                {
+                  r = rPrev +1;
+                }
               #endif
 
                 for (int c = -suppressionRadius; c <= suppressionRadius; c++)
                 {
                   #if ASSERTIONS_ON
-                    c = rPrev +1;
+                    if (r< suppLimit)
+                    {
+                      c = rPrev +1;
+                    }
                   #endif
 
                     int sx = points[i].point.x+c;
@@ -298,6 +306,9 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
                 #endif
             }
             // Convert back to original image coordinate system
+            #if ASSERTIONS_ON
+              filterRange = 3;
+            #endif
             points[i].point.x += 1 + filterRange;
             points[i].point.y += 1 + filterRange;
             topPoints.push_back(points[i]);
@@ -355,11 +366,14 @@ Mat Harris::convertRgbToGrayscale(Mat &img)
 //-----------------------------------------------------------------------------------------------
 Derivatives Harris::applyGaussToDerivatives(Derivatives &dMats, int filterRange)
 {
-    if (filterRange == 0)
-        return dMats;
+  #if ASSERTIONS_ON
+    filterRange = 3;
+  #endif
+  if (filterRange == 0)
+      return dMats;
 
-    Derivatives mdMats;
-    Derivatives mdMats_gold;
+  Derivatives mdMats;
+  Derivatives mdMats_gold;
 
 
     mdMats_gold.Ix = gaussFilter(dMats.Ix, filterRange);
