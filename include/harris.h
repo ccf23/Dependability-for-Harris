@@ -22,7 +22,7 @@ using namespace cv;
 #define THREADS_ON 				    	false
 #define HAMMING_ON         	  			false
 
-#define INJECT_FAULTS			    	true
+#define INJECT_FAULTS			    	false
 
 #define DATA_COLLECTION_MODE 			true	// enable this for logging and to disable printing to std::out
 
