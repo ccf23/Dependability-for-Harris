@@ -17,18 +17,20 @@
 using namespace std;
 using namespace cv;
 
-#define ASSERTIONS_ON 			  false
-#define ABFT_ON 				      true
-#define THREADS_ON 				    false
-#define HAMMING_ON         	  false
+#define ASSERTIONS_ON 			  		false
+#define ABFT_ON 				      	false
+#define THREADS_ON 				    	false
+#define HAMMING_ON         	  			false
 
-#define INJECT_FAULTS			    true
+#define INJECT_FAULTS			    	false
 
-#define DATA_COLLECTION_MODE 	false	// enable this for logging and to disable printing to std::out
+#define DATA_COLLECTION_MODE 			true	// enable this for logging and to disable printing to std::out
 
-#define POSITION_RANGE			  5		// range for points in processing::process()
+#define POSITION_RANGE			  		5		// range for points in processing::process()
 
-#define LOCAL 					      false	// set to true to allow for visual test on local machine
+#define THREADS_NUM_FAULTS_TOLERATED 	700000	// Number of faults in image that threading will tolerate
+
+#define LOCAL 					      	false	// set to true to allow for visual test on local machine
 
 #if ASSERTIONS_ON
 
@@ -55,6 +57,7 @@ private:
 	Derivatives runParallel_computeDerivatives(Mat& greyscaleImg);
 	Derivatives runParallel_applyToDerivatives(Derivatives& dMats, int filterRange);
 	Mat runParallel_computeHarrisResponses(float k, Derivatives& mDerivatives);
+	bool withinPixelDiffTolerance(Mat mat1, Mat mat2);
 #endif
 
 	Mat gaussFilter(Mat& img, int range);
