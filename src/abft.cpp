@@ -103,7 +103,7 @@ bool abft_addChecksums(Mat img, Mat &rCheck, Mat &cCheck)
 
 bool abft_check(Mat &img, Mat &rCheck, Mat &cCheck, bool useThresh, runStats &stats)
 {
-    abft_check(img, rCheck, cCheck, useThresh, maxErrorLimit, stats);
+    return abft_check(img, rCheck, cCheck, useThresh, maxErrorLimit, stats);
 }
 
 bool abft_check(Mat &img, Mat &rCheck, Mat &cCheck, bool useThresh,int errThresh, runStats &stats)
