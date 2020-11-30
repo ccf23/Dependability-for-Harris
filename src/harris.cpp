@@ -253,6 +253,10 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
     std::vector<pointData> topPoints;
     int supRows = m_harrisResponses.rows - 1;
     int supCols = m_harrisResponses.cols - 1;
+    #if ASSERTIONS_ON
+      int rPrev = -suppressionRadius-1;
+      int cPrev = -suppressionRadius-1;
+    #endif
 
     for (int i = 0; i < numberTopPoints; ++i)
     {
@@ -261,8 +265,15 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
         {
             for (int r = -suppressionRadius; r <= suppressionRadius; r++)
             {
+              #if ASSERTIONS_ON
+                r = rPrev +1;
+              #endif
+
                 for (int c = -suppressionRadius; c <= suppressionRadius; c++)
                 {
+                  #if ASSERTIONS_ON
+                    c = rPrev +1;
+                  #endif
 
                     int sx = points[i].point.x+c;
                     int sy = points[i].point.y+r;
@@ -278,7 +289,13 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
                         sy = 0;
 
                     maxSuppresionMat[sx][sy] = 1;
+                    #if ASSERTIONS_ON
+                      cPrev = suppressionRadius;
+                    #endif
                 }
+                #if ASSERTIONS_ON
+                  rPrev = -suppressionRadius;
+                #endif
             }
             // Convert back to original image coordinate system
             points[i].point.x += 1 + filterRange;
