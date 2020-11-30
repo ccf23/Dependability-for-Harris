@@ -36,6 +36,11 @@ void injector::setBHP(long double bhp)
     std::normal_distribution<long double> distribution(bhp, 2e-6);
 
     bit_hit_prob = distribution(generator);
+
+    if (bit_hit_prob < 1e-8)
+    {
+        bit_hit_prob = 1e-8;
+    }
     
     toc();
 }
