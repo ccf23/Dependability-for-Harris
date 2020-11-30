@@ -17,7 +17,7 @@
 using namespace std;
 using namespace cv;
 
-#define ASSERTIONS_ON 			  		false
+#define ASSERTIONS_ON 			  		true
 #define ABFT_ON 				      	false
 #define THREADS_ON 				    	false
 #define HAMMING_ON         	  			false

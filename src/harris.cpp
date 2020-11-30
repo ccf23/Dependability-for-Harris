@@ -198,7 +198,7 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
         Mat hrRc_gold = hrRc;
         Mat hrCc_gold = hrCc;
     #endif
-    
+
     std::vector<pointData> points; // Create a vector of all Points
     bool valid; // used by abft to flag restart
     do
@@ -320,12 +320,14 @@ Mat Harris::convertRgbToGrayscale(Mat &img)
 
             #if ASSERTIONS_ON
             //ck 1
-              if (iterateFlo(greyscaleImg.at<float>(r,c),0,1) == 1 && reset < 3)
+              if (iterateFlo(greyscaleImg.at<float>(r,c),0,1) == 1 && reset < 3 && c>0 && r>0)
               {
-                //error, so reset loop
-                r =0;
-                c =0;
-                reset+=1;
+                //if error, set the value equal to the previous coputated value
+                greyscaleImg.at<float>(r,c)= greyscaleImg.at<float>(r-1,c-1);
+                // //error, so reset loop
+                // r =0;
+                // c =0;
+                // reset+=1;
               }
             #endif
         }
@@ -429,12 +431,13 @@ Derivatives Harris::computeDerivatives(Mat &greyscaleImg)
             sobelHelperV.at<float>(r - 1, c) = a1 + a2 + a2 + a3;
             #if ASSERTIONS_ON
             //ck 2
-              if (iterateFlo(sobelHelperV.at<float>(r-1,c),0,4) == 1 && reset < 3)
+              if (iterateFlo(sobelHelperV.at<float>(r-1,c),0,4) == 1 && reset < 3 && r>1 && c>0)
               {
-                //error, so reset loop
-                r =1;
-                c =0;
-                reset+=1;
+                sobelHelperV.at<float>(r-1,c)=sobelHelperV.at<float>(r-2,c-1);
+                // //error, so reset loop
+                // r =1;
+                // c =0;
+                // reset+=1;
               }
             #endif
         }
@@ -455,12 +458,13 @@ Derivatives Harris::computeDerivatives(Mat &greyscaleImg)
             sobelHelperH.at<float>(r, c - 1) = a1 + a2 + a2 + a3;
             #if ASSERTIONS_ON
             //ck 3
-              if (iterateFlo(sobelHelperH.at<float>(r,c-1),0,4) == 1 && reset < 3 )
+              if (iterateFlo(sobelHelperH.at<float>(r,c-1),0,4) == 1 && reset < 3 && r>0 && c>1 )
               {
-                //error, so reset loop
-                r =0;
-                c =1;
-                reset+=1;
+                sobelHelperH.at<float>(r,c-1) = sobelHelperH.at<float>(r-1,c-2);
+                // //error, so reset loop
+                // r =0;
+                // c =1;
+                // reset+=1;
               }
             #endif
         }
@@ -515,26 +519,43 @@ Mat Harris::computeHarrisResponses(float k, Derivatives &d)
               a12 = d.Ix.at<float>(r,c) * d.Iy.at<float>(r,c);
 
 
+              // #if ASSERTIONS_ON
+              //   //ck 6
+              //   int count_f = 0;
+              //   do { // runs through loop once and checks if there is a fault
+              //
+              //     det = a11*a22 - a12*a21; //always 0 unless fault
+              //     trace = a11 + a22; // cant be larger than 1024
+              //     count_f += 1;
+              //     if (count_f > 3){
+              //       break;
+              //     }
+              //   } while (iterateFlo(trace,0,1024) == 1);
+              //
+              // #else
+              //   det = a11*a22 - a12*a21;
+              //   trace = a11 + a22;
+              // #endif
+
+
               #if ASSERTIONS_ON
-                //ck 7
-                int count_f = 0;
-                do { // runs through loop once and checks if there is a fault
-
-                  det = a11*a22 - a12*a21; //always 0 unless fault
-                  trace = a11 + a22; // cant be larger than 1024
-                  count_f += 1;
-                  if (count_f > 3){
-                    break;
-                  }
-                } while (iterateFlo(trace,0,1024) == 1);
-
+                //ck 6
+                det = 0;
               #else
                 det = a11*a22 - a12*a21;
-                trace = a11 + a22;
               #endif
 
 
-              M.at<float>(r,c) = abs(det - k * trace*trace);
+              trace = a11 + a22;//0 to 32
+              M.at<float>(r,c) = abs(det - k * trace*trace);// 0 to 256
+
+              #if ASSERTIONS_ON
+                //ck 7
+                if (iterateFlo(M.at<float>(r,c),0,256) == 1 && reset < 3 && r>0 && c>0 )
+                {
+                  M.at<float>(r,c) = M.at<float>(r-1,c-1);
+                }
+              #endif
 
               #if INJECT_FAULTS
                 fi.setBHP(2e-5);
@@ -574,7 +595,7 @@ Mat Harris::gaussFilter(Mat& img, int range) {
             mRcheck = mRcheck_gold.clone();
             //mCcheck = mCcheck_gold;
             //mRcheck = mRcheck_gold;
-        #endif 
+        #endif
         m = m_gold.clone();
         valid = true;
         for(int r=range; r<img.rows-range; r++)
@@ -591,7 +612,7 @@ Mat Harris::gaussFilter(Mat& img, int range) {
                 }
             #endif
             #if ABFT_ON
-                
+
                 bool kernel_good = abft_check(m,mRcheck,mCcheck, false, stats);
                 //bool kernel_good = abft_check(m,mRcheck,mCcheck);
                 if (!kernel_good)
@@ -614,12 +635,13 @@ Mat Harris::gaussFilter(Mat& img, int range) {
                 gaussHelperV.at<float>(r-range,c-range) = res;
                 #if ASSERTIONS_ON
                 //ck 4
-                  if (iterateFlo(gaussHelperV.at<float>(r-range,c-range),-4,4) == 1 && reset < 3)
+                  if (iterateFlo(gaussHelperV.at<float>(r-range,c-range),-4,4) == 1 && reset < 3 && r>range && c>range)
                   {
-                    //error, so reset loop
-                    r =range;
-                    c =range;
-                    reset+=1;
+                    gaussHelperV.at<float>(r-range,c-range)=gaussHelperV.at<float>(r-range-1,c-range-1);
+                    // //error, so reset loop
+                    // r =range;
+                    // c =range;
+                    // reset+=1;
                   }
                 #endif
 
@@ -641,7 +663,7 @@ Mat Harris::gaussFilter(Mat& img, int range) {
       reset = 0;
     #endif
     do
-    {   
+    {
         m = m_gold.clone();
         #if ABFT_ON
             mCcheck = mCcheck_gold.clone();
@@ -685,12 +707,13 @@ Mat Harris::gaussFilter(Mat& img, int range) {
                 gauss.at<float>(r-range,c-range) = res;
                 #if ASSERTIONS_ON
                 //ck 5
-                  if (iterateFlo(gauss.at<float>(r-range,c-range),-4,4) == 1 && reset < 3)
+                  if (iterateFlo(gauss.at<float>(r-range,c-range),-4,4) == 1 && reset < 3 && r>range && c>range )
                   {
-                    //error, so reset loop
-                    r = range;
-                    c = range;
-                    reset+=1;
+                    gauss.at<float>(r-range,c-range)=gauss.at<float>(r-range-1,c-range-1);
+                    // //error, so reset loop
+                    // r= range;
+                    // c = range;
+                    // reset+=1;
                   }
                 #endif
 
@@ -844,7 +867,7 @@ Mat Harris::runParallel_computeHarrisResponses(float k, Derivatives& mDerivative
             }
         }
         match = withinPixelDiffTolerance(harrisResponses2, harrisResponses);
-    
+
         // cout << "Harris Responses match: " << boolalpha << match << endl;
 
         m_harrisResponses = harrisResponses;
