@@ -307,6 +307,7 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
                         //cout<< "      "<< rPrev <<endl;
                         cPrev= c;
                     #endif
+
                 }
 
             }
