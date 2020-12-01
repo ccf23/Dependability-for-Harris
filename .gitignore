@@ -1,6 +1,7 @@
 /build
 /build_local
 .vscode/
+/images
 
 scp_harris_header.sh
 scp_source.sh
