@@ -131,7 +131,8 @@ void processing::log(runStats stats, std::string filename, bool benchmark)
              << "INJECT_FAULTS," \
              << "DATA_COLLECTION_MODE," \
              << "POSITION_RANGE," \
-             << "THREADS_NUM_FAULTS_TOLERATED," \
+             << "THREADS_NUM_FAULTS_TOLERATED_HIGH," \
+             << "THREADS_NUM_FAULTS_TOLERATED_LOW," \
              << "LOCAL," \
              << "ABFT: greyscale runs," \
              << "ABFT: derivative runs," \
@@ -164,7 +165,8 @@ void processing::log(runStats stats, std::string filename, bool benchmark)
          << boolalpha << INJECT_FAULTS << "," \
          << boolalpha << DATA_COLLECTION_MODE << "," \
          << POSITION_RANGE << "," \
-         << THREADS_NUM_FAULTS_TOLERATED << "," \
+         << THREADS_NUM_FAULTS_TOLERATED_HIGH << "," \
+         << THREADS_NUM_FAULTS_TOLERATED_LOW << "," \
          << boolalpha << LOCAL << "," \
          << stats.abft.grayscaleRuns << "," \
          << stats.abft.derivativeRuns << "," \

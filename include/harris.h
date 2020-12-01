@@ -23,16 +23,17 @@ static unsigned long int get_maxima_fi_time = 0;
 
 #define ASSERTIONS_ON 			  		false
 #define ABFT_ON 				      	false
-#define THREADS_ON 				    	false
+#define THREADS_ON 				    	true
 #define HAMMING_ON         	  			false
 
 #define INJECT_FAULTS			    	false
 
-#define DATA_COLLECTION_MODE 			false	// enable this for logging and to disable printing to std::out
+#define DATA_COLLECTION_MODE 			true	// enable this for logging and to disable printing to std::out
 
 #define POSITION_RANGE			  		5		// range for points in processing::process()
 
-#define THREADS_NUM_FAULTS_TOLERATED 	700000	// Number of faults in image that threading will tolerate
+#define THREADS_NUM_FAULTS_TOLERATED_HIGH 	550000	// Number of faults in image that threading will tolerate
+#define THREADS_NUM_FAULTS_TOLERATED_LOW    850    
 
 #define LOCAL 					      	false	// set to true to allow for visual test on local machine
 
@@ -61,7 +62,7 @@ private:
 	Derivatives runParallel_computeDerivatives(Mat& greyscaleImg);
 	Derivatives runParallel_applyToDerivatives(Derivatives& dMats, int filterRange);
 	Mat runParallel_computeHarrisResponses(float k, Derivatives& mDerivatives);
-	bool withinPixelDiffTolerance(Mat mat1, Mat mat2);
+	bool withinPixelDiffTolerance(Mat mat1, Mat mat2, bool high_thresh);
 #endif
 
 	Mat gaussFilter(Mat& img, int range);

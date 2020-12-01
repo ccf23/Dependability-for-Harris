@@ -863,16 +863,23 @@ Mat Harris::gaussFilter(Mat& img, int range) {
 
 #if THREADS_ON
 
-bool Harris::withinPixelDiffTolerance(Mat mat1, Mat mat2)
+bool Harris::withinPixelDiffTolerance(Mat mat1, Mat mat2, bool high_thresh)
 {
     Mat diff;
 
     compare(mat1, mat2, diff, CMP_NE);
 
     int num_diff = countNonZero(diff);
-    // cout << "num diff pixels: " << num_diff << "\n";
+     cout << "num diff pixels: " << num_diff << "\n";
 
-    return (countNonZero(diff) <= THREADS_NUM_FAULTS_TOLERATED);
+    if (high_thresh)
+    {
+        return (countNonZero(diff) <= THREADS_NUM_FAULTS_TOLERATED_HIGH);
+    }
+    else
+    {
+        return (countNonZero(diff) <= THREADS_NUM_FAULTS_TOLERATED_LOW);
+    }
 }
 
 Mat Harris::runParallel_convertRgbToGrayscale(Mat& img)
@@ -897,7 +904,7 @@ Mat Harris::runParallel_convertRgbToGrayscale(Mat& img)
         }
 
         // verify that they match within THREADS_NUM_FAULTS_TOLERATED pixels
-        match = withinPixelDiffTolerance(greyscaleImg2, greyscaleImg);
+        match = withinPixelDiffTolerance(greyscaleImg2, greyscaleImg, false);
         // cout << "Grayscale match: " << boolalpha << match << endl;
     }
 
@@ -931,9 +938,9 @@ Derivatives Harris::runParallel_computeDerivatives(Mat& greyscaleImg)
         }
 
         //verify match within THREADS_NUM_FAULTS_TOLERATED pixels
-        bool matchX = withinPixelDiffTolerance(derivatives2.Ix, derivatives.Ix);
-        bool matchY = withinPixelDiffTolerance(derivatives2.Iy, derivatives.Iy);
-        bool matchXY = withinPixelDiffTolerance(derivatives2.Ixy, derivatives.Ixy);
+        bool matchX = withinPixelDiffTolerance(derivatives2.Ix, derivatives.Ix, false);
+        bool matchY = withinPixelDiffTolerance(derivatives2.Iy, derivatives.Iy, false);
+        bool matchXY = withinPixelDiffTolerance(derivatives2.Ixy, derivatives.Ixy, false);
 
         match = matchX & matchY & matchXY;
 
@@ -965,9 +972,9 @@ Derivatives Harris::runParallel_applyToDerivatives(Derivatives& derivatives, int
         }
 
         //verify match
-        bool mMatchX = withinPixelDiffTolerance(mDerivatives2.Ix, mDerivatives.Ix);
-        bool mMatchY = withinPixelDiffTolerance(mDerivatives2.Iy, mDerivatives.Iy);
-        bool mMatchXY = withinPixelDiffTolerance(mDerivatives2.Ixy, mDerivatives.Ixy);
+        bool mMatchX = withinPixelDiffTolerance(mDerivatives2.Ix, mDerivatives.Ix, true);
+        bool mMatchY = withinPixelDiffTolerance(mDerivatives2.Iy, mDerivatives.Iy, true);
+        bool mMatchXY = withinPixelDiffTolerance(mDerivatives2.Ixy, mDerivatives.Ixy, true);
 
         match = mMatchX & mMatchY & mMatchXY;
 
@@ -994,7 +1001,7 @@ Mat Harris::runParallel_computeHarrisResponses(float k, Derivatives& mDerivative
                 harrisResponses2 = computeHarrisResponses(k,mDerivatives);
             }
         }
-        match = withinPixelDiffTolerance(harrisResponses2, harrisResponses);
+        match = withinPixelDiffTolerance(harrisResponses2, harrisResponses, false);
 
         // cout << "Harris Responses match: " << boolalpha << match << endl;
 
