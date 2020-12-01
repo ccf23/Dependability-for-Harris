@@ -16,15 +16,12 @@
 
 injector::injector(INJECTOR_MODE_TYPE mode = NONE, long double bhp = 0.0)
 {
-    
-    tic();
+    setBHP(bhp);
     default_mode = mode;
     injections = 0;
     total_time = 0;
 
     std::srand(time(NULL)); // seed 
-    toc();
-    setBHP(bhp);
 }
 
 void injector::setBHP(long double bhp)
@@ -128,7 +125,6 @@ void injector::inject(cv::Mat &data, INJECTOR_MODE_TYPE mode)
             int rowPos = std::rand() % rows;
             int colPos = std::rand() % cols;
 
-            toc();
             inject(data.at<float>(rowPos, colPos), SINGLE_DATA);
         }
         else if (mode == DOUBLE_DATA)
@@ -142,13 +138,11 @@ void injector::inject(cv::Mat &data, INJECTOR_MODE_TYPE mode)
                 colPos2 = std::rand() % cols;
             } while (colPos1 == colPos2 && rowPos1 == rowPos2);
 
-            toc(); //timing handled in inject
             inject(data.at<float>(rowPos1, colPos1), SINGLE_DATA);
             inject(data.at<float>(rowPos2, colPos2), SINGLE_DATA);
         }
         else if (mode == PROB_DATA)
         {
-            toc(); // assume looping is negligable wrt injection
             for (int r = 0; r < rows; ++r)
             {
                 for (int c = 0; c < cols; ++c)
@@ -158,7 +152,7 @@ void injector::inject(cv::Mat &data, INJECTOR_MODE_TYPE mode)
             }
         }
     }
-    
+    toc();
 }
 
 void injector::inject(cv::Mat &data)
@@ -209,6 +203,11 @@ unsigned long int injector::getTime(void)
 {
     return total_time;
 }
+
+void injector::clearTime(void)
+{
+    total_time = 0;
+} 
 
 // explicitly defines valid template types
 template void injector::inject<uint8_t>(uint8_t&);

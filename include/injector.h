@@ -59,15 +59,11 @@ public:
     // returns injection statistics as a string
     std::string stats(void);
 
-    // starts timing injector function
-    void tic(void);
-
-    // finish timing injector and add count to total_time
-    void toc(void);
-
-    // returns the current time expended by injector in us
-    unsigned long int getTime(void);
-
+    /* timing functions */
+    void tic(void);                     // starts timing injector function
+    void toc(void);                     // finish timing injector and add count to total_time
+    unsigned long int getTime(void);    // returns the current time expended by injector in us
+    void clearTime(void);               // clears total_time
 };
 
 #endif

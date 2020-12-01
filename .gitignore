@@ -2,3 +2,7 @@
 /build_local
 .vscode/
 /images
+
+scp_harris_header.sh
+scp_source.sh
+scp_to_lab.sh

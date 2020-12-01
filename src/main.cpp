@@ -17,6 +17,7 @@ using namespace std;
 Mat m_img;
 string filename;
 
+
 void doHarris(std::string filename, bool benchmark) {
     auto harris_before = high_resolution_clock::now();
     int boxFilterSize = 3;
@@ -35,21 +36,36 @@ void doHarris(std::string filename, bool benchmark) {
     harris_time = feat_select_time = 0;
     #if DATA_COLLECTION_MODE
         harris_time = duration.count();
+        #if INJECT_FAULTS
+            harris_time = harris_time - total_fi_time;
+        #endif
     #else
-        cout << "Total time to compute Harris: " << duration.count()/1000 << " ms" << endl;
+        #if INJECT_FAULTS
+            cout << "Total time to compute Harris - total_fi_time: " << (duration.count() -total_fi_time)/1000 << " ms" << endl;
+        #else
+            cout << "Total time to compute Harris: " << duration.count()/1000 << " ms" << endl;
+        #endif
     #endif
 
     // get vector of points wanted
     t_before = high_resolution_clock::now();
-
     vector<pointData> resPts = harris.getMaximaPoints(percentage, boxFilterSize, maximaSuppressionDimension);
     t_after = high_resolution_clock::now();
     duration = duration_cast<microseconds>(t_after - t_before);
     #if DATA_COLLECTION_MODE
         feat_select_time = duration.count();
+
+        #if INJECT_FAULTS
+            feat_select_time = feat_select_time - get_maxima_fi_time;
+        #endif
     #else
-        cout << "Total time to get vector of points: " << duration.count()/1000 << " ms" << endl;
-        cout << "Features Detected: "<<resPts.size()<<endl;
+        #if INJECT_FAULTS
+            cout << "Total time to get vector of points - get_maxima_fi_time: " << (duration.count() - get_maxima_fi_time)/1000 << " ms" << endl;
+            cout << "Features Detected: "<<resPts.size()<<endl;
+        #else
+            cout << "Total time to get vector of points: " << duration.count()/1000 << " ms" << endl;
+            cout << "Features Detected: "<<resPts.size()<<endl;
+        #endif
     #endif
 
     // get stats struct from harris
@@ -101,8 +117,16 @@ void doHarris(std::string filename, bool benchmark) {
 
     #if DATA_COLLECTION_MODE
         stats.timing.total = duration.count();
+
+        #if INJECT_FAULTS
+            stats.timing.response = stats.timing.response - total_fi_time;
+        #endif
     #else
-        cout << "Total execution time: " << duration.count()/1000 << " ms" << endl;
+        #if INJECT_FAULTS
+            cout << "Total execution time - total_fi_time: " << (duration.count() - total_fi_time)/1000 << " ms" << endl;
+        #else
+            cout << "Total execution time: " << duration.count()/1000 << " ms" << endl;
+        #endif
     #endif
 
     #if DATA_COLLECTION_MODE
