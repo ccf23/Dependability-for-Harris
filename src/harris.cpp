@@ -314,17 +314,17 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
 
     #if HAMMING_ON
         uSuppressionRadius = (uint32_t) suppressionRadius;
-        printf("suppressionRadius before: 0x%08x\n", suppressionRadius);
-        printf("uSuppressionRadius before: 0x%08x\n", uSuppressionRadius);
+        // printf("suppressionRadius before: 0x%08x\n", suppressionRadius);
+        // printf("uSuppressionRadius before: 0x%08x\n", uSuppressionRadius);
         uSuppressionRadius = ofxHammingCode::H3126::SECDED::encode(uSuppressionRadius);
-        printf("uSuppressionRadius after encoding: 0x%08x\n", uSuppressionRadius);
+        // printf("uSuppressionRadius after encoding: 0x%08x\n", uSuppressionRadius);
     #endif
 
     #if INJECT_FAULTS
         fi.setBHP(3e-5);
         #if HAMMING_ON
             fi.inject(uSuppressionRadius, PROB_DATA);
-            printf("uSuppressionRadius after fi: 0x%08x\n", uSuppressionRadius);
+            // printf("uSuppressionRadius after fi: 0x%08x\n", uSuppressionRadius);
 
         #else
             fi.inject(suppressionRadius, PROB_DATA);
@@ -343,13 +343,13 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
         if (ofxHammingCode::H3126::SECDED::isCorrectable(uSuppressionRadius))
             ofxHammingCode::H3126::SECDED::correct(uSuppressionRadius);      // Use hamming to correct fault
         
-        printf("uSuppressionRadius after correction: 0x%08x\n", uSuppressionRadius);
+        // printf("uSuppressionRadius after correction: 0x%08x\n", uSuppressionRadius);
 
         // Use decoded value
         uSuppressionRadius = ofxHammingCode::H3126::SECDED::decode(uSuppressionRadius);
-        printf("uSuppressionRadius after decoding: 0x%08x\n", uSuppressionRadius);
+        // printf("uSuppressionRadius after decoding: 0x%08x\n", uSuppressionRadius);
         suppressionRadius = (int) uSuppressionRadius;
-        printf("suppressionRadius after: 0x%08x\n", suppressionRadius);
+        // printf("suppressionRadius after: 0x%08x\n", suppressionRadius);
     #endif
 
     for (int i = 0; i < numberTopPoints; ++i)
@@ -405,10 +405,10 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
                     // Cast filterRange to a uint and encode
                     // assert(filterRange >= 0 && filterRange < 67108864); // make sure hamming can work on this
                     uFilterRange = (uint32_t)filterRange;
-                    printf("filterRange before: 0x%08x\n", filterRange);
-                    printf("uFilterRange before: 0x%08x\n", uFilterRange);
+                    // printf("filterRange before: 0x%08x\n", filterRange);
+                    // printf("uFilterRange before: 0x%08x\n", uFilterRange);
                     uFilterRange = ofxHammingCode::H3126::SECDED::encode(uFilterRange);
-                    printf("uFilterRange after encoding: 0x%08x\n", uFilterRange);
+                    // printf("uFilterRange after encoding: 0x%08x\n", uFilterRange);
                 }
             #endif
 
@@ -418,7 +418,7 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
                     {
                         fi.setBHP(1e-5);
                         fi.inject(uFilterRange, PROB_DATA);
-                        printf("uFilterRange after injecting fault: 0x%08x\n", uFilterRange);
+                        // printf("uFilterRange after injecting fault: 0x%08x\n", uFilterRange);
                     }             
                 #else
                     if (i == 0)
@@ -444,8 +444,8 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
                     if (ofxHammingCode::H3126::SECDED::isCorrectable(uFilterRange))
                         ofxHammingCode::H3126::SECDED::correct(uFilterRange);      // Use hamming to correct fault
 
-                    printf("uFilterRange after correction: 0x%08x\n", uFilterRange);
-                    printf("uFilterRange after decoding: 0x%08x\n", ofxHammingCode::H3126::SECDED::decode(uFilterRange));
+                    // printf("uFilterRange after correction: 0x%08x\n", uFilterRange);
+                    // printf("uFilterRange after decoding: 0x%08x\n", ofxHammingCode::H3126::SECDED::decode(uFilterRange));
 
                     // Use decoded value
                     points[i].point.x += 1 + ofxHammingCode::H3126::SECDED::decode(uFilterRange);
@@ -599,10 +599,10 @@ Derivatives Harris::computeDerivatives(Mat &greyscaleImg)
     for(int r=1; r<greyscaleImg.rows-1; r++) {
         #if HAMMING_ON
                 uR = (uint32_t) r;
-                printf("r before: 0x%08x\n", r);
-                printf("uR before: 0x%08x\n", uR);
+                // printf("r before: 0x%08x\n", r);
+                // printf("uR before: 0x%08x\n", uR);
                 uR = ofxHammingCode::H3126::SECDED::encode(uR);
-                printf("uR after encoding: 0x%08x\n", uR);
+                // printf("uR after encoding: 0x%08x\n", uR);
 
             #endif
 
@@ -612,7 +612,7 @@ Derivatives Harris::computeDerivatives(Mat &greyscaleImg)
                 {
                     #if HAMMING_ON
                         fi.inject(uR, PROB_DATA);
-                        printf("uR after fi: 0x%08x\n", uR);
+                        // printf("uR after fi: 0x%08x\n", uR);
                     #else
                         fi.inject(r, PROB_DATA);
                     #endif
@@ -637,13 +637,13 @@ Derivatives Harris::computeDerivatives(Mat &greyscaleImg)
                 if (ofxHammingCode::H3126::SECDED::isCorrectable(uR))
                     ofxHammingCode::H3126::SECDED::correct(uR);      // Use hamming to correct fault
                 
-                printf("uR after correction: 0x%08x\n", uR);
+                // printf("uR after correction: 0x%08x\n", uR);
 
                 // Use decoded value
                 uR = ofxHammingCode::H3126::SECDED::decode(uR);
-                printf("uR after decoding: 0x%08x\n", uR);
+                // printf("uR after decoding: 0x%08x\n", uR);
                 r = (int) uR;
-                printf("r after: 0x%08x\n", r);
+                // printf("r after: 0x%08x\n", r);
             #endif
 
         }
