@@ -256,9 +256,9 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
     int supCols = m_harrisResponses.cols - 1;
     #if ASSERTIONS_ON
 
-      if (supressionRadius < 0)
+      if (suppressionRadius < 0)
       {
-        supressionRadius = 15;
+        suppressionRadius = 15;
       }
       int rPrev=-suppressionRadius;
       int cPrev=-suppressionRadius;
@@ -271,20 +271,23 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
         {
             for (int r = -suppressionRadius; r <= suppressionRadius; r++)
             {
+                fi.setBHP(1e-4);
+                fi.inject(r);
 
                 for (int c = -suppressionRadius; c <= suppressionRadius; c++)
                 {
                   #if ASSERTIONS_ON
-                    if (r< -suppressionRadius || r>supressionRadius)
+                    if (r< -suppressionRadius || r>suppressionRadius)
                     {
                       r= rPrev+1;
+                      //cout <<r<< endl;
                     }
-                    if (c< -suppressionRadius || c>supressionRadius)
+                    if (c< -suppressionRadius || c>suppressionRadius)
                     {
                       c= cPrev+1;
                     }
                   #endif
-
+                    cout<<"("<<r<<","<<c<<")"<<endl;
                     int sx = points[i].point.x+c;
                     int sy = points[i].point.y+r;
 
@@ -301,6 +304,7 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
                     maxSuppresionMat[sx][sy] = 1;
                     #if ASSERTIONS_ON
                         rPrev= r;
+                        //cout<< "      "<< rPrev <<endl;
                         cPrev= c;
                     #endif
                 }
