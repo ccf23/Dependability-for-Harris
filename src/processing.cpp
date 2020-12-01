@@ -108,6 +108,40 @@ void processing::log(runStats stats, std::string filename, bool benchmark)
         exit(0);
     }
 
+    // if this is the benchmark run then print the headers out
+    if (benchmark)
+    {
+        fout << "greyscale time,"  \
+             << "derivative time," \
+             << "filtering time,"  \
+             << "Harris response time," \
+             << "harris time," \
+             << "get features time," \
+             << "derivative time," \
+             << "bench features," \
+             << "test features," \
+             << "matching features," \
+             << "missing features," \
+             << "false features," \
+             << "benchmark run," \
+             << "ABFT_ON," \
+             << "ASSERTIONS_ON," \
+             << "THREADS_ON," \
+             << "HAMMING_ON," \
+             << "INJECT_FAULTS," \
+             << "DATA_COLLECTION_MODE," \
+             << "POSITION_RANGE," \
+             << "THREADS_NUM_FAULTS_TOLERATED," \
+             << "LOCAL," \
+             << "ABFT: greyscale runs," \
+             << "ABFT: derivative runs," \
+             << "ABFT: gauss filter runs," \
+             << "ABFT: response resets," \
+             << "ABFT: corrected errors," \
+             << "faults injected"<<endl;
+    }
+
+
     // write out stats to file stream in csv format
     fout << stats.timing.greyscale << ","   \
          << stats.timing.derivatives << "," \

@@ -24,7 +24,7 @@ using namespace cv;
 
 #define INJECT_FAULTS			    	true
 
-#define DATA_COLLECTION_MODE 			false	// enable this for logging and to disable printing to std::out
+#define DATA_COLLECTION_MODE 			true	// enable this for logging and to disable printing to std::out
 
 #define POSITION_RANGE			  		5		// range for points in processing::process()
 
