@@ -67,9 +67,7 @@ Harris::Harris(Mat img, float k, int filterRange)
     #if INJECT_FAULTS
         auto fi_time = fi.getTime();
         fi.clearTime();
-        cout << "greyscale time before removing fi: " << duration.count() / 1000 << " ms" << endl;
-        cout << "fi_time: " << fi_time << "\n";
-        cout << "greyscale time after removing fi: " << (duration.count() - fi_time) / 1000 << " ms" << endl;
+        cout << "Time to convert to greyscale image - fi_time " << (duration.count() - fi_time) / 1000 << " ms" << endl;
     #else 
         cout << "Time to convert to greyscale image: " << duration.count() / 1000 << " ms" << endl;
     #endif
