@@ -23,13 +23,8 @@ static unsigned long int get_maxima_fi_time = 0;
 
 #define ASSERTIONS_ON 			  		false
 #define ABFT_ON 				      	false
-<<<<<<< HEAD
-#define THREADS_ON 				    	true
-#define HAMMING_ON         	  			false
-=======
 #define THREADS_ON 				    	false
-#define HAMMING_ON         	  			true
->>>>>>> 32d54cae017d885db8496ce2ed802eb159d42b72
+#define HAMMING_ON         	  			false
 
 #define INJECT_FAULTS			    	true
 
