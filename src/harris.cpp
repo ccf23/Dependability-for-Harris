@@ -271,12 +271,16 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
         {
             for (int r = -suppressionRadius; r <= suppressionRadius; r++)
             {
+                // fi.setBHP(1e-4);
+                // fi.inject(r);
+
                 for (int c = -suppressionRadius; c <= suppressionRadius; c++)
                 {
                   #if ASSERTIONS_ON
                     if (r< -suppressionRadius || r>suppressionRadius)
                     {
-                      r= rPrev + 1;
+                      r= rPrev+1;
+                      //cout <<r<< endl;
                     }
                     if (c< -suppressionRadius || c>suppressionRadius)
                     {
@@ -299,8 +303,9 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
 
                     maxSuppresionMat[sx][sy] = 1;
                     #if ASSERTIONS_ON
-                        (r != suppressionRadius ? rPrev = r : rPrev = 0);
-                        (c != suppressionRadius ? cPrev = c : cPrev = 0);
+                        rPrev= r;
+                        //cout<< "      "<< rPrev <<endl;
+                        cPrev= c;
                     #endif
 
                 }
@@ -461,17 +466,18 @@ Derivatives Harris::computeDerivatives(Mat &greyscaleImg)
             float a3 = greyscaleImg.at<float>(r + 1, c);
 
             sobelHelperV.at<float>(r - 1, c) = a1 + a2 + a2 + a3;
+
             #if ASSERTIONS_ON
             //ck 2
               if (iterateFlo(sobelHelperV.at<float>(r-1,c),0,4) == 1 && reset < 3 && r>1 && c>0)
               {
+
                 sobelHelperV.at<float>(r-1,c)=sobelHelperV.at<float>(r-2,c-1);
-                // //error, so reset loop
-                // r =1;
-                // c =0;
-                // reset+=1;
+
+
               }
             #endif
+
         }
     }
     // Horizontal
@@ -488,15 +494,13 @@ Derivatives Harris::computeDerivatives(Mat &greyscaleImg)
             float a3 = greyscaleImg.at<float>(r, c + 1);
 
             sobelHelperH.at<float>(r, c - 1) = a1 + a2 + a2 + a3;
+
             #if ASSERTIONS_ON
             //ck 3
               if (iterateFlo(sobelHelperH.at<float>(r,c-1),0,4) == 1 && reset < 3 && r>0 && c>1 )
               {
                 sobelHelperH.at<float>(r,c-1) = sobelHelperH.at<float>(r-1,c-2);
-                // //error, so reset loop
-                // r =0;
-                // c =1;
-                // reset+=1;
+
               }
             #endif
         }
@@ -551,25 +555,6 @@ Mat Harris::computeHarrisResponses(float k, Derivatives &d)
               a12 = d.Ix.at<float>(r,c) * d.Iy.at<float>(r,c);
 
 
-              // #if ASSERTIONS_ON
-              //   //ck 6
-              //   int count_f = 0;
-              //   do { // runs through loop once and checks if there is a fault
-              //
-              //     det = a11*a22 - a12*a21; //always 0 unless fault
-              //     trace = a11 + a22; // cant be larger than 1024
-              //     count_f += 1;
-              //     if (count_f > 3){
-              //       break;
-              //     }
-              //   } while (iterateFlo(trace,0,1024) == 1);
-              //
-              // #else
-              //   det = a11*a22 - a12*a21;
-              //   trace = a11 + a22;
-              // #endif
-
-
               #if ASSERTIONS_ON
                 //ck 6
                 det = 0;
@@ -580,18 +565,19 @@ Mat Harris::computeHarrisResponses(float k, Derivatives &d)
 
               trace = a11 + a22;//0 to 32
               M.at<float>(r,c) = abs(det - k * trace*trace);// 0 to 256
-
-              #if ASSERTIONS_ON
-                //ck 7
-                if (iterateFlo(M.at<float>(r,c),0,256) == 1 && reset < 3 && r>0 && c>0 )
-                {
-                  M.at<float>(r,c) = M.at<float>(r-1,c-1);
-                }
-              #endif
+              //cout << M.at<float>(r,c)<<"good" <<endl;
 
               #if INJECT_FAULTS
                 fi.setBHP(2e-5);
                 fi.inject(M.at<float>(r,c));
+              #endif
+              #if ASSERTIONS_ON
+                //ck 7
+                if (iterateFlo(M.at<float>(r,c),0,51.2) == 1 && reset < 3 && r>0 && c>0 )
+                {
+                  M.at<float>(r,c) = M.at<float>(r-1,c-1);
+
+                }
               #endif
           }
       }
