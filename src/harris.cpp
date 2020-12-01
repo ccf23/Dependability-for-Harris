@@ -313,7 +313,11 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
             }
             // Convert back to original image coordinate system
             #if ASSERTIONS_ON
-              filterRange = 3;
+              if (filterRange<0)
+              {
+                filterRange = 3;
+              }
+
             #endif
             points[i].point.x += 1 + filterRange;
             points[i].point.y += 1 + filterRange;
@@ -373,7 +377,10 @@ Mat Harris::convertRgbToGrayscale(Mat &img)
 Derivatives Harris::applyGaussToDerivatives(Derivatives &dMats, int filterRange)
 {
   #if ASSERTIONS_ON
-    filterRange = 3;
+    if (filterRange<0)
+    {
+      filterRange = 3;
+    }
   #endif
   if (filterRange == 0)
       return dMats;
