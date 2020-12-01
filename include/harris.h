@@ -24,11 +24,11 @@ static unsigned long int get_maxima_fi_time = 0;
 #define ASSERTIONS_ON 			  		false
 #define ABFT_ON 				      	false
 #define THREADS_ON 				    	false
-#define HAMMING_ON         	  			false
+#define HAMMING_ON         	  			true
 
-#define INJECT_FAULTS			    	false
+#define INJECT_FAULTS			    	true
 
-#define DATA_COLLECTION_MODE 			false	// enable this for logging and to disable printing to std::out
+#define DATA_COLLECTION_MODE 			true	// enable this for logging and to disable printing to std::out
 
 #define POSITION_RANGE			  		5		// range for points in processing::process()
 
@@ -76,6 +76,7 @@ private:
 #if INJECT_FAULTS || HAMMING_ON
 	uint32_t uFilterRange;
 	uint32_t uSuppressionRadius;
+	uint32_t uR;
 #endif
 
 

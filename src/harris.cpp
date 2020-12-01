@@ -364,17 +364,17 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
 
                 for (int c = -suppressionRadius; c <= suppressionRadius; c++)
                 {
-                  #if ASSERTIONS_ON
-                    if (r< -suppressionRadius || r>suppressionRadius)
-                    {
-                      r= rPrev+1;
-                      //cout <<r<< endl;
-                    }
-                    if (c< -suppressionRadius || c>suppressionRadius)
-                    {
-                      c= cPrev+1;
-                    }
-                  #endif
+                //   #if ASSERTIONS_ON
+                //     if (r< -suppressionRadius || r>suppressionRadius)
+                //     {
+                //       r= rPrev+1;
+                //       //cout <<r<< endl;
+                //     }
+                //     if (c< -suppressionRadius || c>suppressionRadius)
+                //     {
+                //       c= cPrev+1;
+                //     }
+                //   #endif
                     //cout<<"("<<r<<","<<c<<")"<<endl;
                     int sx = points[i].point.x+c;
                     int sy = points[i].point.y+r;
@@ -390,10 +390,10 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
                         sy = 0;
 
                     maxSuppresionMat[sx][sy] = 1;
-                    #if ASSERTIONS_ON
-                        ((r != suppressionRadius) ? rPrev = r : rPrev = 0);
-                        ((c != suppressionRadius) ? cPrev = c : cPrev = 0);
-                    #endif
+                    // #if ASSERTIONS_ON
+                    //     ((r != suppressionRadius) ? rPrev = r : rPrev = 0);
+                    //     ((c != suppressionRadius) ? cPrev = c : cPrev = 0);
+                    // #endif
 
                 }
 
@@ -597,6 +597,27 @@ Derivatives Harris::computeDerivatives(Mat &greyscaleImg)
 
     // Vertical
     for(int r=1; r<greyscaleImg.rows-1; r++) {
+        #if HAMMING_ON
+                uR = (uint32_t) r;
+                printf("r before: 0x%08x\n", r);
+                printf("uR before: 0x%08x\n", uR);
+                uR = ofxHammingCode::H3126::SECDED::encode(uR);
+                printf("uR after encoding: 0x%08x\n", uR);
+
+            #endif
+
+            #if INJECT_FAULTS
+                fi.setBHP(1e-8);
+                if ((r % 100) == 0)
+                {
+                    #if HAMMING_ON
+                        fi.inject(uR, PROB_DATA);
+                        printf("uR after fi: 0x%08x\n", uR);
+                    #else
+                        fi.inject(r, PROB_DATA);
+                    #endif
+                }  
+            #endif
         for(int c=0; c<greyscaleImg.cols; c++) {
 
             float a1 = greyscaleImg.at<float>(r - 1, c);
@@ -611,6 +632,18 @@ Derivatives Harris::computeDerivatives(Mat &greyscaleImg)
               {
                 sobelHelperV.at<float>(r-1,c)=sobelHelperV.at<float>(r-2,c-1);
               }
+            #elif HAMMING_ON
+                // Correct bitflip if possible
+                if (ofxHammingCode::H3126::SECDED::isCorrectable(uR))
+                    ofxHammingCode::H3126::SECDED::correct(uR);      // Use hamming to correct fault
+                
+                printf("uR after correction: 0x%08x\n", uR);
+
+                // Use decoded value
+                uR = ofxHammingCode::H3126::SECDED::decode(uR);
+                printf("uR after decoding: 0x%08x\n", uR);
+                r = (int) uR;
+                printf("r after: 0x%08x\n", r);
             #endif
 
         }
