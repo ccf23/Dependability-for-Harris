@@ -57,8 +57,22 @@ Harris::Harris(Mat img, float k, int filterRange)
     auto duration = duration_cast<microseconds>(t_stop - t_start);
 #if DATA_COLLECTION_MODE
     stats.timing.greyscale = duration.count();
+
+    #if INJECT_FAULTS
+        auto fi_time = fi.getTime();
+        fi.clearTime();
+        stats.timing.greyscale = stats.timing.greyscale - fi_time;
+    #endif
 #else
-    cout << "Time to convert to greyscale image: " << duration.count() / 1000 << " ms" << endl;
+    #if INJECT_FAULTS
+        auto fi_time = fi.getTime();
+        fi.clearTime();
+        cout << "greyscale time before removing fi: " << duration.count() / 1000 << " ms" << endl;
+        cout << "fi_time: " << fi_time << "\n";
+        cout << "greyscale time after removing fi: " << (duration.count() - fi_time) / 1000 << " ms" << endl;
+    #else 
+        cout << "Time to convert to greyscale image: " << duration.count() / 1000 << " ms" << endl;
+    #endif
 #endif
 
     // (2) Compute Derivatives
@@ -132,8 +146,20 @@ Harris::Harris(Mat img, float k, int filterRange)
     duration = duration_cast<microseconds>(t_stop - t_start);
 #if DATA_COLLECTION_MODE
     stats.timing.derivatives = duration.count();
+
+    #if INJECT_FAULTS
+        fi_time = fi.getTime();
+        fi.clearTime();
+        stats.timing.derivatives = stats.timing.derivatives - fi_time;
+    #endif
 #else
-    cout << "Time to compute derivatives: " << duration.count() / 1000 << " ms" << endl;
+    #if INJECT_FAULTS
+        fi_time = fi.getTime();
+        fi.clearTime();
+        cout << "Time to compute derivatives - fi_time: " << (duration.count() - fi_time) / 1000 << " ms" << endl;
+    #else 
+        cout << "Time to compute derivatives: " << duration.count() / 1000 << " ms" << endl;
+    #endif
 #endif
 
     // (3) Gaussian Filtering
@@ -148,10 +174,21 @@ Harris::Harris(Mat img, float k, int filterRange)
     duration = duration_cast<microseconds>(t_stop - t_start);
 #if DATA_COLLECTION_MODE
     stats.timing.filtering = duration.count();
-#else
-    cout << "Time to perform median filtering: " << duration.count() / 1000 << " ms" << endl;
-#endif
 
+    #if INJECT_FAULTS
+        fi_time = fi.getTime();
+        fi.clearTime();
+        stats.timing.filtering = stats.timing.filtering - fi_time;
+    #endif
+#else
+    #if INJECT_FAULTS
+        fi_time = fi.getTime();
+        fi.clearTime();
+        cout << "Time to perform median filtering - fi_time: " << (duration.count() - fi_time) / 1000 << " ms" << endl;
+    #else 
+        cout << "Time to perform median filtering: " << duration.count() / 1000 << " ms" << endl;
+    #endif
+#endif
 
     // (4) Compute Harris Response
     t_start = high_resolution_clock::now();
@@ -174,8 +211,20 @@ Harris::Harris(Mat img, float k, int filterRange)
 
 #if DATA_COLLECTION_MODE
     stats.timing.response = duration.count();
+
+    #if INJECT_FAULTS
+        fi_time = fi.getTime();
+        fi.clearTime();
+        stats.timing.response = stats.timing.response - fi_time;
+    #endif
 #else
-    cout << "Time to compute Harris responses: " << duration.count() / 1000 << " ms" << endl;
+    #if INJECT_FAULTS
+        fi_time = fi.getTime();
+        fi.clearTime();
+        cout << "Time to compute Harris responses - fi_time: " << (duration.count() - fi_time) / 1000 << " ms" << endl;
+    #else 
+        cout << "Time to compute Harris responses: " << duration.count() / 1000 << " ms" << endl;
+    #endif
 #endif
 
 }
