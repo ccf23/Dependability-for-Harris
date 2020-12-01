@@ -17,6 +17,10 @@
 using namespace std;
 using namespace cv;
 
+static unsigned long int total_fi_time = 0;
+static unsigned long int get_maxima_fi_time = 0;
+
+
 #define ASSERTIONS_ON 			  		false
 #define ABFT_ON 				      	false
 #define THREADS_ON 				    	false
@@ -67,6 +71,12 @@ private:
 	Mat m_harrisResponses;
   Mat hrCc, hrRc; // harris response column and row checks
   runStats stats;
+
+
+#if INJECT_FAULTS || HAMMING_ON
+	uint32_t uFilterRange;
+#endif
+
 
 #if INJECT_FAULTS
 	injector fi;
