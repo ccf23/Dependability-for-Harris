@@ -597,6 +597,7 @@ Derivatives Harris::computeDerivatives(Mat &greyscaleImg)
 
     // Vertical
     for(int r=1; r<greyscaleImg.rows-1; r++) {
+        // cout << "greyscaleImg.rows = " << greyscaleImg.rows << "\n";
         #if HAMMING_ON
                 uR = (uint32_t) r;
                 // printf("r before: 0x%08x\n", r);
@@ -618,6 +619,20 @@ Derivatives Harris::computeDerivatives(Mat &greyscaleImg)
                     #endif
                 }  
             #endif
+
+            #if HAMMING_ON
+                // Correct bitflip if possible
+                if (ofxHammingCode::H3126::SECDED::isCorrectable(uR))
+                    ofxHammingCode::H3126::SECDED::correct(uR);      // Use hamming to correct fault
+                
+                // printf("uR after correction: 0x%08x\n", uR);
+
+                // Use decoded value
+                uR = ofxHammingCode::H3126::SECDED::decode(uR);
+                // printf("uR after decoding: 0x%08x\n", uR);
+                r = (int) uR;
+                // printf("r after: 0x%08x\n", r);
+            #endif
         for(int c=0; c<greyscaleImg.cols; c++) {
 
             float a1 = greyscaleImg.at<float>(r - 1, c);
@@ -632,18 +647,6 @@ Derivatives Harris::computeDerivatives(Mat &greyscaleImg)
               {
                 sobelHelperV.at<float>(r-1,c)=sobelHelperV.at<float>(r-2,c-1);
               }
-            #elif HAMMING_ON
-                // Correct bitflip if possible
-                if (ofxHammingCode::H3126::SECDED::isCorrectable(uR))
-                    ofxHammingCode::H3126::SECDED::correct(uR);      // Use hamming to correct fault
-                
-                // printf("uR after correction: 0x%08x\n", uR);
-
-                // Use decoded value
-                uR = ofxHammingCode::H3126::SECDED::decode(uR);
-                // printf("uR after decoding: 0x%08x\n", uR);
-                r = (int) uR;
-                // printf("r after: 0x%08x\n", r);
             #endif
 
         }
