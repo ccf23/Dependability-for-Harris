@@ -255,9 +255,13 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
     int supRows = m_harrisResponses.rows - 1;
     int supCols = m_harrisResponses.cols - 1;
     #if ASSERTIONS_ON
-      int rPrev = -15; //-suppressionRadius-1; //seed for loop
-      int cPrev = -15; //-suppressionRadius-1; //seed for loop
-      int suppLimit = 15;// ends for loop
+
+      if (supressionRadius < 0)
+      {
+        supressionRadius = 15;
+      }
+      int rPrev=-suppressionRadius;
+      int cPrev=-suppressionRadius;
     #endif
 
     for (int i = 0; i < numberTopPoints; ++i)
@@ -270,6 +274,16 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
 
                 for (int c = -suppressionRadius; c <= suppressionRadius; c++)
                 {
+                  #if ASSERTIONS_ON
+                    if (r< -suppressionRadius || r>supressionRadius)
+                    {
+                      r= rPrev+1;
+                    }
+                    if (c< -suppressionRadius || c>supressionRadius)
+                    {
+                      c= cPrev+1;
+                    }
+                  #endif
 
                     int sx = points[i].point.x+c;
                     int sy = points[i].point.y+r;
@@ -286,23 +300,11 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
 
                     maxSuppresionMat[sx][sy] = 1;
                     #if ASSERTIONS_ON
-                      if (c< suppLimit)
-                      {
-                        c = rPrev +1;
-                      }else{
-                        break;
-                      }
+                        rPrev= r;
+                        cPrev= c;
                     #endif
                 }
-                #if ASSERTIONS_ON
 
-                  if (r< suppLimit)
-                  {
-                    r = rPrev +1;
-                  }else{
-                    break;
-                  }
-                #endif
             }
             // Convert back to original image coordinate system
             #if ASSERTIONS_ON
