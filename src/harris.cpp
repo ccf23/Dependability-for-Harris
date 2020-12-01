@@ -289,6 +289,8 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
                       if (c< suppLimit)
                       {
                         c = rPrev +1;
+                      }else{
+                        break;
                       }
                     #endif
                 }
@@ -297,6 +299,8 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
                   if (r< suppLimit)
                   {
                     r = rPrev +1;
+                  }else{
+                    break;
                   }
                 #endif
             }
