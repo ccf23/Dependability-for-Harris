@@ -903,7 +903,7 @@ bool Harris::withinPixelDiffTolerance(Mat mat1, Mat mat2, bool high_thresh)
     compare(mat1, mat2, diff, CMP_NE);
 
     int num_diff = countNonZero(diff);
-     cout << "num diff pixels: " << num_diff << "\n";
+    // cout << "num diff pixels: " << num_diff << "\n";
 
     if (high_thresh)
     {

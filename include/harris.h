@@ -23,10 +23,10 @@ static unsigned long int get_maxima_fi_time = 0;
 
 #define ASSERTIONS_ON 			  		false
 #define ABFT_ON 				      	false
-#define THREADS_ON 				    	false
+#define THREADS_ON 				    	true
 #define HAMMING_ON         	  			false
 
-#define INJECT_FAULTS			    	true
+#define INJECT_FAULTS			    	false
 
 #define DATA_COLLECTION_MODE 			true	// enable this for logging and to disable printing to std::out
 
