@@ -26,7 +26,7 @@ static unsigned long int get_maxima_fi_time = 0;
 #define THREADS_ON 				    	false
 #define HAMMING_ON         	  			false
 
-#define INJECT_FAULTS			    	true
+#define INJECT_FAULTS			    	false
 
 #define DATA_COLLECTION_MODE 			false	// enable this for logging and to disable printing to std::out
 
@@ -75,6 +75,7 @@ private:
 
 #if INJECT_FAULTS || HAMMING_ON
 	uint32_t uFilterRange;
+	uint32_t uSuppressionRadius;
 #endif
 
 

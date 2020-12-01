@@ -311,14 +311,45 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
     std::vector<pointData> topPoints;
     int supRows = m_harrisResponses.rows - 1;
     int supCols = m_harrisResponses.cols - 1;
-    #if ASSERTIONS_ON
 
-      if (suppressionRadius < 0)
-      {
-        suppressionRadius = 15;
-      }
-      int rPrev=-suppressionRadius;
-      int cPrev=-suppressionRadius;
+    #if HAMMING_ON
+        uSuppressionRadius = (uint32_t) suppressionRadius;
+        printf("suppressionRadius before: 0x%08x\n", suppressionRadius);
+        printf("uSuppressionRadius before: 0x%08x\n", uSuppressionRadius);
+        uSuppressionRadius = ofxHammingCode::H3126::SECDED::encode(uSuppressionRadius);
+        printf("uSuppressionRadius after encoding: 0x%08x\n", uSuppressionRadius);
+    #endif
+
+    #if INJECT_FAULTS
+        fi.setBHP(3e-5);
+        #if HAMMING_ON
+            fi.inject(uSuppressionRadius, PROB_DATA);
+            printf("uSuppressionRadius after fi: 0x%08x\n", uSuppressionRadius);
+
+        #else
+            fi.inject(suppressionRadius, PROB_DATA);
+        #endif
+    #endif
+
+    #if ASSERTIONS_ON
+        if (suppressionRadius < 0)
+        {
+            suppressionRadius = 15;
+        }
+        int rPrev=-suppressionRadius;
+        int cPrev=-suppressionRadius;
+    #elif HAMMING_ON
+        // Correct bitflip if possible
+        if (ofxHammingCode::H3126::SECDED::isCorrectable(uSuppressionRadius))
+            ofxHammingCode::H3126::SECDED::correct(uSuppressionRadius);      // Use hamming to correct fault
+        
+        printf("uSuppressionRadius after correction: 0x%08x\n", uSuppressionRadius);
+
+        // Use decoded value
+        uSuppressionRadius = ofxHammingCode::H3126::SECDED::decode(uSuppressionRadius);
+        printf("uSuppressionRadius after decoding: 0x%08x\n", uSuppressionRadius);
+        suppressionRadius = (int) uSuppressionRadius;
+        printf("suppressionRadius after: 0x%08x\n", suppressionRadius);
     #endif
 
     for (int i = 0; i < numberTopPoints; ++i)
@@ -360,63 +391,76 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
 
                     maxSuppresionMat[sx][sy] = 1;
                     #if ASSERTIONS_ON
-                        rPrev= r;
-                        //cout<< "      "<< rPrev <<endl;
-                        cPrev= c;
+                        ((r != suppressionRadius) ? rPrev = r : rPrev = 0);
+                        ((c != suppressionRadius) ? cPrev = c : cPrev = 0);
                     #endif
 
                 }
 
             }
             // Convert back to original image coordinate system
-            #if ASSERTIONS_ON
-              if (filterRange<0)
-              {
-                filterRange = 3;
-              }
-
-            #endif
-
             #if HAMMING_ON
                 if (i == 0) // only inject/correct 1 fault (when i == 0)
                 {
                     // Cast filterRange to a uint and encode
+                    // assert(filterRange >= 0 && filterRange < 67108864); // make sure hamming can work on this
                     uFilterRange = (uint32_t)filterRange;
-                    // printf("filterRange before: 0x%08x\n", filterRange);
-                    // printf("uFilterRange before: 0x%08x\n", uFilterRange);
+                    printf("filterRange before: 0x%08x\n", filterRange);
+                    printf("uFilterRange before: 0x%08x\n", uFilterRange);
                     uFilterRange = ofxHammingCode::H3126::SECDED::encode(uFilterRange);
-                    // printf("uFilterRange after encoding: 0x%08x\n", uFilterRange);
+                    printf("uFilterRange after encoding: 0x%08x\n", uFilterRange);
                 }
             #endif
+
             #if INJECT_FAULTS 
-                if (i == 0) // only inject/correct 1 fault (when i == 0)
-                {
-                    fi.inject(uFilterRange, SINGLE_DATA);
-                    // printf("uFilterRange after injecting fault: 0x%08x\n", uFilterRange);
-                }               
+                #if HAMMING_ON
+                    if (i == 0) // only inject/correct 1 fault (when i == 0)
+                    {
+                        fi.setBHP(1e-5);
+                        fi.inject(uFilterRange, PROB_DATA);
+                        printf("uFilterRange after injecting fault: 0x%08x\n", uFilterRange);
+                    }             
+                #else
+                    if (i == 0)
+                    {
+                        fi.setBHP(1e-5);
+                        fi.inject(filterRange, PROB_DATA);
+                    }
+                #endif  
             #endif
 
-            #if HAMMING_ON
+            #if ASSERTIONS_ON
+                if (filterRange<0)
+                {
+                    filterRange = 3;
+                }
+                // Convert back to original image coordinate system
+                points[i].point.x += 1 + filterRange;
+                points[i].point.y += 1 + filterRange;
+            #elif HAMMING_ON
                 if (i == 0) // only inject/correct 1 fault (when i == 0)
                 {
                     // Correct bitflip if possible
                     if (ofxHammingCode::H3126::SECDED::isCorrectable(uFilterRange))
                         ofxHammingCode::H3126::SECDED::correct(uFilterRange);      // Use hamming to correct fault
 
-                    // printf("uFilterRange after correction: 0x%08x\n", uFilterRange);
-                    // printf("uFilterRange after decoding: 0x%08x\n", ofxHammingCode::H3126::SECDED::decode(uFilterRange));
+                    printf("uFilterRange after correction: 0x%08x\n", uFilterRange);
+                    printf("uFilterRange after decoding: 0x%08x\n", ofxHammingCode::H3126::SECDED::decode(uFilterRange));
 
                     // Use decoded value
                     points[i].point.x += 1 + ofxHammingCode::H3126::SECDED::decode(uFilterRange);
                     points[i].point.y += 1 + ofxHammingCode::H3126::SECDED::decode(uFilterRange);
+                    
+                    filterRange = (int)uFilterRange;
                 }
-                points[i].point.x += 1 + filterRange;
-                points[i].point.y += 1 + filterRange;
             #else
                 // Convert back to original image coordinate system
                 points[i].point.x += 1 + filterRange;
                 points[i].point.y += 1 + filterRange;
             #endif
+            
+            
+
             topPoints.push_back(points[i]);
         }
 
@@ -439,10 +483,6 @@ Mat Harris::convertRgbToGrayscale(Mat &img)
 {
     Mat greyscaleImg(img.rows, img.cols, CV_32F);
 
-    #if ASSERTIONS_ON
-      int reset;
-      reset = 0;
-    #endif
     for (int c = 0; c < img.cols; c++) {
         for (int r = 0; r < img.rows; r++) {
             greyscaleImg.at<float>(r,c) =
@@ -458,14 +498,10 @@ Mat Harris::convertRgbToGrayscale(Mat &img)
 
             #if ASSERTIONS_ON
             //ck 1
-              if (iterateFlo(greyscaleImg.at<float>(r,c),0,1) == 1 && reset < 3 && c>0 && r>0)
+              if (iterateFlo(greyscaleImg.at<float>(r,c),0,1) == 1 && c>0 && r>0)
               {
                 //if error, set the value equal to the previous coputated value
                 greyscaleImg.at<float>(r,c)= greyscaleImg.at<float>(r-1,c-1);
-                // //error, so reset loop
-                // r =0;
-                // c =0;
-                // reset+=1;
               }
             #endif
         }
@@ -560,11 +596,6 @@ Derivatives Harris::computeDerivatives(Mat &greyscaleImg)
 
 
     // Vertical
-    #if ASSERTIONS_ON
-      int reset;
-      reset = 0;
-    #endif
-  // do { // runs through loop once and checks if there is a fault
     for(int r=1; r<greyscaleImg.rows-1; r++) {
         for(int c=0; c<greyscaleImg.cols; c++) {
 
@@ -576,21 +607,15 @@ Derivatives Harris::computeDerivatives(Mat &greyscaleImg)
 
             #if ASSERTIONS_ON
             //ck 2
-              if (iterateFlo(sobelHelperV.at<float>(r-1,c),0,4) == 1 && reset < 3 && r>1 && c>0)
+              if (iterateFlo(sobelHelperV.at<float>(r-1,c),0,4) == 1 && r>1 && c>0)
               {
-
                 sobelHelperV.at<float>(r-1,c)=sobelHelperV.at<float>(r-2,c-1);
-
-
               }
             #endif
 
         }
     }
     // Horizontal
-    #if ASSERTIONS_ON
-      reset = 0;
-    #endif
     for (int r = 0; r < greyscaleImg.rows; r++)
     {
         for (int c = 1; c < greyscaleImg.cols - 1; c++)
@@ -604,7 +629,7 @@ Derivatives Harris::computeDerivatives(Mat &greyscaleImg)
 
             #if ASSERTIONS_ON
             //ck 3
-              if (iterateFlo(sobelHelperH.at<float>(r,c-1),0,4) == 1 && reset < 3 && r>0 && c>1 )
+              if (iterateFlo(sobelHelperH.at<float>(r,c-1),0,4) == 1 && r>0 && c>1 )
               {
                 sobelHelperH.at<float>(r,c-1) = sobelHelperH.at<float>(r-1,c-2);
 
@@ -641,14 +666,6 @@ Mat Harris::computeHarrisResponses(float k, Derivatives &d)
 {
     Mat M(d.Iy.rows, d.Ix.cols, CV_32F);
 
-    #if ASSERTIONS_ON
-      int reset,reset11, reset22, reset21, reset12;
-      reset = 0;
-      reset11 = 0;
-      reset22 = 0;
-      reset21 = 0;
-      reset12 = 0;
-    #endif
     float det, trace;
       for(int r=0; r<d.Iy.rows; r++) {
           for(int c=0; c<d.Iy.cols; c++) {
@@ -680,7 +697,7 @@ Mat Harris::computeHarrisResponses(float k, Derivatives &d)
               #endif
               #if ASSERTIONS_ON
                 //ck 7
-                if (iterateFlo(M.at<float>(r,c),0,51.2) == 1 && reset < 3 && r>0 && c>0 )
+                if (iterateFlo(M.at<float>(r,c),0,51.2) == 1 && r>0 && c>0 )
                 {
                   M.at<float>(r,c) = M.at<float>(r-1,c-1);
 
@@ -708,10 +725,6 @@ Mat Harris::gaussFilter(Mat& img, int range) {
 
     // Helper Mats for better time complexity
     Mat gaussHelperV(img.rows-range*2, img.cols-range*2, CV_32F);
-    #if ASSERTIONS_ON
-      int reset;
-      reset = 0;
-    #endif
     bool valid;
     do
     {
@@ -760,19 +773,16 @@ Mat Harris::gaussFilter(Mat& img, int range) {
                 gaussHelperV.at<float>(r-range,c-range) = res;
                 #if ASSERTIONS_ON
                 //ck 4
-                  if (iterateFlo(gaussHelperV.at<float>(r-range,c-range),-4,4) == 1 && reset < 3 && r>range && c>range)
+                  if (iterateFlo(gaussHelperV.at<float>(r-range,c-range),-4,4) == 1 && r>range && c>range)
                   {
                     gaussHelperV.at<float>(r-range,c-range)=gaussHelperV.at<float>(r-range-1,c-range-1);
-                    // //error, so reset loop
-                    // r =range;
-                    // c =range;
-                    // reset+=1;
+
                   }
                 #endif
 
             }
             #if INJECT_FAULTS
-                fi.setBHP(2e-5); // TODO: update bhp
+                fi.setBHP(1.8e-5);
                 fi.inject(m);
                 #if ABFT_ON
                     fi.inject(mRcheck);
@@ -784,9 +794,6 @@ Mat Harris::gaussFilter(Mat& img, int range) {
     } while(!valid);
 
     Mat gauss(img.rows-range*2, img.cols-range*2, CV_32F);
-    #if ASSERTIONS_ON
-      reset = 0;
-    #endif
     do
     {
         m = m_gold.clone();
@@ -832,13 +839,9 @@ Mat Harris::gaussFilter(Mat& img, int range) {
                 gauss.at<float>(r-range,c-range) = res;
                 #if ASSERTIONS_ON
                 //ck 5
-                  if (iterateFlo(gauss.at<float>(r-range,c-range),-4,4) == 1 && reset < 3 && r>range && c>range )
+                  if (iterateFlo(gauss.at<float>(r-range,c-range),-4,4) == 1 && r>range && c>range )
                   {
                     gauss.at<float>(r-range,c-range)=gauss.at<float>(r-range-1,c-range-1);
-                    // //error, so reset loop
-                    // r= range;
-                    // c = range;
-                    // reset+=1;
                   }
                 #endif
 
@@ -846,7 +849,7 @@ Mat Harris::gaussFilter(Mat& img, int range) {
             }
             #if INJECT_FAULTS
                // cout<<"injecting faults into m in gauss filter (2)"<<endl;
-                fi.setBHP(2e-5); // TODO: update bhp
+                fi.setBHP(1.8e-5);
                 #if ABFT_ON
                     fi.inject(mRcheck);
                     fi.inject(mCcheck);
