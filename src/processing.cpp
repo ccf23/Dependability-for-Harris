@@ -137,6 +137,7 @@ void processing::log(runStats stats, std::string filename, bool benchmark)
              << "ABFT: derivative runs," \
              << "ABFT: gauss filter runs," \
              << "ABFT: response resets," \
+             << "ABFT: gauss deriv runs," \
              << "ABFT: corrected errors," \
              << "faults injected"<<endl;
     }
