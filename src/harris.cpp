@@ -255,9 +255,9 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
     int supRows = m_harrisResponses.rows - 1;
     int supCols = m_harrisResponses.cols - 1;
     #if ASSERTIONS_ON
-      int rPrev = -16; //-suppressionRadius-1; //seed for loop
-      int cPrev = -16; //-suppressionRadius-1; //seed for loop
-      int suppLimit = suppressionRadius;// ends for loop
+      int rPrev = -15; //-suppressionRadius-1; //seed for loop
+      int cPrev = -15; //-suppressionRadius-1; //seed for loop
+      int suppLimit = 15;// ends for loop
     #endif
 
     for (int i = 0; i < numberTopPoints; ++i)
@@ -267,21 +267,9 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
         {
             for (int r = -suppressionRadius; r <= suppressionRadius; r++)
             {
-              #if ASSERTIONS_ON
-                if (r< suppLimit)
-                {
-                  r = rPrev +1;
-                }
-              #endif
 
                 for (int c = -suppressionRadius; c <= suppressionRadius; c++)
                 {
-                  #if ASSERTIONS_ON
-                    if (c< suppLimit)
-                    {
-                      c = rPrev +1;
-                    }
-                  #endif
 
                     int sx = points[i].point.x+c;
                     int sy = points[i].point.y+r;
@@ -298,11 +286,18 @@ vector<pointData> Harris::getMaximaPoints(float percentage, int filterRange, int
 
                     maxSuppresionMat[sx][sy] = 1;
                     #if ASSERTIONS_ON
-                      cPrev = suppressionRadius;
+                      if (c< suppLimit)
+                      {
+                        c = rPrev +1;
+                      }
                     #endif
                 }
                 #if ASSERTIONS_ON
-                  rPrev = -suppressionRadius;
+
+                  if (r< suppLimit)
+                  {
+                    r = rPrev +1;
+                  }
                 #endif
             }
             // Convert back to original image coordinate system
