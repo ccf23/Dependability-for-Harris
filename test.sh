@@ -33,6 +33,7 @@ echo " "
 
 # var to track the number of seg faults/other errors
 let FAILS=0 
+let TIMEOUTS=0
 
 # run test case for each image NUM_TESTS times
 for img in ./images/*.jpeg;
@@ -40,7 +41,14 @@ do
 	for counter in $(seq 1 $NUM_TESTS);
 	do
 		echo "--- running test $counter for $img ---"
-		./Harris_test $img
+		timeout 30m -s SIGTERM ./Harris_test $img
+		
+		# check for timeout 
+		if [ $? -eq 124 ]
+		then
+			let TIMEOUTS++
+			echo "Run timed out, there have been $TIMEOUTS timeouts so far..."
+		fi
 
 		# check for seg fault or other error
 		let err=$(($? >> 7))
@@ -62,6 +70,7 @@ let SECONDS=DURATION%60
 
 echo ""
 printf "tests completed in %d hours %02d minutes and %02d seconds\n" $HOURS $MINUTES $SECONDS
-printf "%d seg faults occured\n\n" $FAILS
+printf "%d seg faults occured\n" $FAILS
+printf "%d timeouts occurred\n\n" $TIMEOUTS
 
 exit
