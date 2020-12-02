@@ -23,17 +23,17 @@ static unsigned long int get_maxima_fi_time = 0;
 
 #define ASSERTIONS_ON 			  		false
 #define ABFT_ON 				      	false
-#define THREADS_ON 				    	false
-#define HAMMING_ON         	  			true
+#define THREADS_ON 				    	true
+#define HAMMING_ON         	  			false
 
-#define INJECT_FAULTS			    	false
+#define INJECT_FAULTS			    	true
 
-#define DATA_COLLECTION_MODE 			false	// enable this for logging and to disable printing to std::out
+#define DATA_COLLECTION_MODE 			true	// enable this for logging and to disable printing to std::out
 
 #define POSITION_RANGE			  		5		// range for points in processing::process()
 
-#define THREADS_NUM_FAULTS_TOLERATED_HIGH 	650000	// Number of faults in image that threading will tolerate
-#define THREADS_NUM_FAULTS_TOLERATED_LOW    850    
+static const int THREADS_NUM_FAULTS_TOLERATED_HIGH 	 = 700000;	// Number of faults in image that threading will tolerate
+static const int THREADS_NUM_FAULTS_TOLERATED_LOW  = 975;    
 
 #define LOCAL 					      	false	// set to true to allow for visual test on local machine
 
