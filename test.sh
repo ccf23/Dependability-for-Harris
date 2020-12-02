@@ -41,8 +41,8 @@ do
 	for counter in $(seq 1 $NUM_TESTS);
 	do
 		echo "--- running test $counter for $img ---"
-		timeout 30m -s SIGTERM ./Harris_test $img
-		
+		timeout 30m ./Harris_test $img
+
 		# check for timeout 
 		if [ $? -eq 124 ]
 		then
