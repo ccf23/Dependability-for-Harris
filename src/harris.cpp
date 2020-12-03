@@ -86,8 +86,6 @@ Harris::Harris(Mat img, float k, int filterRange)
         valid = abft_check(greyscaleImg,a,b,true);
     } while (!valid);*/
     Derivatives derivatives = computeDerivatives(greyscaleImg);
-#elif THREADS_ON
-    Derivatives derivatives = runParallel_computeDerivatives(greyscaleImg);
 #else
     Derivatives derivatives = computeDerivatives(greyscaleImg);
 #endif
@@ -197,10 +195,8 @@ Harris::Harris(Mat img, float k, int filterRange)
     // (4) Compute Harris Response
     t_start = high_resolution_clock::now();
 
-#if THREADS_ON
-    Mat harrisResponses = runParallel_computeHarrisResponses(k, mDerivatives);
-    m_harrisResponses = harrisResponses;
-#elif ABFT_ON
+
+#if ABFT_ON
     Mat harrisResponses = computeHarrisResponses(k, mDerivatives);
     m_harrisResponses = harrisResponses;
     // check created here, verified when get Maxima Points is called
@@ -950,46 +946,6 @@ Mat Harris::runParallel_convertRgbToGrayscale(Mat& img)
     return greyscaleImg;
 }
 
-Derivatives Harris::runParallel_computeDerivatives(Mat& greyscaleImg)
-{
-    Derivatives derivatives, derivatives2;
-    Mat greyscaleImg1, greyscaleImg2;
-    bool match = false;
-
-    while (!match)
-    {
-        // If threads don't match, reset greyscaleImgs for next run
-        // (computeDerivatives() modifies greyscaleImg)
-        greyscaleImg1 = greyscaleImg.clone();
-        greyscaleImg2 = greyscaleImg.clone();
-#pragma omp parallel num_threads(2)
-        {
-            int i = omp_get_thread_num();
-            if (i == 0)
-            {
-                derivatives = computeDerivatives(greyscaleImg1);
-            }
-
-            if (i == 1 || omp_get_num_threads() != 2)
-            {
-                derivatives2 = computeDerivatives(greyscaleImg2);
-            }
-        }
-
-        //verify match within THREADS_NUM_FAULTS_TOLERATED pixels
-        bool matchX = withinPixelDiffTolerance(derivatives2.Ix, derivatives.Ix, false);
-        bool matchY = withinPixelDiffTolerance(derivatives2.Iy, derivatives.Iy, false);
-        bool matchXY = withinPixelDiffTolerance(derivatives2.Ixy, derivatives.Ixy, false);
-
-        match = matchX & matchY & matchXY;
-
-        // cout << "Derivatives match: " << boolalpha << match << endl;
-    }
-    // set greyscaleImg equal to one of the results
-    greyscaleImg = greyscaleImg1.clone();
-    return derivatives;
-}
-
 Derivatives Harris::runParallel_applyToDerivatives(Derivatives& derivatives, int filterRange)
 {
     Derivatives mDerivatives, mDerivatives2;
@@ -1020,33 +976,5 @@ Derivatives Harris::runParallel_applyToDerivatives(Derivatives& derivatives, int
         // cout << "M Derivatives match: " << boolalpha << match << endl;
     }
     return mDerivatives;
-}
-
-Mat Harris::runParallel_computeHarrisResponses(float k, Derivatives& mDerivatives)
-{
-    Mat harrisResponses, harrisResponses2;
-    bool match = false;
-    while (!match)
-    {
-#pragma omp parallel num_threads(2)
-        {
-            int i = omp_get_thread_num();
-            if (i == 0)
-            {
-                harrisResponses = computeHarrisResponses(k,mDerivatives);
-            }
-            if (i == 1 || omp_get_num_threads() != 2)
-            {
-                harrisResponses2 = computeHarrisResponses(k,mDerivatives);
-            }
-        }
-        match = withinPixelDiffTolerance(harrisResponses2, harrisResponses, false);
-
-        // cout << "Harris Responses match: " << boolalpha << match << endl;
-
-        m_harrisResponses = harrisResponses;
-    }
-
-    return harrisResponses;
 }
 #endif

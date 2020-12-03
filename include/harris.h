@@ -32,8 +32,8 @@ static unsigned long int get_maxima_fi_time = 0;
 
 #define POSITION_RANGE			  		5		// range for points in processing::process()
 
-static const int THREADS_NUM_FAULTS_TOLERATED_HIGH 	 = 700000;	// Number of faults in image that threading will tolerate
-static const int THREADS_NUM_FAULTS_TOLERATED_LOW  = 975;    
+static const int THREADS_NUM_FAULTS_TOLERATED_HIGH 	 = 580000;	// Number of faults in image that threading will tolerate
+static const int THREADS_NUM_FAULTS_TOLERATED_LOW  = 740;    
 
 #define LOCAL 					      	false	// set to true to allow for visual test on local machine
 
@@ -59,9 +59,7 @@ private:
 
 #if THREADS_ON
 	Mat runParallel_convertRgbToGrayscale(Mat& img);
-	Derivatives runParallel_computeDerivatives(Mat& greyscaleImg);
 	Derivatives runParallel_applyToDerivatives(Derivatives& dMats, int filterRange);
-	Mat runParallel_computeHarrisResponses(float k, Derivatives& mDerivatives);
 	bool withinPixelDiffTolerance(Mat mat1, Mat mat2, bool high_thresh);
 #endif
 
