@@ -21,9 +21,9 @@ static unsigned long int total_fi_time = 0;
 static unsigned long int get_maxima_fi_time = 0;
 
 
-#define ASSERTIONS_ON 			  		false
-#define ABFT_ON 				      	false
-#define THREADS_ON 				    	true
+#define ASSERTIONS_ON 			  		true
+#define ABFT_ON 				      	true
+#define THREADS_ON 				    	false
 #define HAMMING_ON         	  			false
 
 #define INJECT_FAULTS			    	true

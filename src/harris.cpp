@@ -494,7 +494,7 @@ Mat Harris::convertRgbToGrayscale(Mat &img)
 
             #if ASSERTIONS_ON
             //ck 1
-              if (iterateFlo(greyscaleImg.at<float>(r,c),0,1) == 1 && c>0 && r>0)
+              if (iterateFlo(greyscaleImg.at<float>(r,c),0,1) == 1 && c>0 && r>0 && r < img.rows - 1 && c < img.cols - 1)
               {
                 //if error, set the value equal to the previous coputated value
                 greyscaleImg.at<float>(r,c)= greyscaleImg.at<float>(r-1,c-1);
